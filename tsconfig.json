@@ -1,0 +1,54 @@
+{
+  "include": ["eslint.config.mjs", "prettier.config.mjs", "src"],
+  "references": [{ "path": "./tsconfig.node.json" }],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+
+    /* LANGUAGE COMPILATION OPTIONS */
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ES2021"],
+    "module": "ESNext",
+
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "checkJs": true,
+
+    /* EMIT RULES */
+    "outDir": "./dist",
+    "jsx": "react-jsx",
+    "noEmit": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "removeComments": true,
+
+    /* TYPE CHECKING RULES */
+    "strict": true,
+    // "noImplicitAny": true, // Included in "Strict"
+    // "noImplicitThis": true, // Included in "Strict"
+    // "strictBindCallApply": true, // Included in "Strict"
+    // "strictFunctionTypes": true, // Included in "Strict"
+    // "strictNullChecks": true, // Included in "Strict"
+    // "strictPropertyInitialization": true, // Included in "Strict"
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "useUnknownInCatchVariables": true,
+    "noUncheckedIndexedAccess": true,
+
+    /* OTHER OPTIONS */
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    // "emitDecoratorMetadata": true,
+    // "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "useDefineForClassFields": true
+  }
+}
