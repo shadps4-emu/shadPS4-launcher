@@ -4,7 +4,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     },
 
     /* LANGUAGE COMPILATION OPTIONS */
@@ -21,8 +21,6 @@
     "outDir": "./dist",
     "jsx": "react-jsx",
     "noEmit": true,
-    "declaration": true,
-    "declarationMap": true,
     "sourceMap": true,
     "removeComments": true,
 
