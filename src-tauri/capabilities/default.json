@@ -9,14 +9,39 @@
     "core:default",
     "opener:default",
     "store:default",
-    "fs:default",
     {
       "identifier": "fs:read-dirs",
-      "allow": [{ "path": "**/*" }]
+      "allow": [
+        {
+          "path": "**/*"
+        }
+      ]
     },
     {
       "identifier": "fs:allow-exists",
-      "allow": [{ "path": "**/*" }]
+      "allow": [
+        {
+          "path": "**/*"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-copy-file",
+      "allow": [
+        {
+          "path": "**/*"
+        }
+      ]
+    },
+    {
+    "identifier": "shell:allow-execute",
+    "allow": [
+      {
+        "name": "shadps4-emu",
+        "cmd": "$APPDATA/shadps4-emu.exe",
+        "args": true
+      }
+    ]
     }
   ]
 }

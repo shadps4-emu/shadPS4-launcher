@@ -1,7 +1,7 @@
 import { basename, join } from "@tauri-apps/api/path";
 import { exists, readDir } from "@tauri-apps/plugin-fs";
 import { atom } from "jotai";
-import { PathPreferences } from "./paths";
+import { pathPreferences } from "./paths";
 
 export interface GameEntry {
   id: string;
@@ -43,7 +43,7 @@ export const gameLibrary = atom(async (get) => {
     }
   }
 
-  const v = get(PathPreferences.gamesPath);
+  const v = get(pathPreferences.gamesPath);
   if (!v || !(await exists(v))) {
     return [];
   }
