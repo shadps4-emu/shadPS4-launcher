@@ -9,6 +9,14 @@
     "core:default",
     "opener:default",
     "store:default",
-    "fs:default"
+    "fs:default",
+    {
+      "identifier": "fs:read-dirs",
+      "allow": [{ "path": "**/*" }]
+    },
+    {
+      "identifier": "fs:allow-exists",
+      "allow": [{ "path": "**/*" }]
+    }
   ]
 }

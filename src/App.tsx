@@ -1,8 +1,10 @@
 import { useAtom } from "jotai";
-import { type ChangeEvent, useCallback } from "react";
+import { type ChangeEvent, Suspense, useCallback } from "react";
 import "./App.css";
-import logo from "./assets/shadps4.png";
+import { GameLibrary } from "./components/game-library";
+import { Toolbar } from "./components/toolbar";
 import { Input } from "./components/ui/input";
+import { Spinner } from "./components/ui/spinner";
 import { PathPreferences } from "./store/paths";
 
 function App() {
@@ -13,13 +15,22 @@ function App() {
   }, []);
 
   return (
-    <main className="bg-primary h-screen">
-      <div className="flex flex-col items-center justify-center text-white p-8">
-        <a href="https://github.com/shadps4-emu/shadPS4" target="_blank">
-          <img src={logo} className="size-40" alt="React logo" />
-        </a>
+    <main
+      className="flex flex-col align-top justify-stretch"
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      <Suspense
+        fallback={
+          <div className="h-screen w-screen flex justify-center items-center">
+            <div className="bg-stone-800 opacity-60 left-0 top-0 right-0 bottom-0 absolute"></div>
+            <Spinner size="large" className="text-black" />
+          </div>
+        }
+      >
         <Input type="text" value={gamePath} onChange={onChangeGamePath} />
-      </div>
+        <Toolbar />
+        <GameLibrary />
+      </Suspense>
     </main>
   );
 }

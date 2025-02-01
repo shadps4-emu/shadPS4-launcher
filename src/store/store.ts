@@ -18,13 +18,14 @@ async function getStore(path: string): Promise<Store> {
 export function atomWithTauriStore<T>(
   path: string,
   key: string,
-  initialValue: T | (() => Promise<T> | T),
+  initialValue: T,
+  onMount: T | (() => Promise<T> | T) = initialValue,
 ) {
   const getInitialValue = async () => {
     const initial: T = await Promise.resolve(
-      typeof initialValue === "function"
-        ? (initialValue as () => Promise<T> | T)()
-        : initialValue,
+      typeof onMount === "function"
+        ? (onMount as () => Promise<T> | T)()
+        : onMount,
     );
     try {
       const store = await getStore(path);
@@ -41,7 +42,7 @@ export function atomWithTauriStore<T>(
     }
   };
 
-  const baseAtom = atom<T>({} as T);
+  const baseAtom = atom<T>(initialValue);
   baseAtom.onMount = (setAtom) => {
     void Promise.resolve(getInitialValue()).then(setAtom);
   };

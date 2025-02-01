@@ -9,7 +9,7 @@ interface PathPreferences {
 }
 
 export const PathPreferences: PathPreferences = Object.freeze({
-  gamesPath: atomWithTauriStore("config.json", "games_path", async () =>
+  gamesPath: atomWithTauriStore("config.json", "games_path", "", async () =>
     join(await appDataDir(), "games"),
   ),
 });
