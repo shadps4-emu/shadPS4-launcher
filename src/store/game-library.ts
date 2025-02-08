@@ -1,3 +1,4 @@
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { basename, join } from "@tauri-apps/api/path";
 import { exists, readDir } from "@tauri-apps/plugin-fs";
 import { atom } from "jotai";
@@ -55,6 +56,8 @@ export const gameLibrary = atom(async (get) => {
       let cover: string | null = await join(path, "sce_sys", "icon0.png");
       if (!(await exists(cover))) {
         cover = null;
+      } else {
+        cover = convertFileSrc(cover);
       }
       return {
         id: b,

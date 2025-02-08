@@ -1,7 +1,6 @@
 import { type GameEntry, gameLibrary } from "@/store/game-library";
 import { pathPreferences } from "@/store/paths";
 import { defaultStore } from "@/store/store";
-import { convertFileSrc } from "@tauri-apps/api/core";
 import { appDataDir, join } from "@tauri-apps/api/path";
 import { copyFile, exists } from "@tauri-apps/plugin-fs";
 import { Command } from "@tauri-apps/plugin-shell";
@@ -37,11 +36,7 @@ function GameBox({ game }: { game: GameEntry }) {
     >
       <div className="aspect-square relative overflow-hidden rounded-md bg-zinc-800">
         {(game.cover && (
-          <img
-            src={convertFileSrc(game.cover)}
-            alt={game.title}
-            className="object-cover"
-          />
+          <img src={game.cover} alt={game.title} className="object-cover" />
         )) || (
           <div className="center">
             <span className="text-red-500">No cover</span>
