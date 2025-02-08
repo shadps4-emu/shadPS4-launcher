@@ -6,7 +6,8 @@ import { appDataDir, join } from "@tauri-apps/api/path";
 import { copyFile, exists } from "@tauri-apps/plugin-fs";
 import { Command } from "@tauri-apps/plugin-shell";
 import { useAtom } from "jotai";
-import { useCallback } from "react";
+import { Suspense, useCallback } from "react";
+import { Skeleton } from "./ui/skeleton";
 
 function GameBox({ game }: { game: GameEntry }) {
   const openGame = useCallback(
@@ -31,7 +32,7 @@ function GameBox({ game }: { game: GameEntry }) {
   return (
     <div
       key={game.id}
-      className="space-y-2 bg-zinc-800 transition-all hover:z-20 hover:scale-125"
+      className="space-y-2 bg-zinc-800 transition-all hover:z-20 hover:scale-105"
       onDoubleClick={openGame}
     >
       <div className="aspect-square relative overflow-hidden rounded-md bg-zinc-800">
@@ -52,7 +53,7 @@ function GameBox({ game }: { game: GameEntry }) {
   );
 }
 
-export function GameLibrary() {
+function Grid() {
   const [games] = useAtom(gameLibrary);
 
   return (
@@ -61,5 +62,28 @@ export function GameLibrary() {
         <GameBox key={game.id} game={game} />
       ))}
     </div>
+  );
+}
+
+function GridSkeleton() {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-10 gap-4">
+      {Array(50)
+        .fill(0)
+        .map((_, i) => (
+          <Skeleton
+            key={i}
+            className="aspect-square relative overflow-hidden rounded-md bg-zinc-800"
+          />
+        ))}
+    </div>
+  );
+}
+
+export function GameLibrary() {
+  return (
+    <Suspense fallback={<GridSkeleton />}>
+      <Grid />
+    </Suspense>
   );
 }
