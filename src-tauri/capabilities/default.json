@@ -34,14 +34,22 @@
       ]
     },
     {
-    "identifier": "shell:allow-execute",
-    "allow": [
-      {
-        "name": "shadps4-emu",
-        "cmd": "$APPDATA/shadps4-emu.exe",
-        "args": true
-      }
-    ]
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "shadps4-emu",
+          "cmd": "$APPDATA/shadps4-emu.exe",
+          "args": true
+        }
+      ]
+    },
+    {
+    "identifier": "fs:read-files",
+      "allow": [
+        {
+          "path": "$RESOURCE/mock/**/*"
+        }
+      ]
     }
   ]
 }

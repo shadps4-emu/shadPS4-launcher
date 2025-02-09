@@ -1,6 +1,6 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { basename, join } from "@tauri-apps/api/path";
-import { exists, readDir } from "@tauri-apps/plugin-fs";
+import { basename, join, resourceDir } from "@tauri-apps/api/path";
+import { exists, readDir, readTextFile } from "@tauri-apps/plugin-fs";
 import { atom } from "jotai";
 import { pathPreferences } from "./paths";
 
@@ -12,6 +12,14 @@ export interface GameEntry {
 }
 
 export const gameLibrary = atom(async (get) => {
+  if (import.meta.env.VITE_USE_MOCK) {
+    const data = await readTextFile(
+      await join(await resourceDir(), "mock/games.json"),
+    );
+
+    return JSON.parse(data) as GameEntry[];
+  }
+
   const knownPaths: string[] = [];
 
   async function isGame(path: string) {
