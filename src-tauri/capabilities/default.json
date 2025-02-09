@@ -9,29 +9,16 @@
     "core:default",
     "opener:default",
     "store:default",
+    "fs:allow-read-dir",
+    "fs:allow-exists",
+    "fs:allow-copy-file",
+    "fs:allow-read-file",
+    "fs:allow-read-text-file",
+    "fs:allow-write-file",
+    "fs:allow-resource-read-recursive",
     {
-      "identifier": "fs:read-dirs",
-      "allow": [
-        {
-          "path": "**/*"
-        }
-      ]
-    },
-    {
-      "identifier": "fs:allow-exists",
-      "allow": [
-        {
-          "path": "**/*"
-        }
-      ]
-    },
-    {
-      "identifier": "fs:allow-copy-file",
-      "allow": [
-        {
-          "path": "**/*"
-        }
-      ]
+      "identifier": "fs:scope",
+      "allow": ["**/*"]
     },
     {
       "identifier": "shell:allow-execute",

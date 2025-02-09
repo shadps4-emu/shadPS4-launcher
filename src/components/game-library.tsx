@@ -1,11 +1,16 @@
 import { type GameEntry, gameLibrary } from "@/store/game-library";
 import { pathPreferences } from "@/store/paths";
 import { defaultStore } from "@/store/store";
-import { appDataDir, join } from "@tauri-apps/api/path";
-import { copyFile, exists } from "@tauri-apps/plugin-fs";
+import { appDataDir, BaseDirectory, join } from "@tauri-apps/api/path";
+import {
+  copyFile,
+  exists,
+  writeFile,
+  writeTextFile,
+} from "@tauri-apps/plugin-fs";
 import { Command } from "@tauri-apps/plugin-shell";
 import { useAtom } from "jotai";
-import { Suspense, useCallback } from "react";
+import { Suspense, useCallback, useEffect } from "react";
 import { Skeleton } from "./ui/skeleton";
 
 function GameBox({ game }: { game: GameEntry }) {
@@ -43,7 +48,7 @@ function GameBox({ game }: { game: GameEntry }) {
           </div>
         )}
       </div>
-      <div className="text-xs text-zinc-400">{game.id}</div>
+      <div className="text-xs text-zinc-400">{game.title}</div>
     </div>
   );
 }
@@ -54,7 +59,7 @@ function Grid() {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-10 gap-4">
       {games.map((game) => (
-        <GameBox key={game.id} game={game} />
+        <GameBox key={game.path} game={game} />
       ))}
     </div>
   );
