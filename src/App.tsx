@@ -8,19 +8,19 @@ import { Spinner } from "./components/ui/spinner";
 function App() {
   return (
     <main
-      className="flex flex-col align-top justify-stretch max-h-screen"
+      className="flex max-h-screen flex-col justify-stretch align-top"
       onContextMenu={(e) => e.preventDefault()}
     >
       <Suspense
         fallback={
-          <div className="h-screen w-screen flex justify-center items-center">
-            <div className="bg-stone-800 opacity-60 left-0 top-0 right-0 bottom-0 absolute"></div>
+          <div className="flex h-screen w-screen items-center justify-center">
+            <div className="absolute bottom-0 left-0 right-0 top-0 bg-stone-800 opacity-60"></div>
             <Spinner size="large" className="text-black" />
           </div>
         }
       >
         <Toolbar />
-        <ScrollArea type="scroll" className="h-screen p-8 z-20">
+        <ScrollArea type="scroll" className="z-20 h-screen">
           <GameLibrary />
         </ScrollArea>
       </Suspense>

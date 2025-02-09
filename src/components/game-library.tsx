@@ -1,16 +1,11 @@
 import { type GameEntry, gameLibrary } from "@/store/game-library";
 import { pathPreferences } from "@/store/paths";
 import { defaultStore } from "@/store/store";
-import { appDataDir, BaseDirectory, join } from "@tauri-apps/api/path";
-import {
-  copyFile,
-  exists,
-  writeFile,
-  writeTextFile,
-} from "@tauri-apps/plugin-fs";
+import { appDataDir, join } from "@tauri-apps/api/path";
+import { copyFile, exists } from "@tauri-apps/plugin-fs";
 import { Command } from "@tauri-apps/plugin-shell";
 import { useAtom } from "jotai";
-import { Suspense, useCallback, useEffect } from "react";
+import { Suspense, useCallback } from "react";
 import { Skeleton } from "./ui/skeleton";
 
 function GameBox({ game }: { game: GameEntry }) {
@@ -39,7 +34,7 @@ function GameBox({ game }: { game: GameEntry }) {
       className="space-y-2 bg-zinc-800 transition-all hover:z-20 hover:scale-105"
       onDoubleClick={openGame}
     >
-      <div className="aspect-square relative overflow-hidden rounded-md bg-zinc-800">
+      <div className="relative aspect-square overflow-hidden rounded-md bg-zinc-800">
         {(game.cover && (
           <img src={game.cover} alt={game.title} className="object-cover" />
         )) || (
@@ -57,7 +52,7 @@ function Grid() {
   const [games] = useAtom(gameLibrary);
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-10 gap-4">
+    <div className="grid grid-cols-2 gap-4 p-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-10">
       {games.map((game) => (
         <GameBox key={game.path} game={game} />
       ))}
@@ -67,13 +62,13 @@ function Grid() {
 
 function GridSkeleton() {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-10 gap-4">
+    <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-10">
       {Array(50)
         .fill(0)
         .map((_, i) => (
           <Skeleton
             key={i}
-            className="aspect-square relative overflow-hidden rounded-md bg-zinc-800"
+            className="relative aspect-square overflow-hidden rounded-md bg-zinc-800"
           />
         ))}
     </div>
