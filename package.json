@@ -4,9 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "vite:dev": "vite",
+    "vite:build": "tsc && vite build",
     "tauri": "tauri",
     "lint": "eslint . && prettier . --check",
     "lint:fix": "eslint --fix .",

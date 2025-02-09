@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "identifier": "net.shadps4.app",
   "build": {
-    "beforeDevCommand": "pnpm dev",
+    "beforeDevCommand": "bun vite:dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "pnpm build",
+    "beforeBuildCommand": "bun vite:build",
     "frontendDist": "../dist"
   },
   "app": {
