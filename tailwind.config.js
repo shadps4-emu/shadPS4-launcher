@@ -1,3 +1,5 @@
+import plugin from "tailwindcss/plugin";
+
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: ["class"],
@@ -53,5 +55,19 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    plugin(({ addUtilities }) => {
+      addUtilities({
+        ".stack": {
+          display: "grid",
+          "place-items": "stretch",
+          "& > *": {
+            "grid-column": "1 / -1",
+            "grid-row": "1 / -1",
+          },
+        },
+      });
+    }),
+  ],
 };

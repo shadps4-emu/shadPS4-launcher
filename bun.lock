@@ -5,6 +5,7 @@
       "name": "shadps4-launcher",
       "dependencies": {
         "@radix-ui/react-scroll-area": "^1.2.2",
+        "@radix-ui/react-slot": "^1.1.2",
         "@tauri-apps/api": "^2",
         "@tauri-apps/plugin-fs": "~2",
         "@tauri-apps/plugin-opener": "^2",
