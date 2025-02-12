@@ -1,3 +1,9 @@
+import CN from "@/assets/flags/cn.svg";
+import EU from "@/assets/flags/eu.svg";
+import JP from "@/assets/flags/jp.svg";
+import US from "@/assets/flags/us.svg";
+import { useFocus } from "@/hooks/useFocus";
+import { useGamepad } from "@/hooks/useGamepad";
 import { type GameEntry, gameLibrary } from "@/store/game-library";
 import { pathPreferences } from "@/store/paths";
 import { defaultStore } from "@/store/store";
@@ -6,13 +12,10 @@ import { copyFile, exists } from "@tauri-apps/plugin-fs";
 import { Command } from "@tauri-apps/plugin-shell";
 import { useAtom } from "jotai";
 import { CircleHelp, Globe, ImageOff, Play } from "lucide-react";
-import { Suspense, useCallback, useMemo } from "react";
+import { Suspense, useCallback, useMemo, useRef } from "react";
+import { Gamepad } from "./gamepad";
+import GamepadIcon from "./gamepad-icon";
 import { Skeleton } from "./ui/skeleton";
-
-import CN from "@/assets/flags/cn.svg";
-import EU from "@/assets/flags/eu.svg";
-import JP from "@/assets/flags/jp.svg";
-import US from "@/assets/flags/us.svg";
 
 function Flag({
   sfo,
@@ -39,7 +42,9 @@ function Flag({
   }
 }
 
-function GameBox({ game }: { game: GameEntry }) {
+function GameBox({ game, isFirst }: { game: GameEntry; isFirst?: boolean }) {
+  const { active: isGamepad } = useGamepad();
+
   const openGame = useCallback(
     () =>
       void (async () => {
@@ -60,7 +65,7 @@ function GameBox({ game }: { game: GameEntry }) {
   );
 
   return (
-    <button
+    <div
       key={game.id}
       className="group aspect-square h-auto w-full cursor-pointer overflow-hidden rounded-lg bg-zinc-800 transition-transform stack focus-within:scale-110 hover:scale-110"
       onDoubleClick={openGame}
@@ -76,7 +81,7 @@ function GameBox({ game }: { game: GameEntry }) {
       )}
 
       <div className="grid grid-cols-3 grid-rows-3 bg-black/50 opacity-0 backdrop-blur-[2px] transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
-        <span className="col-span-full row-start-1 row-end-2 truncate px-3 py-2 text-lg font-semibold">
+        <span className="col-span-full row-start-1 row-end-2 truncate px-3 py-2 text-center text-lg font-semibold">
           {/* TODO: scroll text on overflow */}
           {game.title}
         </span>
@@ -85,27 +90,74 @@ function GameBox({ game }: { game: GameEntry }) {
           <Flag sfo={game.sfo} className="rounded-full" />
         </div>
 
-        <button className="col-span-full row-start-3 row-end-4 self-end py-2 transition-colors hover:bg-secondary/75 focus:bg-secondary/75">
-          View More
+        <button
+          className="col-span-full row-span-full grid size-16 place-items-center place-self-center rounded-full bg-black/75"
+          data-play-game={""}
+          data-initial-focus={isFirst ? "" : undefined}
+        >
+          <Play className="size-10" fill="currentColor" />
         </button>
 
-        <div className="col-span-full row-span-full grid size-16 place-items-center place-self-center rounded-full bg-black/75">
-          <Play className="size-10" fill="currentColor" />
-        </div>
+        <button className="col-span-full row-start-3 row-end-4 flex flex-row items-center justify-center gap-x-2 self-end py-2 transition-colors hover:bg-secondary/75 focus:bg-secondary/75">
+          {isGamepad && <GamepadIcon icon="options" className="size-6" />}
+          View More
+          {isGamepad && <div className="size-6" />}
+        </button>
       </div>
-    </button>
+    </div>
   );
 }
 
 function Grid() {
+  const { getElements } = useFocus();
   const [games] = useAtom(gameLibrary);
+  const grid = useRef<HTMLDivElement>(null);
+
+  const getColumns = useCallback(() => {
+    return grid.current
+      ? window
+          .getComputedStyle(grid.current)
+          .getPropertyValue("grid-template-columns")
+          .split(" ").length
+      : 0;
+  }, []);
+
+  const move = useCallback((offset: number) => {
+    const focusableElements = getElements();
+    const games = focusableElements.filter(
+      (el) => el.dataset["play-game"] !== undefined,
+    );
+    const currentIndex = games.indexOf(document.activeElement as HTMLElement);
+
+    if (currentIndex === -1) {
+      games[0]?.focus();
+      return;
+    }
+
+    const nextIndex = currentIndex + offset;
+
+    if (offset > 0 && nextIndex >= games.length) {
+      const newIndex = focusableElements.indexOf(grid.current!) + 1;
+      focusableElements[newIndex]?.focus();
+    } else if (offset < 0 && nextIndex < 0) {
+      const newIndex = focusableElements.indexOf(grid.current!) - 1;
+      focusableElements[newIndex]?.focus();
+    } else {
+      games[nextIndex]?.focus();
+    }
+  }, []);
 
   return (
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 p-8">
-      {games.map((game) => (
-        <GameBox key={game.path} game={game} />
-      ))}
-    </div>
+    <Gamepad onMove={({ x, y }) => move(x + getColumns() * y)}>
+      <div
+        className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 p-8"
+        ref={grid}
+      >
+        {games.map((game, index) => (
+          <GameBox key={game.path} game={game} isFirst={index === 0} />
+        ))}
+      </div>
+    </Gamepad>
   );
 }
 
