@@ -125,7 +125,7 @@ function Grid() {
   const move = useCallback((offset: number) => {
     const focusableElements = getElements();
     const games = focusableElements.filter(
-      (el) => el.dataset["play-game"] !== undefined,
+      (el) => el.dataset.playGame !== undefined,
     );
     const currentIndex = games.indexOf(document.activeElement as HTMLElement);
 
