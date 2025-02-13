@@ -14,7 +14,7 @@ const BUTTON_MAP = {
 } as const;
 
 const SELECTABLE_DATA_ATTR = "data-gamepad-selectable";
-const SELECTION_ANGLE = (45 * Math.PI) / 180;
+const SELECTION_ANGLE = (60 * Math.PI) / 180;
 
 interface Props {
   zIndex?: number;
@@ -99,14 +99,15 @@ export function GamepadNavField({
       );
       const diff = pointDiff(activeCenter, c);
 
-      const angle =
-        Math.abs(angleOffset - Math.atan2(diff.y, diff.x)) % (Math.PI * 2);
+      let angle = Math.abs(angleOffset - Math.atan2(diff.y, diff.x));
+      if (angle > Math.PI) {
+        angle = Math.PI * 2 - angle;
+      }
       const dist = distSquared(diff);
       if (
-        dist < 500 * 500 &&
         angle < SELECTION_ANGLE &&
-        angle - nextAngle > 0.1 &&
-        dist < nextDistance
+        (angle - nextAngle < 0.1 || angle < 0.01) &&
+        (dist < nextDistance || (angle < 0.01 && nextAngle > 0.15))
       ) {
         next = e;
         nextAngle = angle;

@@ -22,7 +22,7 @@ function App() {
       >
         <GamepadNavField>
           <Toolbar />
-          <ScrollArea type="scroll" className="z-20 h-screen">
+          <ScrollArea type="scroll" className="z-20">
             <GameLibrary />
           </ScrollArea>
         </GamepadNavField>

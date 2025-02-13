@@ -11,7 +11,7 @@ import { Input } from "./ui/input";
 
 export function Toolbar() {
   return (
-    <div className="sticky top-0 z-30 flex justify-between bg-secondary/40 p-3">
+    <div className="sticky top-0 z-30 flex justify-between bg-secondary p-3">
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <button
