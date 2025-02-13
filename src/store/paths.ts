@@ -1,5 +1,5 @@
+import { atomWithTauriStore } from "@/utils/jotai/tauri-store";
 import { appDataDir, join } from "@tauri-apps/api/path";
-import { atomWithTauriStore } from "./store";
 
 export const pathPreferences = Object.freeze({
   gamesPath: atomWithTauriStore("config.json", "games_path", "", async () =>

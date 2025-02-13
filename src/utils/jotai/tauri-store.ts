@@ -1,7 +1,5 @@
 import { Store } from "@tauri-apps/plugin-store";
-import { atom, createStore, type SetStateAction } from "jotai";
-
-export const defaultStore = createStore();
+import { atom, type SetStateAction } from "jotai";
 
 const __store = new Map<string, Promise<Store>>();
 

@@ -2,18 +2,16 @@ import CN from "@/assets/flags/cn.svg";
 import EU from "@/assets/flags/eu.svg";
 import JP from "@/assets/flags/jp.svg";
 import US from "@/assets/flags/us.svg";
-import { useFocus } from "@/hooks/useFocus";
-import { useGamepad } from "@/hooks/useGamepad";
+import { defaultStore } from "@/store";
 import { type GameEntry, gameLibrary } from "@/store/game-library";
+import { gamepadActiveAtom } from "@/store/gamepad";
 import { pathPreferences } from "@/store/paths";
-import { defaultStore } from "@/store/store";
 import { appDataDir, join } from "@tauri-apps/api/path";
 import { copyFile, exists } from "@tauri-apps/plugin-fs";
 import { Command } from "@tauri-apps/plugin-shell";
 import { useAtom } from "jotai";
 import { CircleHelp, Globe, ImageOff, Play } from "lucide-react";
-import { Suspense, useCallback, useMemo, useRef } from "react";
-import { Gamepad } from "./gamepad";
+import { Suspense, useCallback, useMemo } from "react";
 import GamepadIcon from "./gamepad-icon";
 import { Skeleton } from "./ui/skeleton";
 
@@ -43,7 +41,7 @@ function Flag({
 }
 
 function GameBox({ game, isFirst }: { game: GameEntry; isFirst?: boolean }) {
-  const { active: isGamepad } = useGamepad();
+  const isGamepad = useAtom(gamepadActiveAtom);
 
   const openGame = useCallback(
     () =>
@@ -69,6 +67,8 @@ function GameBox({ game, isFirst }: { game: GameEntry; isFirst?: boolean }) {
       key={game.id}
       className="group aspect-square h-auto w-full cursor-pointer overflow-hidden rounded-lg bg-zinc-800 transition-transform stack focus-within:scale-110 hover:scale-110"
       onDoubleClick={openGame}
+      data-gamepad-selectable
+      tabIndex={0}
     >
       {game.cover ? (
         <img
@@ -109,55 +109,14 @@ function GameBox({ game, isFirst }: { game: GameEntry; isFirst?: boolean }) {
 }
 
 function Grid() {
-  const { getElements } = useFocus();
   const [games] = useAtom(gameLibrary);
-  const grid = useRef<HTMLDivElement>(null);
-
-  const getColumns = useCallback(() => {
-    return grid.current
-      ? window
-          .getComputedStyle(grid.current)
-          .getPropertyValue("grid-template-columns")
-          .split(" ").length
-      : 0;
-  }, []);
-
-  const move = useCallback((offset: number) => {
-    const focusableElements = getElements();
-    const games = focusableElements.filter(
-      (el) => el.dataset.playGame !== undefined,
-    );
-    const currentIndex = games.indexOf(document.activeElement as HTMLElement);
-
-    if (currentIndex === -1) {
-      games[0]?.focus();
-      return;
-    }
-
-    const nextIndex = currentIndex + offset;
-
-    if (offset > 0 && nextIndex >= games.length) {
-      const newIndex = focusableElements.indexOf(grid.current!) + 1;
-      focusableElements[newIndex]?.focus();
-    } else if (offset < 0 && nextIndex < 0) {
-      const newIndex = focusableElements.indexOf(grid.current!) - 1;
-      focusableElements[newIndex]?.focus();
-    } else {
-      games[nextIndex]?.focus();
-    }
-  }, []);
 
   return (
-    <Gamepad onMove={({ x, y }) => move(x + getColumns() * y)}>
-      <div
-        className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 p-8"
-        ref={grid}
-      >
-        {games.map((game, index) => (
-          <GameBox key={game.path} game={game} isFirst={index === 0} />
-        ))}
-      </div>
-    </Gamepad>
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 p-8">
+      {games.map((game, index) => (
+        <GameBox key={game.path} game={game} isFirst={index === 0} />
+      ))}
+    </div>
   );
 }
 

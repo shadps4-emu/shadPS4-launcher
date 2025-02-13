@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import "./App.css";
 import { GameLibrary } from "./components/game-library";
+import { GamepadNavField } from "./components/gamepad-nav-field";
 import { Toolbar } from "./components/toolbar";
 import { ScrollArea } from "./components/ui/scroll-area";
 import { Spinner } from "./components/ui/spinner";
@@ -19,10 +20,12 @@ function App() {
           </div>
         }
       >
-        <Toolbar />
-        <ScrollArea type="scroll" className="z-20 h-screen">
-          <GameLibrary />
-        </ScrollArea>
+        <GamepadNavField>
+          <Toolbar />
+          <ScrollArea type="scroll" className="z-20 h-screen">
+            <GameLibrary />
+          </ScrollArea>
+        </GamepadNavField>
       </Suspense>
     </main>
   );
