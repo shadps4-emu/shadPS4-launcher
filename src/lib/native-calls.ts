@@ -21,3 +21,10 @@ export async function readPsf(path: string): Promise<PSF> {
     path,
   });
 }
+
+export async function extractZip(zipPath: string, extractPath: string) {
+  return await invoke("extract_zip", {
+    zipPath,
+    extractPath,
+  });
+}

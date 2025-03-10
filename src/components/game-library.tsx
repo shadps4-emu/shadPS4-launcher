@@ -2,13 +2,8 @@ import CN from "@/assets/flags/cn.svg";
 import EU from "@/assets/flags/eu.svg";
 import JP from "@/assets/flags/jp.svg";
 import US from "@/assets/flags/us.svg";
-import { defaultStore } from "@/store";
 import { type GameEntry, gameLibrary } from "@/store/game-library";
 import { gamepadActiveAtom } from "@/store/gamepad";
-import { pathPreferences } from "@/store/paths";
-import { appDataDir, join } from "@tauri-apps/api/path";
-import { copyFile, exists } from "@tauri-apps/plugin-fs";
-import { Command } from "@tauri-apps/plugin-shell";
 import { useAtom } from "jotai";
 import { CircleHelp, Globe, ImageOff, Play } from "lucide-react";
 import { Suspense, useCallback, useMemo } from "react";
@@ -46,18 +41,7 @@ function GameBox({ game, isFirst }: { game: GameEntry; isFirst?: boolean }) {
   const openGame = useCallback(
     () =>
       void (async () => {
-        const runTarget = await join(await appDataDir(), "shadps4-emu.exe");
-
-        if (!(await exists(runTarget))) {
-          const emuPath = defaultStore.get(pathPreferences.emulatorPath);
-          await copyFile(emuPath, runTarget);
-        }
-
-        const elfPath = await join(game.path, "eboot.bin");
-
-        void Command.create("shadps4-emu", ["-g", elfPath], {
-          cwd: await appDataDir(),
-        }).execute();
+        // TODO Run the game
       })(),
     [game],
   );

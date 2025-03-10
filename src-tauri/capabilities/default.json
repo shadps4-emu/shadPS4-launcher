@@ -7,28 +7,20 @@
   ],
   "permissions": [
     "core:default",
-    "opener:default",
-    "store:default",
-    "fs:allow-read-dir",
-    "fs:allow-exists",
     "fs:allow-copy-file",
+    "fs:allow-exists",
+    "fs:allow-read-dir",
     "fs:allow-read-file",
     "fs:allow-read-text-file",
-    "fs:allow-write-file",
     "fs:allow-resource-read-recursive",
+    "fs:allow-write-file",
+    "opener:default",
+    "os:default",
+    "store:default",
+    "upload:default",
     {
       "identifier": "fs:scope",
       "allow": ["**/*"]
-    },
-    {
-      "identifier": "shell:allow-execute",
-      "allow": [
-        {
-          "name": "shadps4-emu",
-          "cmd": "$APPDATA/shadps4-emu.exe",
-          "args": true
-        }
-      ]
     },
     {
     "identifier": "fs:read-files",

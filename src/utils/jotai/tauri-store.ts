@@ -16,8 +16,15 @@ async function getStore(path: string): Promise<Store> {
 export function atomWithTauriStore<T>(
   path: string,
   key: string,
-  initialValue: T,
-  onMount: T | (() => Promise<T> | T) = initialValue,
+  {
+    initialValue,
+    onMount = initialValue,
+    mergeInitial = true,
+  }: {
+    initialValue: T;
+    onMount?: T | (() => Promise<T> | T);
+    mergeInitial?: boolean;
+  },
 ) {
   const getInitialValue = async () => {
     const initial: T = await Promise.resolve(
@@ -28,11 +35,15 @@ export function atomWithTauriStore<T>(
     try {
       const store = await getStore(path);
       const value = await store.get<T>(key);
-      if (typeof initial === "object") {
-        return {
-          ...initial,
-          ...(value || {}),
-        };
+      if (mergeInitial) {
+        if (Array.isArray(initial)) {
+          return [...initial, ...((value as T[]) || [])] as T;
+        } else if (typeof initial === "object") {
+          return {
+            ...initial,
+            ...(value || {}),
+          };
+        }
       }
       return value || initial;
     } catch {

@@ -1,14 +1,9 @@
 import { type PSF, readPsf } from "@/lib/native-calls";
-import {
-  BaseDirectory,
-  basename,
-  join,
-  resourceDir,
-} from "@tauri-apps/api/path";
+import { convertFileSrc } from "@tauri-apps/api/core";
+import { BaseDirectory, basename, join } from "@tauri-apps/api/path";
 import { exists, readDir, readTextFile } from "@tauri-apps/plugin-fs";
 import { atom } from "jotai";
-import { pathPreferences } from "./paths";
-import { convertFileSrc } from "@tauri-apps/api/core";
+import { atomGamesPath } from "./paths";
 
 export interface GameEntry {
   path: string;
@@ -65,7 +60,7 @@ export const gameLibrary = atom(async (get) => {
     }
   }
 
-  const v = get(pathPreferences.gamesPath);
+  const v = get(atomGamesPath);
   if (!v || !(await exists(v))) {
     return [];
   }
