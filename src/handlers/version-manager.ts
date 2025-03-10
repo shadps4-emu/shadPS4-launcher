@@ -27,7 +27,10 @@ export async function readConfig(
     return null;
   }
   const data = await readTextFile(metaPath);
-  return superjson.parse<EmulatorVersion>(data);
+  return {
+    ...superjson.parse<EmulatorVersion>(data),
+    path,
+  };
 }
 
 export async function installNewVersion(

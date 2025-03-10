@@ -1,5 +1,10 @@
-import { atomModalConfigIsOpen } from "@/store/common";
-import { useSetAtom } from "jotai";
+import { atomModalConfigIsOpen, oficialRepo } from "@/store/common";
+import {
+  atomInstalledVersions,
+  atomModalVersionManagerIsOpen,
+  atomSelectedVersion,
+} from "@/store/version-manager";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   Gamepad2,
   Pause,
@@ -9,6 +14,8 @@ import {
   Settings,
   Square,
 } from "lucide-react";
+import { useState } from "react";
+import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import {
   Select,
@@ -20,12 +27,49 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { Button } from "./ui/button";
-import { atomModalVersionManagerIsOpen } from "@/store/version-manager";
+
+function VersionSelector() {
+  const [isOpen, setIsOpen] = useState(false);
+  const setVersionManagerModalOpen = useSetAtom(atomModalVersionManagerIsOpen);
+  const installedVersions = useAtomValue(atomInstalledVersions);
+  const [selectVersion, setSelectedVersion] = useAtom(atomSelectedVersion);
+
+  return (
+    <Select
+      open={isOpen}
+      onOpenChange={(e) => setIsOpen(e)}
+      value={selectVersion?.path}
+      onValueChange={setSelectedVersion}
+    >
+      <SelectTrigger className="w-[180px] border-secondary-foreground">
+        <SelectValue placeholder="No version selected" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          <SelectLabel>Emulator Version</SelectLabel>
+          {installedVersions.map((v) => (
+            <SelectItem key={v.path} value={v.path}>
+              {v.version} {v.repo != oficialRepo && `(${v.repo})`}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+        <SelectSeparator />
+        <Button
+          variant="ghost"
+          onClick={() => {
+            setIsOpen(false);
+            setVersionManagerModalOpen(true);
+          }}
+        >
+          Open Version Manager
+        </Button>
+      </SelectContent>
+    </Select>
+  );
+}
 
 export function Toolbar() {
   const setConfigModalOpen = useSetAtom(atomModalConfigIsOpen);
-  const setVersionManagerModalOpen = useSetAtom(atomModalVersionManagerIsOpen);
 
   return (
     <div className="sticky top-0 z-30 flex justify-between bg-secondary p-3">
@@ -70,27 +114,7 @@ export function Toolbar() {
           >
             <Gamepad2 className="h-6 w-6" />
           </button>
-          <Select>
-            <SelectTrigger className="w-[180px] border-secondary-foreground">
-              <SelectValue placeholder="No version installed"></SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Emulator Version</SelectLabel>
-                <SelectItem value="0.6.0">0.6.0</SelectItem>
-              </SelectGroup>
-              <SelectSeparator />
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setVersionManagerModalOpen(true);
-                  document.body.blur();
-                }}
-              >
-                Open Version Manager
-              </Button>
-            </SelectContent>
-          </Select>
+          <VersionSelector />
         </div>
       </div>
       <div className="max-w-md flex-1">

@@ -5,8 +5,10 @@ import { readDir } from "@tauri-apps/plugin-fs";
 import { platform } from "@tauri-apps/plugin-os";
 import { atom } from "jotai";
 import { atomWithQuery } from "jotai-tanstack-query";
+import { unwrap } from "jotai/utils";
 import { Octokit } from "octokit";
 import { type JotaiStore } from ".";
+import { oficialRepo } from "./common";
 import { atomEmuInstallsPath } from "./paths";
 
 const currentPlatform = (() => {
@@ -35,10 +37,33 @@ const octokit = new Octokit();
 
 export const atomModalVersionManagerIsOpen = atom<boolean>(false);
 
-export const atomSelectedVersion = atom<EmulatorVersion | null>(null);
+const atomSelectedVersionRaw = atomWithTauriStore<string>(
+  "config.json",
+  "selected",
+  {
+    initialValue: "",
+  },
+);
+
+export const atomSelectedVersion = atom<
+  EmulatorVersion | null,
+  [EmulatorVersion | string],
+  void
+>(
+  (get) => {
+    const raw = get(atomSelectedVersionRaw);
+    const installedVersion = get(unwrap(atomInstalledVersions));
+    if (!raw || !installedVersion) return null;
+
+    return installedVersion.find((e) => e.path === raw) ?? null;
+  },
+  (_get, set, value: EmulatorVersion | string) => {
+    set(atomSelectedVersionRaw, typeof value === "string" ? value : value.path);
+  },
+);
 
 export const atomRemoteList = atomWithTauriStore("config.json", "remote_list", {
-  initialValue: ["shadps4-emu/shadPS4"],
+  initialValue: [oficialRepo],
   mergeInitial: false,
 });
 

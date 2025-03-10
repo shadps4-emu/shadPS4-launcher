@@ -20,18 +20,24 @@ export function atomWithTauriStore<T>(
     initialValue,
     onMount = initialValue,
     mergeInitial = true,
-  }: {
-    initialValue?: T;
-    onMount?: T | (() => Promise<T> | T);
-    mergeInitial?: boolean;
-  },
+  }:
+    | {
+        initialValue: T;
+        onMount?: T | (() => Promise<T> | T);
+        mergeInitial?: boolean;
+      }
+    | {
+        initialValue?: T;
+        onMount: T | (() => Promise<T> | T);
+        mergeInitial?: boolean;
+      },
 ) {
   const getInitialValue = async () => {
     const initialProm =
       typeof onMount === "function"
         ? (onMount as () => Promise<T> | T)()
         : onMount;
-    if (!initialProm) {
+    if (initialProm == null) {
       throw new Error("Initial value or onMount must be defined");
     }
     const initial: T = await Promise.resolve(initialProm);
@@ -59,7 +65,7 @@ export function atomWithTauriStore<T>(
     void Promise.resolve(getInitialValue()).then(setAtom);
   };
 
-  return atom<T | null, T[], void>(
+  return atom<T | null, [T], void>(
     (get) => get(baseAtom),
     (get, set, update: SetStateAction<T | null>) => {
       const newValue =
