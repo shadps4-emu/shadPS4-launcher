@@ -28,3 +28,15 @@ export async function extractZip(zipPath: string, extractPath: string) {
     extractPath,
   });
 }
+
+export async function startGameProcess(
+  exe: string,
+  workingDir: string,
+  gameBinary: string,
+) {
+  return await invoke("start_emu_process_cmd", {
+    exe,
+    wd: workingDir,
+    gameBinary,
+  });
+}

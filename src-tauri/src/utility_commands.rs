@@ -1,7 +1,7 @@
 use std::{fs, fs::File, io, path::Path};
 
 use anyhow_tauri::IntoTAResult;
-use tauri_plugin_fs::SafeFilePath;
+use tauri_plugin_fs::FilePath;
 use zip::ZipArchive;
 
 fn extract_zip_internal(zip_path: &Path, extract_path: &Path) -> anyhow::Result<()> {
@@ -43,14 +43,15 @@ fn extract_zip_internal(zip_path: &Path, extract_path: &Path) -> anyhow::Result<
 }
 
 #[tauri::command]
-pub fn extract_zip(
-    zip_path: SafeFilePath,
-    extract_path: SafeFilePath,
-) -> anyhow_tauri::TAResult<()> {
+pub fn extract_zip(zip_path: FilePath, extract_path: FilePath) -> anyhow_tauri::TAResult<()> {
     let zip_path = zip_path
         .as_path()
         .ok_or(anyhow::anyhow!("zip_path is not a valid path"))
         .into_ta_result()?;
-    extract_zip_internal(zip_path, extract_path.as_path().unwrap())?;
+    let extract_path = extract_path
+        .as_path()
+        .ok_or(anyhow::anyhow!("extract_path is not a valid path"))
+        .into_ta_result()?;
+    extract_zip_internal(zip_path, extract_path)?;
     Ok(())
 }

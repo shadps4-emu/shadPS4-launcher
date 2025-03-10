@@ -2,14 +2,17 @@ import CN from "@/assets/flags/cn.svg";
 import EU from "@/assets/flags/eu.svg";
 import JP from "@/assets/flags/jp.svg";
 import US from "@/assets/flags/us.svg";
+import { startGame } from "@/handlers/run_emu";
 import { type GameEntry, atomGameLibrary } from "@/store/game-library";
 import { gamepadActiveAtom } from "@/store/gamepad";
 import { atomGamesPath } from "@/store/paths";
+import { atomSelectedVersion } from "@/store/version-manager";
 import { exists, mkdir } from "@tauri-apps/plugin-fs";
 import { openPath } from "@tauri-apps/plugin-opener";
 import { useAtom, useStore } from "jotai";
 import { CircleHelp, Globe, ImageOff, Play } from "lucide-react";
-import { Suspense, useCallback, useMemo } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import GamepadIcon from "./gamepad-icon";
 import { ScrollArea } from "./ui/scroll-area";
 import { Skeleton } from "./ui/skeleton";
@@ -41,20 +44,47 @@ function Flag({
 
 function GameBox({ game, isFirst }: { game: GameEntry; isFirst?: boolean }) {
   const isGamepad = useAtom(gamepadActiveAtom);
+  const store = useStore();
+
+  const [clickCount, setClickCount] = useState<number>(0);
 
   const openGame = useCallback(
     () =>
       void (async () => {
-        // TODO Run the game
+        setClickCount(0);
+        const selectEmu = store.get(atomSelectedVersion);
+        if (!selectEmu) {
+          toast.warning("No emulator selected");
+          return;
+        }
+        await startGame(selectEmu, game.path);
+        toast.success("Game started");
       })(),
-    [game],
+    [game, store],
   );
+
+  const onClick = () => {
+    setClickCount((prev) => prev + 1);
+  };
+
+  const onBlur = () => {
+    setClickCount(0);
+  };
+
+  useEffect(() => {
+    if (clickCount >= 3) {
+      setClickCount(0);
+      toast.info("Do a double click to start the game");
+    }
+  }, [clickCount]);
 
   return (
     <div
       key={game.id}
       className="group aspect-square h-auto w-full cursor-pointer overflow-hidden rounded-lg bg-zinc-800 transition-transform stack focus-within:scale-110 hover:scale-110"
       onDoubleClick={openGame}
+      onClick={onClick}
+      onBlur={onBlur}
       data-gamepad-selectable
       tabIndex={0}
     >
@@ -105,7 +135,7 @@ function Grid() {
       const path = store.get(atomGamesPath);
       if (path) {
         if (!(await exists(path))) {
-          await mkdir(path);
+          await mkdir(path, { recursive: true });
         }
         await openPath(path);
       }

@@ -1,5 +1,6 @@
 mod file_format;
 mod utility_commands;
+mod emu_process;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -7,6 +8,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             file_format::psf::js::read_psf,
             utility_commands::extract_zip,
+            emu_process::start_emu_process_cmd
         ])
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_upload::init())

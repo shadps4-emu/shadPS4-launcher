@@ -1,4 +1,5 @@
 import { atomModalConfigIsOpen, oficialRepo } from "@/store/common";
+import { refreshGameLibrary } from "@/store/game-library";
 import {
   atomInstalledVersions,
   atomModalVersionManagerIsOpen,
@@ -30,7 +31,6 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Tooltip, TooltipContent } from "./ui/tooltip";
-import { refreshGameLibrary } from "@/store/game-library";
 
 function VersionSelector() {
   const [isOpen, setIsOpen] = useState(false);
