@@ -2,12 +2,13 @@ import { installNewVersion } from "@/handlers/version-manager";
 import { atomEmuInstallsPath } from "@/store/paths";
 import {
   atomAvailableVersions,
+  atomInstalledVersions,
   atomModalVersionManagerIsOpen,
   type RemoteEmulatorVersion,
 } from "@/store/version-manager";
 import { format } from "date-fns";
 import { useAtom, useAtomValue, useStore } from "jotai";
-import { CircleSlash, Plus } from "lucide-react";
+import { Check, CircleSlash, Plus } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -56,6 +57,59 @@ function VersionTableRow({
   );
 }
 
+function DownloadButton({
+  version: v,
+  onClick,
+}: {
+  version: RemoteEmulatorVersion;
+  onClick: () => void;
+}) {
+  const installedVersions = useAtomValue(atomInstalledVersions);
+
+  const alreadyInstalled = installedVersions.some(
+    (e) => e.repo == v.repo && e.version == v.version,
+  );
+
+  if (alreadyInstalled) {
+    return (
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger asChild>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="cursor-default hover:bg-inherit"
+          >
+            {" "}
+            <Check />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <span>Already Installed</span>
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  if (v.notSupported) {
+    <Tooltip delayDuration={0}>
+      <TooltipTrigger asChild>
+        <Button size="icon" variant="outline" disabled>
+          <CircleSlash />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        <span>Not Supported In Your Platform</span>
+      </TooltipContent>
+    </Tooltip>;
+  }
+
+  return (
+    <Button size="icon" variant="outline" onClick={onClick}>
+      <Plus />
+    </Button>
+  );
+}
+
 function AddNewVersion() {
   const { data, isLoading, error } = useAtomValue(atomAvailableVersions);
   const rootInstallPath = useAtomValue(atomEmuInstallsPath);
@@ -95,26 +149,7 @@ function AddNewVersion() {
               prePelease={v.prerelease}
             >
               <TableCell>
-                {v.notSupported ? (
-                  <Tooltip delayDuration={0}>
-                    <TooltipTrigger>
-                      <Button size="icon" variant="outline" disabled>
-                        <CircleSlash />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <span>Not Supported In Your Platform</span>
-                    </TooltipContent>
-                  </Tooltip>
-                ) : (
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    onClick={() => install(v)}
-                  >
-                    <Plus></Plus>
-                  </Button>
-                )}
+                <DownloadButton version={v} onClick={() => install(v)} />
               </TableCell>
             </VersionTableRow>
           ))}
@@ -136,6 +171,8 @@ function AddNewVersion() {
 export function VersionManagerModal() {
   const [isOpen, setIsOpen] = useAtom(atomModalVersionManagerIsOpen);
   const [isNew, setIsNew] = useState(false);
+
+  const installedVersions = useAtomValue(atomInstalledVersions);
 
   useEffect(() => {
     if (!isOpen) {
@@ -171,24 +208,16 @@ export function VersionManagerModal() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <VersionTableRow
-                    source="shadps4-emu/shadPS4"
-                    date="03/09/2025"
-                    version="a711f4d"
-                    prePelease
-                  />
-                  <VersionTableRow
-                    source="shadps4-emu/shadPS4"
-                    date="12/25/2024"
-                    version="v0.6.0"
-                    release="parapoly"
-                  />
-                  <VersionTableRow
-                    source="shadps4-emu/shadPS4"
-                    date="01/25/2025"
-                    version="v0.5.0"
-                    release="squidwars"
-                  />
+                  {installedVersions.map((v, i) => (
+                    <VersionTableRow
+                      key={i}
+                      source={v.repo}
+                      date={format(v.date, "PP")}
+                      version={v.version}
+                      release={v.name}
+                      prePelease={v.prerelease}
+                    />
+                  ))}
                 </TableBody>
               </Table>
             </div>

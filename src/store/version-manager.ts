@@ -1,8 +1,13 @@
+import { readConfig } from "@/handlers/version-manager";
 import { atomWithTauriStore } from "@/utils/jotai/tauri-store";
+import { join } from "@tauri-apps/api/path";
+import { readDir } from "@tauri-apps/plugin-fs";
 import { platform } from "@tauri-apps/plugin-os";
 import { atom } from "jotai";
 import { atomWithQuery } from "jotai-tanstack-query";
 import { Octokit } from "octokit";
+import { type JotaiStore } from ".";
+import { atomEmuInstallsPath } from "./paths";
 
 const currentPlatform = (() => {
   const p = platform();
@@ -64,7 +69,7 @@ export const atomAvailableVersions = atomWithQuery((get) => ({
               const asset = release.assets.find(
                 (e) =>
                   e.name.endsWith(".zip") &&
-                  e.name.includes("sdl") &&
+                  (e.name.includes("sdl") || !e.name.includes("qt")) &&
                   e.name.includes(currentPlatform),
               );
 
@@ -104,3 +109,28 @@ export const atomAvailableVersions = atomWithQuery((get) => ({
     ).flat();
   },
 }));
+
+const atomInstalledVersionsRefresh = atom(0);
+
+export function refreshInstalledVersion(s: JotaiStore) {
+  s.set(atomInstalledVersionsRefresh, (prev) => prev + 1);
+}
+
+export const atomInstalledVersions = atom(async (get) => {
+  get(atomInstalledVersionsRefresh);
+  const installationPath = get(atomEmuInstallsPath);
+  if (!installationPath) return [];
+
+  const dirList = (await readDir(installationPath)).filter(
+    (e) => e.isDirectory,
+  );
+
+  return (
+    await Promise.all(
+      dirList.map(async (dir) => {
+        const path = await join(installationPath, dir.name);
+        return await readConfig(path);
+      }),
+    )
+  ).filter((e) => e != null);
+});
