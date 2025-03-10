@@ -3,26 +3,22 @@ import "./App.css";
 import { ConfigModal } from "./components/config-modal";
 import { GameLibrary } from "./components/game-library";
 import { GamepadNavField } from "./components/gamepad-nav-field";
-import { Toolbar } from "./components/toolbar";
-import { ScrollArea } from "./components/ui/scroll-area";
-import { Spinner } from "./components/ui/spinner";
-import { VersionManagerModal } from "./components/version-manager-modal";
 import { LoadingScreen } from "./components/loading-overlay";
+import { Toolbar } from "./components/toolbar";
+import { VersionManagerModal } from "./components/version-manager-modal";
 
 function App() {
   return (
     <main
-      className="flex max-h-screen flex-col justify-stretch align-top"
+      className="flex h-screen max-h-screen flex-col justify-stretch align-top"
       onContextMenu={(e) => e.preventDefault()}
     >
       <Suspense fallback={<LoadingScreen />}>
         <ConfigModal />
         <VersionManagerModal />
-        <GamepadNavField>
+        <GamepadNavField className="flex h-full flex-col">
           <Toolbar />
-          <ScrollArea type="scroll" className="z-20">
-            <GameLibrary />
-          </ScrollArea>
+          <GameLibrary />
         </GamepadNavField>
       </Suspense>
     </main>

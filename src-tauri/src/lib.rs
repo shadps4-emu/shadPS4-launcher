@@ -8,6 +8,7 @@ pub fn run() {
             file_format::psf::js::read_psf,
             utility_commands::extract_zip,
         ])
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_upload::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_shell::init())

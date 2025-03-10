@@ -7,14 +7,18 @@
   ],
   "permissions": [
     "core:default",
+    "dialog:allow-open",
     "fs:allow-copy-file",
     "fs:allow-exists",
+    "fs:allow-mkdir",
     "fs:allow-read-dir",
     "fs:allow-read-file",
     "fs:allow-read-text-file",
     "fs:allow-resource-read-recursive",
     "fs:allow-write-file",
     "fs:allow-write-text-file",
+    "opener:allow-open-path",
+    "opener:allow-reveal-item-in-dir",
     "opener:default",
     "os:default",
     "store:default",
@@ -30,6 +34,12 @@
           "path": "$RESOURCE/mock/**/*"
         }
       ]
+    },
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [{
+        "path": "**/*"
+      }]
     }
   ]
 }

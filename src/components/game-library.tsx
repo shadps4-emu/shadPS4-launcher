@@ -2,12 +2,16 @@ import CN from "@/assets/flags/cn.svg";
 import EU from "@/assets/flags/eu.svg";
 import JP from "@/assets/flags/jp.svg";
 import US from "@/assets/flags/us.svg";
-import { type GameEntry, gameLibrary } from "@/store/game-library";
+import { type GameEntry, atomGameLibrary } from "@/store/game-library";
 import { gamepadActiveAtom } from "@/store/gamepad";
-import { useAtom } from "jotai";
+import { atomGamesPath } from "@/store/paths";
+import { exists, mkdir } from "@tauri-apps/plugin-fs";
+import { openPath } from "@tauri-apps/plugin-opener";
+import { useAtom, useStore } from "jotai";
 import { CircleHelp, Globe, ImageOff, Play } from "lucide-react";
 import { Suspense, useCallback, useMemo } from "react";
 import GamepadIcon from "./gamepad-icon";
+import { ScrollArea } from "./ui/scroll-area";
 import { Skeleton } from "./ui/skeleton";
 
 function Flag({
@@ -93,26 +97,52 @@ function GameBox({ game, isFirst }: { game: GameEntry; isFirst?: boolean }) {
 }
 
 function Grid() {
-  const [games] = useAtom(gameLibrary);
+  const [games] = useAtom(atomGameLibrary);
+  const store = useStore();
+
+  if (games.length === 0) {
+    async function openGameFolder() {
+      const path = store.get(atomGamesPath);
+      if (path) {
+        if (!(await exists(path))) {
+          await mkdir(path);
+        }
+        await openPath(path);
+      }
+    }
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div
+          className="flex h-[150px] w-[300px] cursor-pointer flex-col items-center justify-center rounded-md border border-dashed text-sm"
+          onClick={() => void openGameFolder()}
+        >
+          <span>No game found :(</span>
+          <span>Click here to open game folder</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 p-8">
-      {games.map((game, index) => (
-        <GameBox key={game.path} game={game} isFirst={index === 0} />
-      ))}
-    </div>
+    <ScrollArea type="scroll" className="z-20 flex-1">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 p-8">
+        {games.map((game, index) => (
+          <GameBox key={game.path} game={game} isFirst={index === 0} />
+        ))}
+      </div>
+    </ScrollArea>
   );
 }
 
 function GridSkeleton() {
   return (
-    <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-10">
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 overflow-hidden p-8">
       {Array(50)
         .fill(0)
         .map((_, i) => (
           <Skeleton
             key={i}
-            className="relative aspect-square overflow-hidden rounded-md bg-zinc-800"
+            className="relative aspect-square rounded-md bg-zinc-800"
           />
         ))}
     </div>

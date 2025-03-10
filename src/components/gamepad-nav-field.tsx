@@ -1,6 +1,12 @@
 import { type GamepadButtonEvent } from "@/handlers/gamepad";
 import { useGamepadInputStack } from "@/hooks/useGamepadInputStack";
-import { type PropsWithChildren, useCallback, useEffect, useRef } from "react";
+import {
+  type ComponentProps,
+  type PropsWithChildren,
+  useCallback,
+  useEffect,
+  useRef,
+} from "react";
 
 const BUTTON_MAP = {
   confirm: 0,
@@ -57,9 +63,9 @@ function distSquared({ x, y }: Point): number {
 }
 
 export function GamepadNavField({
-  children,
   zIndex,
-}: PropsWithChildren<Props>) {
+  ...props
+}: PropsWithChildren<Props & ComponentProps<"div">>) {
   const divRef = useRef<HTMLDivElement>(null);
   const availableElements = useRef(new Set<HTMLElement>());
 
@@ -207,5 +213,5 @@ export function GamepadNavField({
     return () => o.disconnect();
   }, [divRef]);
 
-  return <div ref={divRef}>{children}</div>;
+  return <div ref={divRef} {...props} />;
 }

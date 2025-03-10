@@ -135,7 +135,7 @@ export const atomAvailableVersions = atomWithQuery((get) => ({
   },
 }));
 
-const atomInstalledVersionsRefresh = atom(0);
+export const atomInstalledVersionsRefresh = atom(0);
 
 export function refreshInstalledVersion(s: JotaiStore) {
   s.set(atomInstalledVersionsRefresh, (prev) => prev + 1);

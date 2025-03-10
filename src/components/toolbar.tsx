@@ -4,7 +4,9 @@ import {
   atomModalVersionManagerIsOpen,
   atomSelectedVersion,
 } from "@/store/version-manager";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { cn } from "@/utils/ui";
+import { TooltipTrigger } from "@radix-ui/react-tooltip";
+import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import {
   Gamepad2,
   Pause,
@@ -14,7 +16,7 @@ import {
   Settings,
   Square,
 } from "lucide-react";
-import { useState } from "react";
+import { type ComponentProps, useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import {
@@ -27,6 +29,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { Tooltip, TooltipContent } from "./ui/tooltip";
+import { refreshGameLibrary } from "@/store/game-library";
 
 function VersionSelector() {
   const [isOpen, setIsOpen] = useState(false);
@@ -68,52 +72,64 @@ function VersionSelector() {
   );
 }
 
+function ToolbarButton({
+  className,
+  tooltip,
+  ...props
+}: ComponentProps<typeof Button> & { tooltip?: string }) {
+  const content = (
+    <button
+      className={cn(
+        "rounded-md p-2 *:size-6 focus-within:bg-muted hover:bg-muted",
+        className,
+      )}
+      data-gamepad-selectable
+      {...props}
+    />
+  );
+  if (!tooltip) {
+    return content;
+  }
+  return (
+    <Tooltip delayDuration={0}>
+      <TooltipTrigger asChild>{content}</TooltipTrigger>
+      <TooltipContent>{tooltip}</TooltipContent>
+    </Tooltip>
+  );
+}
+
 export function Toolbar() {
   const setConfigModalOpen = useSetAtom(atomModalConfigIsOpen);
+  const store = useStore();
 
   return (
     <div className="sticky top-0 z-30 flex justify-between bg-secondary p-3">
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <button
-            className="rounded-md p-2 focus-within:bg-muted hover:bg-muted"
-            data-gamepad-selectable
-          >
+          <ToolbarButton>
             <Play className="h-6 w-6" />
-          </button>
-          <div className="flex gap-1">
-            <button
-              className="rounded-md p-2 focus-within:bg-muted hover:bg-muted"
-              data-gamepad-selectable
-            >
-              <Pause className="h-6 w-6" />
-            </button>
-            <button
-              className="rounded-md p-2 focus-within:bg-muted hover:bg-muted"
-              data-gamepad-selectable
-            >
-              <Square className="h-6 w-6" />
-            </button>
-          </div>
-          <button
-            className="rounded-md p-2 focus-within:bg-muted hover:bg-muted"
-            data-gamepad-selectable
+          </ToolbarButton>
+          <ToolbarButton>
+            <Pause className="h-6 w-6" />
+          </ToolbarButton>
+          <ToolbarButton>
+            <Square className="h-6 w-6" />
+          </ToolbarButton>
+          <ToolbarButton
+            tooltip="Refresh Game Library"
+            onClick={() => refreshGameLibrary(store)}
           >
             <RotateCcw className="h-6 w-6" />
-          </button>
-          <button
-            className="rounded-md p-2 focus-within:bg-muted hover:bg-muted"
-            data-gamepad-selectable
+          </ToolbarButton>
+          <ToolbarButton
+            tooltip="Settings"
             onClick={() => setConfigModalOpen(true)}
           >
             <Settings className="h-6 w-6" />
-          </button>
-          <button
-            className="rounded-md p-2 focus-within:bg-muted hover:bg-muted"
-            data-gamepad-selectable
-          >
+          </ToolbarButton>
+          <ToolbarButton>
             <Gamepad2 className="h-6 w-6" />
-          </button>
+          </ToolbarButton>
           <VersionSelector />
         </div>
       </div>

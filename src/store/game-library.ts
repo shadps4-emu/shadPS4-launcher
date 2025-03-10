@@ -3,6 +3,7 @@ import { convertFileSrc } from "@tauri-apps/api/core";
 import { BaseDirectory, basename, join } from "@tauri-apps/api/path";
 import { exists, readDir, readTextFile } from "@tauri-apps/plugin-fs";
 import { atom } from "jotai";
+import { type JotaiStore } from ".";
 import { atomGamesPath } from "./paths";
 
 export interface GameEntry {
@@ -15,7 +16,9 @@ export interface GameEntry {
   sfo?: PSF;
 }
 
-export const gameLibrary = atom(async (get) => {
+const atomGameLibraryRefresh = atom(0);
+export const atomGameLibrary = atom(async (get) => {
+  get(atomGameLibraryRefresh);
   if (import.meta.env.VITE_USE_MOCK) {
     await new Promise((resolve) => {
       // simulate some loading
@@ -104,3 +107,7 @@ export const gameLibrary = atom(async (get) => {
     }),
   );
 });
+
+export function refreshGameLibrary(s: JotaiStore) {
+  s.set(atomGameLibraryRefresh, (prev) => prev + 1);
+}
