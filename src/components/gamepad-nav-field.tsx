@@ -8,7 +8,7 @@ import {
   useRef,
 } from "react";
 
-const BUTTON_MAP = {
+export const BUTTON_MAP = {
   confirm: 0,
   back: 1,
   extra: 2,
@@ -18,6 +18,20 @@ const BUTTON_MAP = {
   dpad_left: 14,
   dpad_right: 15,
 } as const;
+
+export const BUTTON_MAP_REVERSE = {
+  0: "confirm",
+  1: "back",
+  2: "extra",
+  3: "options",
+  12: "dpad_up",
+  13: "dpad_down",
+  14: "dpad_left",
+  15: "dpad_right",
+} as const;
+
+export type GamepadButtons =
+  (typeof BUTTON_MAP_REVERSE)[keyof typeof BUTTON_MAP_REVERSE];
 
 const SELECTABLE_DATA_ATTR = "data-gamepad-selectable";
 const SELECTION_ANGLE = (60 * Math.PI) / 180;

@@ -1,9 +1,9 @@
-import { type GamepadButtons } from "@/providers/Gamepad";
 import { createAbort } from "@/utils/events";
 import { useEffect, useState } from "react";
 
-import { CircleHelp } from "lucide-react";
 import { cn } from "@/utils/ui";
+import { CircleHelp } from "lucide-react";
+import { type GamepadButtons } from "./gamepad-nav-field";
 
 export interface GamepadIconProps {
   icon: GamepadButtons;

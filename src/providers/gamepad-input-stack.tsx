@@ -5,11 +5,10 @@ import {
 } from "@/handlers/gamepad";
 import {
   createContext,
-  type PropsWithChildren,
   useCallback,
   useEffect,
   useRef,
-  useState,
+  type PropsWithChildren,
 } from "react";
 
 type Callback = (e: GamepadButtonEvent) => void;
