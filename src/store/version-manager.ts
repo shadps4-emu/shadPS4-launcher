@@ -1,7 +1,7 @@
 import { readConfig } from "@/handlers/version-manager";
 import { atomWithTauriStore } from "@/utils/jotai/tauri-store";
 import { join } from "@tauri-apps/api/path";
-import { readDir } from "@tauri-apps/plugin-fs";
+import { exists, readDir } from "@tauri-apps/plugin-fs";
 import { platform } from "@tauri-apps/plugin-os";
 import { atom } from "jotai";
 import { atomWithQuery } from "jotai-tanstack-query";
@@ -145,6 +145,8 @@ export const atomInstalledVersions = atom(async (get) => {
   get(atomInstalledVersionsRefresh);
   const installationPath = get(atomEmuInstallsPath);
   if (!installationPath) return [];
+
+  if (!(await exists(installationPath))) return [];
 
   const dirList = (await readDir(installationPath)).filter(
     (e) => e.isDirectory,

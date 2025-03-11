@@ -81,7 +81,7 @@ function GameBox({ game, isFirst }: { game: GameEntry; isFirst?: boolean }) {
   return (
     <div
       key={game.id}
-      className="group aspect-square h-auto w-full cursor-pointer overflow-hidden rounded-lg bg-zinc-800 transition-transform stack focus-within:scale-110 hover:scale-110"
+      className="group aspect-square h-auto w-full max-w-[200px] cursor-pointer overflow-hidden rounded-lg bg-zinc-800 transition-transform stack focus-within:scale-110 hover:scale-110"
       onDoubleClick={openGame}
       onClick={onClick}
       onBlur={onBlur}
