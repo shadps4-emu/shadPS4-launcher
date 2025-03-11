@@ -19,13 +19,13 @@ fn extract_zip_internal(zip_path: &Path, extract_path: &Path) -> anyhow::Result<
         let final_path = extract_path.join(inner_path);
 
         if file.is_dir() {
-            fs::create_dir_all(final_path)?;
+            fs::create_dir_all(&final_path)?;
         } else {
             if let Some(p) = final_path.parent() {
                 if !p.exists() {}
                 fs::create_dir_all(p)?
             }
-            let mut out_file = File::create(final_path)?;
+            let mut out_file = File::create(&final_path)?;
             io::copy(&mut file, &mut out_file)?;
         }
 
