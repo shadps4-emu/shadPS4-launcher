@@ -1,23 +1,14 @@
-import { TooltipTrigger } from "@radix-ui/react-tooltip";
-import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
-import {
-    Gamepad2,
-    Pause,
-    Play,
-    RotateCcw,
-    Search,
-    Settings,
-    Square,
-} from "lucide-react";
-import { type ComponentProps, useState } from "react";
 import { atomModalConfigIsOpen, oficialRepo } from "@/store/common";
-import { refreshGameLibrary } from "@/store/game-library";
 import {
     atomInstalledVersions,
     atomModalVersionManagerIsOpen,
     atomSelectedVersion,
 } from "@/store/version-manager";
 import { cn } from "@/utils/ui";
+import { TooltipTrigger } from "@radix-ui/react-tooltip";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { Gamepad2, Pause, Play, Search, Settings, Square } from "lucide-react";
+import { type ComponentProps, useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import {
@@ -103,7 +94,6 @@ function ToolbarButton({
 
 export function Toolbar() {
     const setConfigModalOpen = useSetAtom(atomModalConfigIsOpen);
-    const store = useStore();
 
     return (
         <div className="sticky top-0 z-30 flex justify-between bg-secondary p-3">
@@ -117,12 +107,6 @@ export function Toolbar() {
                     </ToolbarButton>
                     <ToolbarButton>
                         <Square className="h-6 w-6" />
-                    </ToolbarButton>
-                    <ToolbarButton
-                        onClick={() => refreshGameLibrary(store)}
-                        tooltip="Refresh Game Library"
-                    >
-                        <RotateCcw className="h-6 w-6" />
                     </ToolbarButton>
                     <ToolbarButton
                         onClick={() => setConfigModalOpen(true)}
