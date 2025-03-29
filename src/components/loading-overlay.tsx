@@ -1,21 +1,39 @@
+import { atomDownloadingOverlay } from "@/store/common";
 import { cn } from "@/utils/ui";
+import { useAtomValue } from "jotai";
 import { Progress } from "./ui/progress";
 import { Spinner } from "./ui/spinner";
-import { useAtomValue } from "jotai";
-import { atomDownloadingOverlay } from "@/store/common";
 
 interface LoadingProps {
   message?: string;
   percent?: number;
   progress?: number;
   total?: number;
+  format?: keyof typeof progressFormats;
 }
+
+const progressFormats = {
+  data: (v: number) => {
+    if (v > 1024 * 1024 * 1024) {
+      return `${(v / (1024 * 1024 * 1024)).toFixed(2)}GB`;
+    }
+    if (v > 1024 * 1024) {
+      return `${(v / (1024 * 1024)).toFixed(2)}MB`;
+    }
+    if (v > 1024) {
+      return `${(v / 1024).toFixed(2)}KB`;
+    }
+    return `${v}B`;
+  },
+  "": (v: number) => v.toString(),
+} as const;
 
 export function LoadingScreen({
   message,
   percent,
   progress,
   total,
+  format,
 }: LoadingProps) {
   let indicator;
   let subText;
@@ -30,11 +48,13 @@ export function LoadingScreen({
     indicator = <Spinner size="large" />;
   }
 
+  const fmt = progressFormats[format || ""];
+
   if (typeof progress !== "undefined") {
     if (typeof total !== "undefined") {
-      subText = `${progress}/${total}`;
+      subText = `${fmt(progress)}/${fmt(total)}`;
     } else {
-      subText = `${progress}`;
+      subText = `${fmt(progress)}`;
     }
   } else if (typeof percent !== "undefined") {
     subText = `${percent}%`;
@@ -76,6 +96,9 @@ export function LoadingOverlay() {
   }
   if ("total" in value) {
     props.total = value.total;
+  }
+  if ("format" in value) {
+    props.format = value.format;
   }
 
   return <LoadingScreen message={value.message} {...props} />;

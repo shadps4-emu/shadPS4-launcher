@@ -9,7 +9,7 @@ export const atomDownloadingOverlay = atom<
       message?: string;
     } & (
       | { percent: number }
-      | { progress: number; total?: number }
+      | { progress: number; total?: number; format?: "data" }
       | { progress: "infinity" }
     ))
   | null

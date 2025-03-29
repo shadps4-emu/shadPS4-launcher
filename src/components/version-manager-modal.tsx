@@ -208,16 +208,24 @@ export function VersionManagerModal() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {installedVersions.map((v, i) => (
-                    <VersionTableRow
-                      key={i}
-                      source={v.repo}
-                      date={format(v.date, "PP")}
-                      version={v.version}
-                      release={v.name}
-                      prePelease={v.prerelease}
-                    />
-                  ))}
+                  {installedVersions.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center">
+                        No version installed
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    installedVersions.map((v, i) => (
+                      <VersionTableRow
+                        key={i}
+                        source={v.repo}
+                        date={format(v.date, "PP")}
+                        version={v.version}
+                        release={v.name}
+                        prePelease={v.prerelease}
+                      />
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>

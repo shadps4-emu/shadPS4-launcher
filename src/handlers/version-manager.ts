@@ -64,6 +64,7 @@ export async function installNewVersion(
               message: "Downloading",
               progress: progressTotal,
               total,
+              format: "data",
             }
           : { message: "Downloading", progress: "infinity" },
       );
