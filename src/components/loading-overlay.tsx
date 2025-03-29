@@ -62,8 +62,8 @@ export function LoadingScreen({
 
   return (
     <>
-      <div className="fixed inset-0 z-[70] overflow-hidden bg-secondary opacity-70"></div>
-      <div className="fixed inset-0 z-[70] flex h-screen w-screen flex-col items-center justify-center overflow-hidden text-secondary-foreground">
+      <div className="fixed inset-0 z-70 overflow-hidden bg-secondary opacity-70"></div>
+      <div className="fixed inset-0 z-70 flex h-screen w-screen flex-col items-center justify-center overflow-hidden text-secondary-foreground">
         {message && <span className="text-xl">{message}</span>}
         <div
           className={cn("mt-2 flex h-12 flex-col", {
