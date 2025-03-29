@@ -8,21 +8,21 @@ import { Toolbar } from "./components/toolbar";
 import { VersionManagerModal } from "./components/version-manager-modal";
 
 function App() {
-  return (
-    <main
-      className="flex h-screen max-h-screen flex-col justify-stretch align-top"
-      onContextMenu={(e) => e.preventDefault()}
-    >
-      <Suspense fallback={<LoadingScreen />}>
-        <ConfigModal />
-        <VersionManagerModal />
-        <GamepadNavField className="flex h-full flex-col">
-          <Toolbar />
-          <GameLibrary />
-        </GamepadNavField>
-      </Suspense>
-    </main>
-  );
+    return (
+        <main
+            className="flex h-screen max-h-screen flex-col justify-stretch align-top"
+            onContextMenu={(e) => e.preventDefault()}
+        >
+            <Suspense fallback={<LoadingScreen />}>
+                <ConfigModal />
+                <VersionManagerModal />
+                <GamepadNavField className="flex h-full flex-col">
+                    <Toolbar />
+                    <GameLibrary />
+                </GamepadNavField>
+            </Suspense>
+        </main>
+    );
 }
 
 export default App;

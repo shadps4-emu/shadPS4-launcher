@@ -1,0 +1,135 @@
+{
+    "$schema": "https://next.biomejs.dev/schemas/2.0.0-beta/schema.json",
+    "vcs": {
+        "enabled": true,
+        "clientKind": "git",
+        "useIgnoreFile": true,
+    },
+    "files": {
+        "ignoreUnknown": false,
+        "includes": ["**/*.tsx", "**/*.jsx", "!dist/**", "!src-tauri"],
+    },
+    "assist": {
+        "enabled": true,
+        "actions": {
+            "recommended": true,
+            "source": {
+                "useSortedAttributes": "on",
+            },
+        },
+    },
+    "formatter": {
+        "enabled": true,
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineEnding": "lf",
+    },
+    "linter": {
+        "enabled": true,
+        "rules": {
+            "recommended": true,
+            "complexity": {
+                "noUselessThisAlias": "error",
+                "noUselessTypeConstraint": "error",
+                "useArrowFunction": "off",
+                "useLiteralKeys": "error",
+                "useOptionalChain": "error",
+            },
+            "correctness": {
+                "noConstAssign": "error",
+                "noGlobalObjectCalls": "off",
+                "noInvalidBuiltinInstantiation": "off",
+                "noInvalidConstructorSuper": "off",
+                "noNewSymbol": "off",
+                "noSetterReturn": "off",
+                "noUndeclaredVariables": "off",
+                "noUnreachable": "off",
+                "noUnreachableSuper": "off",
+                "noUnusedVariables": "error",
+                "noUnusedImports": "error",
+                "useArrayLiterals": "off",
+                "useExhaustiveDependencies": "warn",
+                "useHookAtTopLevel": "error",
+            },
+            "style": {
+                "noArguments": "error",
+                "noInferrableTypes": "error",
+                "noNamespace": "error",
+                "useAsConstAssertion": "error",
+                "useBlockStatements": "warn",
+                "useConsistentArrayType": "error",
+                "useConst": "error",
+                "useForOf": "error",
+                "useImportType": "error",
+                "useShorthandFunctionType": "error",
+                "useThrowOnlyError": "error",
+                "useFilenamingConvention": {
+                    "level": "error",
+                    "options": {
+                        "strictCase": true,
+                        "requireAscii": true,
+                        "filenameCases": ["kebab-case"],
+                    },
+                },
+            },
+            "suspicious": {
+                "noClassAssign": "off",
+                "noDuplicateClassMembers": "off",
+                "noDuplicateObjectKeys": "off",
+                "noDuplicateParameters": "off",
+                "noEmptyBlockStatements": "error",
+                "noExplicitAny": "error",
+                "noExtraNonNullAssertion": "error",
+                "noVar": "error",
+                "noFunctionAssign": "off",
+                "noImportAssign": "off",
+                "noMisleadingInstantiator": "error",
+                "noRedeclare": "off",
+                "noUnsafeDeclarationMerging": "error",
+                "noUnsafeNegation": "off",
+                "useAwait": "error",
+                "useGetterReturn": "off",
+                "useNamespaceKeyword": "error",
+            },
+            "nursery": {
+                "useSortedClasses": "warn",
+            },
+            "a11y": {
+                "useKeyWithClickEvents": "off",
+            },
+        },
+    },
+    "javascript": {
+        "formatter": {
+            "quoteStyle": "double",
+            "semicolons": "always",
+            "trailingCommas": "all",
+        },
+        "globals": [],
+    },
+    "json": {
+        "formatter": {
+            "trailingCommas": "all",
+        },
+    },
+    "overrides": [
+        {
+            "includes": ["src/hooks/**/*.tsx"],
+            "linter": {
+                "rules": {
+                    "style": {
+                        "useFilenamingConvention": {
+                            "level": "error",
+                            "options": {
+                                "strictCase": true,
+                                "requireAscii": true,
+                                "match": "use.*",
+                                "filenameCases": ["camelCase"],
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    ],
+}
