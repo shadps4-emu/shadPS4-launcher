@@ -29,6 +29,7 @@ tauri-plugin-fs = { version = "2", features = ["watch"] }
 tauri-plugin-opener = "2"
 tauri-plugin-os = "2"
 tauri-plugin-shell = "2"
+tauri-plugin-single-instance = "2"
 tauri-plugin-store = "2"
 tauri-plugin-upload = { version = "2.2.1", features = ["rustls-tls"] }
 thiserror = "2.0.11"
