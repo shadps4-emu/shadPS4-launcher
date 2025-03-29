@@ -12,8 +12,8 @@
     "app": {
         "windows": [
             {
-                "title": "shadps4-launcher",
-                "width": 800,
+                "title": "ShadPS4 Launcher",
+                "width": 930,
                 "height": 600
             }
         ],
