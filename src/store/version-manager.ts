@@ -166,6 +166,7 @@ export const atomInstalledVersions = atom(async (get) => {
 	let unsub: Promise<() => void> | undefined;
 	defaultStore.sub(atomEmuInstallsPath, () => {
 		unsub?.then((e) => e());
+		unsub = undefined;
 
 		const path = defaultStore.get(atomEmuInstallsPath);
 		if (path) {

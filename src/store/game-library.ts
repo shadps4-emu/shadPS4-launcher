@@ -1,9 +1,9 @@
 import { type PSF, readPsf } from "@/lib/native-calls";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { BaseDirectory, basename, join } from "@tauri-apps/api/path";
-import { exists, readDir, readTextFile } from "@tauri-apps/plugin-fs";
+import { exists, readDir, readTextFile, watch } from "@tauri-apps/plugin-fs";
 import { atom } from "jotai";
-import { type JotaiStore } from ".";
+import { defaultStore, type JotaiStore } from ".";
 import { atomGamesPath } from "./paths";
 
 export interface GameEntry {
@@ -111,3 +111,18 @@ export const atomGameLibrary = atom(async (get) => {
 export function refreshGameLibrary(s: JotaiStore) {
   s.set(atomGameLibraryRefresh, (prev) => prev + 1);
 }
+
+(() => {
+  let unsub: Promise<() => void> | undefined;
+	defaultStore.sub(atomGamesPath, () => {
+		unsub?.then((e) => e());
+    unsub = undefined;
+
+		const path = defaultStore.get(atomGamesPath);
+		if (path) {
+			unsub = watch(path, () => {
+				refreshGameLibrary(defaultStore);
+			});
+		}
+	});
+})()
