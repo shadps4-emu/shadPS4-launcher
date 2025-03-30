@@ -33,6 +33,7 @@ tauri-plugin-single-instance = "2"
 tauri-plugin-store = "2"
 tauri-plugin-upload = { version = "2.2.1", features = ["rustls-tls"] }
 thiserror = "2.0.11"
+tokio = { version = "1.44.1", features = ["full"] }
 zerocopy = { version = "0.8.17", features = ["std"] }
 zerocopy-derive = "0.8.17"
 zip = "2.2.3"

@@ -97,6 +97,7 @@ impl PSF {
         Default::default()
     }
 
+    #[allow(dead_code)]
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
         let metadata = metadata(&path)?;
         let f = File::open(&path)?;
