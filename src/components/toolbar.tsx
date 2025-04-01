@@ -124,7 +124,7 @@ export function Toolbar() {
                 </div>
             </div>
             <div className="flex-1" />
-            <RunningGameIcon />
+            <RunningGameIcon autoOpen />
             <VersionSelector />
         </div>
     );

@@ -1,8 +1,13 @@
-import { type Atom, useAtomValue } from "jotai";
-import { type ComponentProps, type ReactElement, useState } from "react";
-import { createPortal } from "react-dom";
 import { atomRunningGames, type RunningGame } from "@/store/running-games";
 import { cn } from "@/utils/ui";
+import { type Atom, useAtomValue } from "jotai";
+import {
+    type ComponentProps,
+    type ReactElement,
+    useEffect,
+    useState,
+} from "react";
+import { createPortal } from "react-dom";
 import { RunningGamePage } from "./running-game-page";
 
 function SingleGameIcon({
@@ -32,33 +37,42 @@ function SingleGameIcon({
     );
 }
 
-export function RunningGameIcon() {
+type Props = {
+    autoOpen?: boolean;
+};
+
+export function RunningGameIcon({ autoOpen }: Props) {
     const runningGames = useAtomValue(atomRunningGames);
     const [showingGame, setShowingGame] = useState<ReactElement>();
 
-    if (runningGames.length === 0) {
-        return <></>;
-    }
-
-    const first = runningGames[0]!;
-
-    const openPage = () => {
+    const openPage = (atomGame: Atom<RunningGame>) => {
         setShowingGame(
             <RunningGamePage
-                atomRunningGame={first}
+                atomRunningGame={atomGame}
                 requestClose={() => setShowingGame(undefined)}
             />,
         );
     };
 
+    const first = runningGames[0];
+
+    // biome-ignore lint/correctness/useExhaustiveDependencies: Not necessary
+    useEffect(() => {
+        if (autoOpen && first) {
+            openPage(first);
+        }
+    }, [autoOpen, first]);
+
     return (
         <div className="center relative mr-2 size-10 p-1">
             {showingGame && createPortal(showingGame, document.body)}
-            <SingleGameIcon
-                atomRunningGame={first}
-                className="cursor-pointer shadow-lg transition-shadow hover:shadow-xl"
-                onClick={openPage}
-            />
+            {first && (
+                <SingleGameIcon
+                    atomRunningGame={first}
+                    className="cursor-pointer shadow-lg transition-shadow hover:shadow-xl"
+                    onClick={() => openPage(first)}
+                />
+            )}
         </div>
     );
 }

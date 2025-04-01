@@ -103,7 +103,9 @@ function GameBox({ game, isFirst }: { game: GameEntry; isFirst?: boolean }) {
                     src={game.cover}
                 />
             ) : (
-                <ImageOff className="col-span-full row-span-full h-8 w-full self-center" />
+                <div className="center col-span-full row-span-full">
+                    <ImageOff className="h-8" />
+                </div>
             )}
 
             <div className="grid grid-cols-3 grid-rows-3 bg-black/50 opacity-0 backdrop-blur-[2px] transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
