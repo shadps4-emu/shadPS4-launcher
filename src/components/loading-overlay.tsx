@@ -63,7 +63,7 @@ export function LoadingScreen({
 
     return (
         <>
-            <div className="fixed inset-0 z-70 overflow-hidden bg-secondary opacity-70" />
+            <div className="fixed inset-0 z-70 overflow-hidden bg-secondary/95 backdrop-blur-md" />
             <div className="fixed inset-0 z-70 flex h-screen w-screen flex-col items-center justify-center overflow-hidden text-secondary-foreground">
                 {message && <span className="text-xl">{message}</span>}
                 <div

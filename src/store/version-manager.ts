@@ -8,6 +8,7 @@ import { Octokit } from "octokit";
 import { toast } from "sonner";
 import { readConfig } from "@/handlers/version-manager";
 import { stringifyError } from "@/utils/error";
+import { atomKeepLast } from "@/utils/jotai/atom-keep-last";
 import { atomWithTauriStore } from "@/utils/jotai/tauri-store";
 import { defaultStore, type JotaiStore } from ".";
 import { oficialRepo } from "./common";
@@ -164,7 +165,7 @@ export function refreshInstalledVersion(s: JotaiStore) {
     s.set(atomInstalledVersionsRefresh, (prev) => prev + 1);
 }
 
-export const atomInstalledVersions = atom(async (get) => {
+export const atomInstalledVersionsRaw = atom(async (get) => {
     get(atomInstalledVersionsRefresh);
     const installationPath = get(atomEmuInstallsPath);
 
@@ -191,6 +192,7 @@ export const atomInstalledVersions = atom(async (get) => {
         )
     ).filter((e) => e != null);
 });
+export const atomInstalledVersions = atomKeepLast(atomInstalledVersionsRaw);
 
 (() => {
     let unsub: (() => void) | undefined;

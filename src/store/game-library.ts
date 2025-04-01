@@ -8,11 +8,12 @@ import {
     watch,
 } from "@tauri-apps/plugin-fs";
 import { atom } from "jotai";
+import { toast } from "sonner";
 import { type PSF, readPsf } from "@/lib/native/psf";
+import { stringifyError } from "@/utils/error";
+import { atomKeepLast } from "@/utils/jotai/atom-keep-last";
 import { defaultStore, type JotaiStore } from ".";
 import { atomGamesPath } from "./paths";
-import { toast } from "sonner";
-import { stringifyError } from "@/utils/error";
 
 export interface GameEntry {
     path: string;
@@ -25,7 +26,7 @@ export interface GameEntry {
 }
 
 const atomGameLibraryRefresh = atom(0);
-export const atomGameLibrary = atom(async (get) => {
+export const atomGameLibraryRaw = atom(async (get) => {
     get(atomGameLibraryRefresh);
     if (import.meta.env.VITE_USE_MOCK) {
         await new Promise((resolve) => {
@@ -118,6 +119,7 @@ export const atomGameLibrary = atom(async (get) => {
         }),
     );
 });
+export const atomGameLibrary = atomKeepLast(atomGameLibraryRaw);
 
 export function refreshGameLibrary(s: JotaiStore) {
     s.set(atomGameLibraryRefresh, (prev) => prev + 1);
