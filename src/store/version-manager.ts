@@ -167,6 +167,9 @@ export function refreshInstalledVersion(s: JotaiStore) {
 export const atomInstalledVersions = atom(async (get) => {
     get(atomInstalledVersionsRefresh);
     const installationPath = get(atomEmuInstallsPath);
+
+    console.log("Refreshing installed version");
+
     if (!installationPath) {
         return [];
     }
@@ -199,7 +202,16 @@ export const atomInstalledVersions = atom(async (get) => {
             const path = defaultStore.get(atomEmuInstallsPath);
             if (path) {
                 await mkdir(path, { recursive: true });
-                unsub = await watch(path, () => {
+                unsub = await watch(path, (e) => {
+                    if (typeof e.type === "object" && "access" in e.type) {
+                        if (
+                            e.type.access.kind === "open" &&
+                            e.paths.length === 1 &&
+                            e.paths[0] === path
+                        ) {
+                            return;
+                        }
+                    }
                     refreshInstalledVersion(defaultStore);
                 });
             }

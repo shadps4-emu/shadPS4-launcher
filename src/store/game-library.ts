@@ -39,6 +39,8 @@ export const atomGameLibrary = atom(async (get) => {
         return JSON.parse(data) as GameEntry[];
     }
 
+    console.log("Refreshing game library");
+
     const knownPaths: string[] = [];
 
     async function isGame(path: string) {
@@ -130,13 +132,22 @@ export function refreshGameLibrary(s: JotaiStore) {
         try {
             const path = defaultStore.get(atomGamesPath);
             if (path) {
-                await mkdir(path, { recursive: true});
-                unsub = await watch(path, () => {
+                await mkdir(path, { recursive: true });
+                unsub = await watch(path, (e) => {
+                    if (typeof e.type === "object" && "access" in e.type) {
+                        if (
+                            e.type.access.kind === "open" &&
+                            e.paths.length === 1 &&
+                            e.paths[0] === path
+                        ) {
+                            return;
+                        }
+                    }
                     refreshGameLibrary(defaultStore);
                 });
             }
         } catch (e: unknown) {
-            console.error(e)
+            console.error(e);
             toast.error("Error watching games path: " + stringifyError(e));
         }
     });
