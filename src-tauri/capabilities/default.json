@@ -6,6 +6,7 @@
     "permissions": [
         "core:default",
         "dialog:allow-open",
+        "fs:default",
         "fs:allow-copy-file",
         "fs:allow-exists",
         "fs:allow-mkdir",
@@ -26,14 +27,6 @@
         {
             "identifier": "fs:scope",
             "allow": ["**/*"]
-        },
-        {
-            "identifier": "fs:read-files",
-            "allow": [
-                {
-                    "path": "$RESOURCE/mock/**/*"
-                }
-            ]
         },
         {
             "identifier": "opener:allow-open-path",
