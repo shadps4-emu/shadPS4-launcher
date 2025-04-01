@@ -1,11 +1,13 @@
 import { join } from "@tauri-apps/api/path";
-import { exists, readDir, watch } from "@tauri-apps/plugin-fs";
+import { exists, mkdir, readDir, watch } from "@tauri-apps/plugin-fs";
 import { platform } from "@tauri-apps/plugin-os";
 import { atom } from "jotai";
 import { unwrap } from "jotai/utils";
 import { atomWithQuery } from "jotai-tanstack-query";
 import { Octokit } from "octokit";
+import { toast } from "sonner";
 import { readConfig } from "@/handlers/version-manager";
+import { stringifyError } from "@/utils/error";
 import { atomWithTauriStore } from "@/utils/jotai/tauri-store";
 import { defaultStore, type JotaiStore } from ".";
 import { oficialRepo } from "./common";
@@ -188,16 +190,22 @@ export const atomInstalledVersions = atom(async (get) => {
 });
 
 (() => {
-    let unsub: Promise<() => void> | undefined;
-    defaultStore.sub(atomEmuInstallsPath, () => {
-        unsub?.then((e) => e());
+    let unsub: (() => void) | undefined;
+    defaultStore.sub(atomEmuInstallsPath, async () => {
+        unsub?.();
         unsub = undefined;
 
-        const path = defaultStore.get(atomEmuInstallsPath);
-        if (path) {
-            unsub = watch(path, () => {
-                refreshInstalledVersion(defaultStore);
-            });
+        try {
+            const path = defaultStore.get(atomEmuInstallsPath);
+            if (path) {
+                await mkdir(path, { recursive: true });
+                unsub = await watch(path, () => {
+                    refreshInstalledVersion(defaultStore);
+                });
+            }
+        } catch (e: unknown) {
+            console.error(e);
+            toast.error("Error watching install path: " + stringifyError(e));
         }
     });
 })();

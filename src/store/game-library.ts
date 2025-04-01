@@ -1,10 +1,18 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { BaseDirectory, basename, join } from "@tauri-apps/api/path";
-import { exists, readDir, readTextFile, watch } from "@tauri-apps/plugin-fs";
+import {
+    exists,
+    mkdir,
+    readDir,
+    readTextFile,
+    watch,
+} from "@tauri-apps/plugin-fs";
 import { atom } from "jotai";
 import { type PSF, readPsf } from "@/lib/native/psf";
 import { defaultStore, type JotaiStore } from ".";
 import { atomGamesPath } from "./paths";
+import { toast } from "sonner";
+import { stringifyError } from "@/utils/error";
 
 export interface GameEntry {
     path: string;
@@ -114,16 +122,22 @@ export function refreshGameLibrary(s: JotaiStore) {
 }
 
 (() => {
-    let unsub: Promise<() => void> | undefined;
-    defaultStore.sub(atomGamesPath, () => {
-        unsub?.then((e) => e());
+    let unsub: (() => void) | undefined;
+    defaultStore.sub(atomGamesPath, async () => {
+        unsub?.();
         unsub = undefined;
 
-        const path = defaultStore.get(atomGamesPath);
-        if (path) {
-            unsub = watch(path, () => {
-                refreshGameLibrary(defaultStore);
-            });
+        try {
+            const path = defaultStore.get(atomGamesPath);
+            if (path) {
+                await mkdir(path, { recursive: true});
+                unsub = await watch(path, () => {
+                    refreshGameLibrary(defaultStore);
+                });
+            }
+        } catch (e: unknown) {
+            console.error(e)
+            toast.error("Error watching games path: " + stringifyError(e));
         }
     });
 })();
