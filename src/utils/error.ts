@@ -6,8 +6,10 @@ export function stringifyError(e: unknown): string {
         const msg = e.message;
         if (typeof msg === "string") {
             return msg;
+        } else if (typeof msg === "number" || typeof msg === "boolean") {
+            return String(msg);
         }
-        return String(msg);
+        return JSON.stringify(msg);
     }
 
     return JSON.stringify(e);

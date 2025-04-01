@@ -2,7 +2,7 @@ import { exists, mkdir } from "@tauri-apps/plugin-fs";
 import { openPath } from "@tauri-apps/plugin-opener";
 import { useAtom, useStore } from "jotai";
 import { CircleHelp, Globe, ImageOff, Play } from "lucide-react";
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import CN from "@/assets/flags/cn.svg";
 import EU from "@/assets/flags/eu.svg";
@@ -13,9 +13,11 @@ import { atomGameLibrary, type GameEntry } from "@/store/game-library";
 import { gamepadActiveAtom } from "@/store/gamepad";
 import { atomGamesPath } from "@/store/paths";
 import { atomSelectedVersion } from "@/store/version-manager";
+import { stringifyError } from "@/utils/error";
 import GamepadIcon from "./gamepad-icon";
 import { ScrollArea } from "./ui/scroll-area";
 import { Skeleton } from "./ui/skeleton";
+import { Spinner } from "./ui/spinner";
 
 function Flag({
     sfo,
@@ -43,25 +45,27 @@ function Flag({
 }
 
 function GameBox({ game, isFirst }: { game: GameEntry; isFirst?: boolean }) {
+    const [isPending, startTransaction] = useTransition();
+
     const isGamepad = useAtom(gamepadActiveAtom);
     const store = useStore();
 
     const [clickCount, setClickCount] = useState<number>(0);
 
-    const openGame = useCallback(
-        () =>
-            void (async () => {
+    const openGame = () =>
+        startTransaction(async () => {
+            try {
                 setClickCount(0);
                 const selectEmu = store.get(atomSelectedVersion);
                 if (!selectEmu) {
                     toast.warning("No emulator selected");
                     return;
                 }
-                await startGame(selectEmu, game.path);
-                toast.success("Game started");
-            })(),
-        [game, store],
-    );
+                await startGame(selectEmu, game);
+            } catch (e: unknown) {
+                toast.error("Unknown error: " + stringifyError(e));
+            }
+        });
 
     const onClick = () => {
         setClickCount((prev) => prev + 1);
@@ -80,13 +84,18 @@ function GameBox({ game, isFirst }: { game: GameEntry; isFirst?: boolean }) {
 
     return (
         <div
-            className="group stack aspect-square h-auto w-full max-w-[200px] cursor-pointer overflow-hidden rounded-lg bg-zinc-800 transition-transform focus-within:scale-110 hover:scale-110"
+            className="relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform focus-within:scale-110 hover:scale-110"
             data-gamepad-selectable
             key={game.id}
             onBlur={onBlur}
             onClick={onClick}
             onDoubleClick={openGame}
         >
+            {isPending && (
+                <div className="center absolute inset-0 bg-black/60">
+                    <Spinner />
+                </div>
+            )}
             {game.cover ? (
                 <img
                     alt={game.title}
@@ -160,7 +169,7 @@ function Grid() {
 
     return (
         <ScrollArea className="z-20 flex-1" type="scroll">
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 p-8">
+            <div className="flex flex-row flex-wrap justify-center gap-4 p-8">
                 {games.map((game, index) => (
                     <GameBox
                         game={game}

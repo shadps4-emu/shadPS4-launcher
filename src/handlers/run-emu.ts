@@ -2,11 +2,14 @@ import { appDataDir, join } from "@tauri-apps/api/path";
 import { exists, mkdir } from "@tauri-apps/plugin-fs";
 import { platform } from "@tauri-apps/plugin-os";
 import { toast } from "sonner";
-import { startGameProcess } from "@/lib/native-calls";
+import { GameProcess } from "@/lib/native/game-process";
+import type { GameEntry } from "@/store/game-library";
+import { addRunningGame } from "@/store/running-games";
 import type { EmulatorVersion } from "@/store/version-manager";
 import { stringifyError } from "@/utils/error";
 
-export async function startGame(emu: EmulatorVersion, gameDir: string) {
+export async function startGame(emu: EmulatorVersion, game: GameEntry) {
+    const gameDir = game.path;
     const gameBinary = await join(gameDir, "eboot.bin");
     if (!(await exists(gameBinary))) {
         const msg = "Game binary (eboot.bin) not found";
@@ -31,7 +34,13 @@ export async function startGame(emu: EmulatorVersion, gameDir: string) {
     }
 
     try {
-        await startGameProcess(emuBinary, workDir, gameBinary);
+        const process = await GameProcess.startGame(
+            emuBinary,
+            workDir,
+            gameBinary,
+        );
+        addRunningGame(game, process);
+        toast.success("Game started");
     } catch (e) {
         const msg = `Couldn't start the game: ${stringifyError(e)}`;
         console.error(msg);

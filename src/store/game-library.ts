@@ -2,7 +2,7 @@ import { convertFileSrc } from "@tauri-apps/api/core";
 import { BaseDirectory, basename, join } from "@tauri-apps/api/path";
 import { exists, readDir, readTextFile, watch } from "@tauri-apps/plugin-fs";
 import { atom } from "jotai";
-import { type PSF, readPsf } from "@/lib/native-calls";
+import { type PSF, readPsf } from "@/lib/native/psf";
 import { defaultStore, type JotaiStore } from ".";
 import { atomGamesPath } from "./paths";
 

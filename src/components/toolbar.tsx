@@ -1,3 +1,7 @@
+import { TooltipTrigger } from "@radix-ui/react-tooltip";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { Gamepad2, Search, Settings } from "lucide-react";
+import { type ComponentProps, useState } from "react";
 import { atomModalConfigIsOpen, oficialRepo } from "@/store/common";
 import {
     atomInstalledVersions,
@@ -5,10 +9,7 @@ import {
     atomSelectedVersion,
 } from "@/store/version-manager";
 import { cn } from "@/utils/ui";
-import { TooltipTrigger } from "@radix-ui/react-tooltip";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Gamepad2, Pause, Play, Search, Settings, Square } from "lucide-react";
-import { type ComponentProps, useState } from "react";
+import { RunningGameIcon } from "./running-game-icon";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import {
@@ -38,15 +39,18 @@ function VersionSelector() {
             open={isOpen}
             value={selectVersion?.path}
         >
-            <SelectTrigger className="w-[180px] border-secondary-foreground">
-                <SelectValue placeholder="No version selected" />
+            <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="No version selected">
+                    {selectVersion &&
+                        `${selectVersion.version} ${selectVersion.name} ${selectVersion.repo !== oficialRepo ? selectVersion.repo : ""}`}
+                </SelectValue>
             </SelectTrigger>
             <SelectContent>
                 <SelectGroup>
                     <SelectLabel>Emulator Version</SelectLabel>
                     {installedVersions.map((v) => (
                         <SelectItem key={v.path} value={v.path}>
-                            {v.version}{" "}
+                            {v.version} {v.name}{" "}
                             {v.repo !== oficialRepo && `(${v.repo})`}
                         </SelectItem>
                     ))}
@@ -98,16 +102,16 @@ export function Toolbar() {
     return (
         <div className="sticky top-0 z-30 flex justify-between bg-secondary p-3">
             <div className="flex items-center gap-4">
+                <div className="relative">
+                    <Search className="absolute top-2.5 left-2 size-4 text-muted-foreground" />
+                    <Input
+                        className="w-full pl-8"
+                        data-gamepad-selectable="CENTER_LEFT"
+                        placeholder="Search..."
+                        type="search"
+                    />
+                </div>
                 <div className="flex items-center gap-2">
-                    <ToolbarButton>
-                        <Play className="h-6 w-6" />
-                    </ToolbarButton>
-                    <ToolbarButton>
-                        <Pause className="h-6 w-6" />
-                    </ToolbarButton>
-                    <ToolbarButton>
-                        <Square className="h-6 w-6" />
-                    </ToolbarButton>
                     <ToolbarButton
                         onClick={() => setConfigModalOpen(true)}
                         tooltip="Settings"
@@ -117,20 +121,11 @@ export function Toolbar() {
                     <ToolbarButton>
                         <Gamepad2 className="h-6 w-6" />
                     </ToolbarButton>
-                    <VersionSelector />
                 </div>
             </div>
-            <div className="max-w-md flex-1">
-                <div className="relative">
-                    <Search className="absolute top-2.5 left-2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        className="w-full border-muted bg-muted pl-8"
-                        data-gamepad-selectable="CENTER_LEFT"
-                        placeholder="Search..."
-                        type="search"
-                    />
-                </div>
-            </div>
+            <div className="flex-1" />
+            <RunningGameIcon />
+            <VersionSelector />
         </div>
     );
 }

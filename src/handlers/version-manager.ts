@@ -3,7 +3,7 @@ import { exists, readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { download } from "@tauri-apps/plugin-upload";
 import { toast } from "sonner";
 import * as superjson from "superjson";
-import { extractZip } from "@/lib/native-calls";
+import { extractZip } from "@/lib/native/common";
 import { defaultStore } from "@/store";
 import { atomDownloadingOverlay } from "@/store/common";
 import {
