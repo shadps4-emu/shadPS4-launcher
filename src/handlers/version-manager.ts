@@ -1,5 +1,10 @@
 import { join, tempDir } from "@tauri-apps/api/path";
-import { exists, readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
+import {
+    exists,
+    readDir,
+    readTextFile,
+    writeTextFile,
+} from "@tauri-apps/plugin-fs";
 import { download } from "@tauri-apps/plugin-upload";
 import { toast } from "sonner";
 import * as superjson from "superjson";
@@ -26,9 +31,13 @@ export async function readConfig(
     if (!(await exists(metaPath))) {
         return null;
     }
-    const data = await readTextFile(metaPath);
+    const rawData = await readTextFile(metaPath);
+    const data = superjson.parse<EmulatorVersion>(rawData);
+    if (!("binaryName" in data)) { // FIXME Remove in the future. Backwards compatibility
+        return null;
+    }
     return {
-        ...superjson.parse<EmulatorVersion>(data),
+        ...data,
         path,
     };
 }
@@ -75,7 +84,24 @@ export async function installNewVersion(
             progress: "infinity",
         });
         await extractZip(tmpPath, installPath);
-        await writeConfig({ ...version, path: installPath });
+
+        const files = await readDir(installPath);
+        const executable = files.find(
+            (e) => e.isFile && /shadps4/i.test(e.name),
+        );
+
+        if (!executable) {
+            toast.error(
+                `Zip downloaded at ${installPath}, but couldn't find the binary inside`,
+            );
+            return;
+        }
+
+        await writeConfig({
+            ...version,
+            path: installPath,
+            binaryName: executable.name,
+        });
 
         defaultStore.set(atomDownloadingOverlay, null);
 
