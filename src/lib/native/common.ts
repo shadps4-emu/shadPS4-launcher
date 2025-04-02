@@ -6,3 +6,9 @@ export async function extractZip(zipPath: string, extractPath: string) {
         extractPath,
     });
 }
+
+export async function openPath(path: string) {
+    return await invoke("open_path", {
+        path,
+    });
+}

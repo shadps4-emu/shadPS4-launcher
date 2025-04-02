@@ -1,5 +1,4 @@
 import { exists, mkdir } from "@tauri-apps/plugin-fs";
-import { openPath } from "@tauri-apps/plugin-opener";
 import { useAtom, useStore } from "jotai";
 import { CircleHelp, Globe, ImageOff, Play } from "lucide-react";
 import { Suspense, useEffect, useMemo, useState, useTransition } from "react";
@@ -18,6 +17,7 @@ import GamepadIcon from "./gamepad-icon";
 import { ScrollArea } from "./ui/scroll-area";
 import { Skeleton } from "./ui/skeleton";
 import { Spinner } from "./ui/spinner";
+import { openPath } from "@/lib/native/common";
 
 function Flag({
     sfo,

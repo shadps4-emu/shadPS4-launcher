@@ -1,7 +1,9 @@
 use std::{fs, fs::File, io, path::Path};
 
 use anyhow_tauri::IntoTAResult;
+use tauri::{State, Wry};
 use tauri_plugin_fs::FilePath;
+use tauri_plugin_opener::Opener;
 use zip::ZipArchive;
 
 fn extract_zip_internal(zip_path: &Path, extract_path: &Path) -> anyhow::Result<()> {
@@ -54,4 +56,15 @@ pub fn extract_zip(zip_path: FilePath, extract_path: FilePath) -> anyhow_tauri::
         .into_ta_result()?;
     extract_zip_internal(zip_path, extract_path)?;
     Ok(())
+}
+
+#[tauri::command]
+pub fn open_path(
+    opener: State<Opener<Wry>, '_>,
+    path: String,
+) -> Result<(), tauri_plugin_opener::Error> {
+    #[cfg(target_os = "linux")]
+    return opener.open_path(path, Some("xdg-open"));
+    #[cfg(not(target_os = "linux"))]
+    return opener.open_path(path, None::<&str>);
 }
