@@ -29,7 +29,12 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_upload::init())
         .setup(|app| {
-            info!("Starting app");
+            let commit = option_env!("GIT_HASH");
+            if let Some(commit) = commit {
+                info!("Starting app. build git ref={}", commit);
+            } else {
+                info!("Starting app. Unknown build git ref");
+            }
             GameBridge::register(&app.handle());
             Ok(())
         })

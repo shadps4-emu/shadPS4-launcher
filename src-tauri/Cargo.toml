@@ -1,6 +1,6 @@
 [package]
 name = "shadps4-launcher"
-version = "0.1.0"
+version = "1.0.0"
 description = "ShadPS4 Launcher"
 authors = ["Vinicius Rangel <me@viniciusrangel.dev>"]
 edition = "2021"

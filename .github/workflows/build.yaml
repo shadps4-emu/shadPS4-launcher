@@ -1,10 +1,11 @@
 name: "publish"
 
 on:
-  workflow_dispatch:
   push:
-    branches:
-      - release
+    tags:
+      - 'app-v[0-9]+.[0-9]+.[0-9]+'
+
+concurrency: build
 
 jobs:
   publish-tauri:
@@ -24,8 +25,18 @@ jobs:
             args: ""
 
     runs-on: ${{ matrix.platform }}
+    environment: Release
     steps:
+      - run: |
+          git config --global core.autocrlf input
+          git config --global core.eol lf
       - uses: actions/checkout@v4
+
+      - name: Setup Biome
+        uses: biomejs/setup-biome@v2
+
+      - name: Run Biome
+        run: biome ci .
 
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
@@ -50,14 +61,22 @@ jobs:
 
       - name: install frontend dependencies
         run: bun install
+      
+      - name: Setup build variables
+        shell: bash
+        run: |
+          VERSION=$(echo "${GITHUB_REF_NAME}" | sed 's/app-v//')
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+
+          sed -i='' "s/0.0.0-dev/${VERSION}/" src-tauri/tauri.conf.json
 
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          GIT_HASH: ${{ github.sha }}
         with:
-          tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
+          tagName: ${{ github.ref_name }}
           releaseName: "App v__VERSION__"
           releaseBody: "See the assets to download this version and install."
-          releaseDraft: true
-          prerelease: false
           args: ${{ matrix.args }}

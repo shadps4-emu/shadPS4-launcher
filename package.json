@@ -1,7 +1,7 @@
 {
     "name": "shadps4-launcher",
     "private": true,
-    "version": "0.1.0",
+    "version": "1.0.0",
     "type": "module",
     "scripts": {
         "dev": "tauri dev --config ./src-tauri/tauri.dev.conf.json",
