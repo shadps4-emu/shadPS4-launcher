@@ -2,6 +2,29 @@ import { format } from "date-fns";
 import { useAtom, useAtomValue, useStore } from "jotai";
 import { Check, CircleSlash, Plus } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Spinner } from "@/components/ui/spinner";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { installNewVersion } from "@/handlers/version-manager";
 import { atomEmuInstallsPath } from "@/store/paths";
 import {
@@ -10,20 +33,6 @@ import {
     atomModalVersionManagerIsOpen,
     type RemoteEmulatorVersion,
 } from "@/store/version-manager";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { ScrollArea } from "./ui/scroll-area";
-import { Spinner } from "./ui/spinner";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "./ui/table";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 function VersionTableRow({
     source,

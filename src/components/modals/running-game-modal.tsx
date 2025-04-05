@@ -1,9 +1,13 @@
-import { type Atom, useAtomValue, useStore } from "jotai";
+import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { Maximize, Maximize2, Pause, Trash2, Volume2, X } from "lucide-react";
 import { useState } from "react";
-import { atomRunningGames, type RunningGame } from "@/store/running-games";
+import {
+    atomRunningGames,
+    atomShowingRunningGame,
+    type RunningGame,
+} from "@/store/running-games";
 import { cn } from "@/utils/ui";
-import { LogList } from "./log-list";
+import { LogList } from "../log-list";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -14,31 +18,31 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
-} from "./ui/alert-dialog";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
+} from "../ui/alert-dialog";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 import {
     Dialog,
     DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
-} from "./ui/dialog";
-import { Skeleton } from "./ui/skeleton";
+} from "../ui/dialog";
+import { Skeleton } from "../ui/skeleton";
 
-type Props = {
-    atomRunningGame: Atom<RunningGame>;
-    requestClose?: () => void;
-};
-
-export function RunningGamePage({ atomRunningGame, requestClose }: Props) {
+function RunningGameDialog({ runningGame }: { runningGame: RunningGame }) {
     const store = useStore();
-    const { game, process, atomRunning, atomLog } =
-        useAtomValue(atomRunningGame);
+    const setShowingGame = useSetAtom(atomShowingRunningGame);
+
+    const { game, process, atomRunning, atomLog } = runningGame;
     const runningFlag = useAtomValue(atomRunning);
     const isRunning = runningFlag === true;
 
     const [maximized, setMaximized] = useState(false);
+
+    const close = () => {
+        setShowingGame(null);
+    };
 
     const kill = () => {
         process.kill();
@@ -46,13 +50,13 @@ export function RunningGamePage({ atomRunningGame, requestClose }: Props) {
 
     const trash = () => {
         store.set(atomRunningGames, (prev) =>
-            prev.filter((e) => e !== atomRunningGame),
+            prev.filter((e) => e !== runningGame),
         );
-        requestClose?.();
+        close();
     };
 
     return (
-        <Dialog onOpenChange={requestClose} open>
+        <Dialog onOpenChange={close} open>
             <DialogContent
                 aria-describedby="running game console"
                 className={cn("flex flex-col gap-4", {
@@ -170,4 +174,14 @@ export function RunningGamePage({ atomRunningGame, requestClose }: Props) {
             </DialogContent>
         </Dialog>
     );
+}
+
+export function RunningGameModal() {
+    const showingGame = useAtomValue(atomShowingRunningGame);
+
+    if (!showingGame) {
+        return <></>;
+    }
+
+    return <RunningGameDialog runningGame={showingGame} />;
 }

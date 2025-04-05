@@ -20,23 +20,26 @@ export type RunningGame = {
     atomLog: Atom<Log>;
 };
 
-export const atomRunningGames = atom<Atom<RunningGame>[]>([]);
+export const atomRunningGames = atom<RunningGame[]>([]);
+export const atomShowingRunningGame = atom<RunningGame | null>(null);
 
-export const addRunningGame = (game: GameEntry, process: GameProcess) => {
+export const addRunningGame = (
+    game: GameEntry,
+    process: GameProcess,
+): RunningGame => {
     const atomRunning = atom<true | number>(true);
     const atomError = atom<string | null>(null);
     const atomLog = atom<Log>({ entries: [] });
 
-    defaultStore.set(atomRunningGames, (prev) => [
-        ...prev,
-        atom({
-            game: game,
-            process: process,
-            atomRunning,
-            atomError,
-            atomLog,
-        }),
-    ]);
+    const runningGame = {
+        game: game,
+        process: process,
+        atomRunning,
+        atomError,
+        atomLog,
+    } satisfies RunningGame;
+
+    defaultStore.set(atomRunningGames, (prev) => [...prev, runningGame]);
 
     process.onMessage = (ev) => {
         switch (ev.event) {
@@ -62,4 +65,6 @@ export const addRunningGame = (game: GameEntry, process: GameProcess) => {
                 break;
         }
     };
+
+    return runningGame;
 };

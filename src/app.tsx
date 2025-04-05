@@ -1,8 +1,9 @@
 import { Suspense } from "react";
-import { ConfigModal } from "./components/config-modal";
 import { LoadingScreen } from "./components/loading-overlay";
 import { MainPage } from "./components/main-page";
-import { VersionManagerModal } from "./components/version-manager-modal";
+import { ConfigModal } from "./components/modals/config-modal";
+import { RunningGameModal } from "./components/modals/running-game-modal";
+import { VersionManagerModal } from "./components/modals/version-manager-modal";
 
 import "./app.css";
 
@@ -15,6 +16,7 @@ export function App() {
             <Suspense fallback={<LoadingScreen />}>
                 <ConfigModal />
                 <VersionManagerModal />
+                <RunningGameModal />
                 <MainPage />
             </Suspense>
         </main>

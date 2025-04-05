@@ -5,11 +5,11 @@ import { toast } from "sonner";
 import { atomModalConfigIsOpen } from "@/store/common";
 import { atomGamesPath } from "@/store/paths";
 import { stringifyError } from "@/utils/error";
-import { Button } from "./ui/button";
-import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { Button } from "../ui/button";
+import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
 function PathConfig() {
     const [gamePath, setGamePath] = useAtom(atomGamesPath);
