@@ -56,8 +56,14 @@ export const atomGameLibraryRaw = atom(async (get) => {
         return false;
     }
 
-    async function discoverGame(path: string) {
+    async function discoverGame(path: string, recursionLevel: number) {
+        if (recursionLevel > 5) {
+            return;
+        }
         try {
+            if (path.endsWith("-UPDATE") || path.endsWith("-patch")) {
+                return;
+            }
             if (await isGame(path)) {
                 knownPaths.push(path);
                 return;
@@ -67,7 +73,10 @@ export const atomGameLibraryRaw = atom(async (get) => {
                     await readDir(path)
                 ).map(async (child) => {
                     if (child.isDirectory) {
-                        await discoverGame(await join(path, child.name));
+                        await discoverGame(
+                            await join(path, child.name),
+                            recursionLevel + 1,
+                        );
                     }
                 }),
             ));
@@ -80,14 +89,36 @@ export const atomGameLibraryRaw = atom(async (get) => {
     if (!v || !(await exists(v))) {
         return [];
     }
-    void (await discoverGame(v));
+    void (await discoverGame(v, 0));
 
     return await Promise.all(
-        knownPaths.map(async (path): Promise<GameEntry> => {
+        knownPaths.map(async (path): Promise<GameEntry | null> => {
             const b = await basename(path);
 
             const paramSfo = await join(path, "sce_sys", "param.sfo");
-            const sfo = await readPsf(paramSfo);
+
+            if (!(await exists(paramSfo))) {
+                return {
+                    path,
+                    id: "N/A - " + b,
+                    title: b,
+                    cover: null,
+                    version: "N/A",
+                    fw_version: "N/A",
+                };
+            }
+
+            let sfo: PSF;
+            try {
+                sfo = await readPsf(paramSfo);
+            } catch (e: unknown) {
+                console.error(
+                    "could not read sfo at:",
+                    paramSfo,
+                    stringifyError(e),
+                );
+                return null;
+            }
             const e = sfo.entries;
 
             let cover: string | null = await join(path, "sce_sys", "icon0.png");
@@ -117,7 +148,7 @@ export const atomGameLibraryRaw = atom(async (get) => {
                 sfo,
             };
         }),
-    );
+    ).then((e) => e.filter((e) => e != null));
 });
 export const atomGameLibrary = atomKeepLast(atomGameLibraryRaw);
 
