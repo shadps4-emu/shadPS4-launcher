@@ -24,7 +24,8 @@ pub async fn game_process_spawn(
             on_event.send(ev).expect("could not send game event to js");
         },
     )
-    .await.inspect_err(|e| error!("could not start the game: err={}", e))?;
+    .await
+    .inspect_err(|e| error!("could not start the game: err={}", e))?;
 
     Ok(p.pid())
 }

@@ -55,7 +55,8 @@ pub fn extract_zip(zip_path: FilePath, extract_path: FilePath) -> anyhow_tauri::
         .as_path()
         .ok_or(anyhow::anyhow!("extract_path is not a valid path"))
         .into_ta_result()?;
-    extract_zip_internal(zip_path, extract_path).inspect_err(|e| error!("could not extract zip: err={}", e))?;
+    extract_zip_internal(zip_path, extract_path)
+        .inspect_err(|e| error!("could not extract zip: err={}", e))?;
     Ok(())
 }
 
@@ -65,7 +66,7 @@ pub fn open_path(
     path: String,
 ) -> Result<(), tauri_plugin_opener::Error> {
     #[cfg(target_os = "linux")]
-    let r =  opener.open_path(&path, Some("xdg-open"));
+    let r = opener.open_path(&path, Some("xdg-open"));
     #[cfg(not(target_os = "linux"))]
     let r = opener.open_path(&path, None::<&str>);
     r.inspect_err(|e| error!("could not open explorer: path={}, err={}", &path, e))

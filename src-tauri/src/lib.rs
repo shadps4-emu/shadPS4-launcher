@@ -1,5 +1,5 @@
-use log::info;
 use crate::game_process::state::GameBridge;
+use log::info;
 use tauri::Manager;
 
 mod file_format;
@@ -16,6 +16,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_os::init())
+        .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_single_instance::init(|app, _, _| {
             info!("Requesting to open main window");
@@ -25,6 +26,7 @@ pub fn run() {
                 .set_focus();
         }))
         .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_upload::init())
         .setup(|app| {
             info!("Starting app");
