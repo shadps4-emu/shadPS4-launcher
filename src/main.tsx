@@ -11,29 +11,33 @@ import { setupForwardingConsole } from "./lib/native/forward-log";
 import { GamepadInputStackProvider } from "./providers/gamepad-input-stack";
 import { defaultStore } from "./store";
 
-await setupForwardingConsole();
-startGamepadHandler();
+async function start() {
+    await setupForwardingConsole();
+    startGamepadHandler();
 
-const queryClient = new QueryClient();
+    const queryClient = new QueryClient();
 
-const root = document.getElementById("root");
+    const root = document.getElementById("root");
 
-if (!root) {
-    throw new Error("Root element not found");
+    if (!root) {
+        throw new Error("Root element not found");
+    }
+
+    ReactDOM.createRoot(root).render(
+        <React.StrictMode>
+            <QueryClientProvider client={queryClient}>
+                <Jotai.Provider store={defaultStore}>
+                    <GamepadInputStackProvider>
+                        <TooltipProvider>
+                            <Toaster richColors />
+                            <LoadingOverlay />
+                            <App />
+                        </TooltipProvider>
+                    </GamepadInputStackProvider>
+                </Jotai.Provider>
+            </QueryClientProvider>
+        </React.StrictMode>,
+    );
 }
 
-ReactDOM.createRoot(root).render(
-    <React.StrictMode>
-        <QueryClientProvider client={queryClient}>
-            <Jotai.Provider store={defaultStore}>
-                <GamepadInputStackProvider>
-                    <TooltipProvider>
-                        <Toaster richColors />
-                        <LoadingOverlay />
-                        <App />
-                    </TooltipProvider>
-                </GamepadInputStackProvider>
-            </Jotai.Provider>
-        </QueryClientProvider>
-    </React.StrictMode>,
-);
+start();
