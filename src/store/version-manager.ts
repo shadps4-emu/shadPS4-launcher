@@ -38,7 +38,10 @@ export interface EmulatorVersion {
     prerelease: boolean;
 }
 
-export type RemoteEmulatorVersion = Omit<EmulatorVersion, "path" | "binaryName"> & {
+export type RemoteEmulatorVersion = Omit<
+    EmulatorVersion,
+    "path" | "binaryName"
+> & {
     url: string; // download url
     notSupported?: boolean; // no available for the current platform
 };

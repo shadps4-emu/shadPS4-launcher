@@ -1,5 +1,3 @@
-import { atomRunningGames, type RunningGame } from "@/store/running-games";
-import { cn } from "@/utils/ui";
 import { type Atom, useAtomValue } from "jotai";
 import {
     type ComponentProps,
@@ -8,6 +6,8 @@ import {
     useState,
 } from "react";
 import { createPortal } from "react-dom";
+import { atomRunningGames, type RunningGame } from "@/store/running-games";
+import { cn } from "@/utils/ui";
 import { RunningGamePage } from "./running-game-page";
 
 function SingleGameIcon({

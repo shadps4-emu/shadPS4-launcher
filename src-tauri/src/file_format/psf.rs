@@ -184,6 +184,7 @@ impl PSF {
 pub mod js {
     use crate::file_format::psf::PSF;
     use anyhow_tauri::IntoTAResult;
+    use log::error;
     use std::fs::metadata;
     use tauri::AppHandle;
     use tauri_plugin_fs::{FsExt, OpenOptions, SafeFilePath};
@@ -201,7 +202,8 @@ pub mod js {
 
         let mut psf = PSF::new();
         psf.last_write = metadata(&path)?.modified()?;
-        psf.read(&mut f)?;
+        psf.read(&mut f)
+            .inspect_err(|e| error!("error reading psf file: {}", e))?;
 
         Ok(psf)
     }

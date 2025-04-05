@@ -1,8 +1,8 @@
-import { atomRunningGames, type RunningGame } from "@/store/running-games";
-import { cn } from "@/utils/ui";
 import { type Atom, useAtomValue, useStore } from "jotai";
 import { Maximize, Maximize2, Pause, Trash2, Volume2, X } from "lucide-react";
 import { useState } from "react";
+import { atomRunningGames, type RunningGame } from "@/store/running-games";
+import { cn } from "@/utils/ui";
 import { LogList } from "./log-list";
 import {
     AlertDialog,

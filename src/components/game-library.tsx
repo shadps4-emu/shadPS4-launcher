@@ -8,6 +8,7 @@ import EU from "@/assets/flags/eu.svg";
 import JP from "@/assets/flags/jp.svg";
 import US from "@/assets/flags/us.svg";
 import { startGame } from "@/handlers/run-emu";
+import { openPath } from "@/lib/native/common";
 import { atomGameLibrary, type GameEntry } from "@/store/game-library";
 import { gamepadActiveAtom } from "@/store/gamepad";
 import { atomGamesPath } from "@/store/paths";
@@ -17,7 +18,6 @@ import GamepadIcon from "./gamepad-icon";
 import { ScrollArea } from "./ui/scroll-area";
 import { Skeleton } from "./ui/skeleton";
 import { Spinner } from "./ui/spinner";
-import { openPath } from "@/lib/native/common";
 
 function Flag({
     sfo,

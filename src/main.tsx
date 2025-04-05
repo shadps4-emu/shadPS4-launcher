@@ -7,9 +7,11 @@ import { LoadingOverlay } from "./components/loading-overlay";
 import { Toaster } from "./components/ui/sonner";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { startGamepadHandler } from "./handlers/gamepad";
+import { setupForwardingConsole } from "./lib/native/forward-log";
 import { GamepadInputStackProvider } from "./providers/gamepad-input-stack";
 import { defaultStore } from "./store";
 
+await setupForwardingConsole();
 startGamepadHandler();
 
 const queryClient = new QueryClient();

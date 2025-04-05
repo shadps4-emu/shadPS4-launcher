@@ -1,11 +1,11 @@
+import { appDataDir, join } from "@tauri-apps/api/path";
+import { exists, mkdir } from "@tauri-apps/plugin-fs";
+import { toast } from "sonner";
 import { GameProcess } from "@/lib/native/game-process";
 import type { GameEntry } from "@/store/game-library";
 import { addRunningGame } from "@/store/running-games";
 import type { EmulatorVersion } from "@/store/version-manager";
 import { stringifyError } from "@/utils/error";
-import { appDataDir, join } from "@tauri-apps/api/path";
-import { exists, mkdir } from "@tauri-apps/plugin-fs";
-import { toast } from "sonner";
 
 export async function startGame(emu: EmulatorVersion, game: GameEntry) {
     const gameDir = game.path;

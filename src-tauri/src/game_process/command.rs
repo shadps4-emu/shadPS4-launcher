@@ -3,6 +3,7 @@ use crate::game_process::GameBridgeState;
 use anyhow::anyhow;
 use anyhow_tauri::bail;
 use anyhow_tauri::IntoTAResult;
+use log::{debug, error};
 use tauri::ipc::Channel;
 use tauri_plugin_fs::FilePath;
 
@@ -23,7 +24,7 @@ pub async fn game_process_spawn(
             on_event.send(ev).expect("could not send game event to js");
         },
     )
-    .await?;
+    .await.inspect_err(|e| error!("could not start the game: err={}", e))?;
 
     Ok(p.pid())
 }
@@ -32,6 +33,7 @@ pub async fn game_process_spawn(
 pub async fn game_process_kill(state: GameBridgeState<'_>, pid: u32) -> anyhow_tauri::TAResult<()> {
     let proc_list = state.lock().await;
     let Some(proc) = proc_list.process_list.get(&pid) else {
+        debug!("process not found: pid={}", pid);
         bail!("pid not found");
     };
 

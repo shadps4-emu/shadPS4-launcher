@@ -33,7 +33,8 @@ export async function readConfig(
     }
     const rawData = await readTextFile(metaPath);
     const data = superjson.parse<EmulatorVersion>(rawData);
-    if (!("binaryName" in data)) { // FIXME Remove in the future. Backwards compatibility
+    if (!("binaryName" in data)) {
+        // FIXME Remove in the future. Backwards compatibility
         return null;
     }
     return {

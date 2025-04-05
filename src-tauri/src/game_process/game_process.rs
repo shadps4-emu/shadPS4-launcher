@@ -27,6 +27,7 @@ enum InnerCommand {
 #[derive(Clone)]
 pub struct GameProcess {
     pid: u32,
+    #[allow(dead_code)]
     sender: Arc<Mutex<Sender<GameCommand>>>,
     inner_sender: Arc<Mutex<Sender<InnerCommand>>>,
 }
