@@ -40,8 +40,6 @@ export const atomGameLibraryRaw = atom(async (get) => {
         return JSON.parse(data) as GameEntry[];
     }
 
-    console.log("Refreshing game library");
-
     const knownPaths: string[] = [];
 
     async function isGame(path: string) {
@@ -89,6 +87,9 @@ export const atomGameLibraryRaw = atom(async (get) => {
     if (!v || !(await exists(v))) {
         return [];
     }
+
+    console.log("Refreshing game library");
+
     void (await discoverGame(v, 0));
 
     return await Promise.all(

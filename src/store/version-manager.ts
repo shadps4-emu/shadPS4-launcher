@@ -1,15 +1,15 @@
-import { join } from "@tauri-apps/api/path";
-import { exists, mkdir, readDir, watch } from "@tauri-apps/plugin-fs";
-import { platform } from "@tauri-apps/plugin-os";
-import { atom } from "jotai";
-import { unwrap } from "jotai/utils";
-import { atomWithQuery } from "jotai-tanstack-query";
-import { Octokit } from "octokit";
-import { toast } from "sonner";
 import { readConfig } from "@/handlers/version-manager";
 import { stringifyError } from "@/utils/error";
 import { atomKeepLast } from "@/utils/jotai/atom-keep-last";
 import { atomWithTauriStore } from "@/utils/jotai/tauri-store";
+import { join } from "@tauri-apps/api/path";
+import { exists, mkdir, readDir, watch } from "@tauri-apps/plugin-fs";
+import { platform } from "@tauri-apps/plugin-os";
+import { atom } from "jotai";
+import { atomWithQuery } from "jotai-tanstack-query";
+import { unwrap } from "jotai/utils";
+import { Octokit } from "octokit";
+import { toast } from "sonner";
 import { defaultStore, type JotaiStore } from ".";
 import { oficialRepo } from "./common";
 import { atomEmuInstallsPath } from "./paths";
@@ -173,8 +173,6 @@ export const atomInstalledVersionsRaw = atom(async (get) => {
     get(atomInstalledVersionsRefresh);
     const installationPath = get(atomEmuInstallsPath);
 
-    console.log("Refreshing installed version");
-
     if (!installationPath) {
         return [];
     }
@@ -182,6 +180,8 @@ export const atomInstalledVersionsRaw = atom(async (get) => {
     if (!(await exists(installationPath))) {
         return [];
     }
+
+    console.log("Refreshing installed version");
 
     const dirList = (await readDir(installationPath)).filter(
         (e) => e.isDirectory,
