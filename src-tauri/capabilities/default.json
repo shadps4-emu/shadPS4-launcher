@@ -25,6 +25,7 @@
         "os:default",
         "process:default",
         "store:default",
+        "updater:default",
         "upload:default",
         {
             "identifier": "fs:scope",

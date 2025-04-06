@@ -89,16 +89,20 @@ export function LoadingOverlay() {
 
     const props: LoadingProps = {};
 
-    if ("percent" in value) {
+    if ("percent" in value && value.percent != null) {
         props.percent = value.percent;
     }
-    if ("progress" in value && value.progress !== "infinity") {
+    if (
+        "progress" in value &&
+        value.progress != null &&
+        value.progress !== "infinity"
+    ) {
         props.progress = value.progress;
     }
-    if ("total" in value) {
+    if ("total" in value && value.total != null) {
         props.total = value.total;
     }
-    if ("format" in value) {
+    if ("format" in value && value.format != null) {
         props.format = value.format;
     }
 

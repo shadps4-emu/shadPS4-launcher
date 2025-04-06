@@ -1,3 +1,4 @@
+import type { Update } from "@tauri-apps/plugin-updater";
 import { atom } from "jotai";
 
 export const oficialRepo = "shadps4-emu/shadPS4";
@@ -14,3 +15,5 @@ export const atomDownloadingOverlay = atom<
       ))
     | null
 >(null);
+
+export const atomUpdateAvailable = atom<Update | null>(null);
