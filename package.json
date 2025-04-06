@@ -61,6 +61,7 @@
         "@vitejs/plugin-react": "^4.3.4",
         "babel-plugin-react-compiler": "^19.0.0-beta-aeaed83-20250323",
         "eslint-plugin-react-compiler": "^19.0.0-beta-aeaed83-20250323",
+        "pre-commit": "^1.2.2",
         "tailwindcss": "^4.0.17",
         "tw-animate-css": "^1.2.5",
         "typescript": "~5.6.2",
@@ -68,6 +69,10 @@
     },
     "trustedDependencies": [
         "@biomejs/biome",
-        "@swc/core"
+        "@swc/core",
+        "pre-commit"
+    ],
+    "pre-commit": [
+        "ci"
     ]
 }
