@@ -44,5 +44,7 @@ export default defineConfig(async () => ({
     },
     build: {
         chunkSizeWarningLimit: Number.POSITIVE_INFINITY,
+        sourcemap: true,
+        minify: false,
     },
 }));
