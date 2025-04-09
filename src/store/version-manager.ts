@@ -181,7 +181,7 @@ export const atomInstalledVersionsRaw = atom(async (get) => {
         return [];
     }
 
-    console.log("Refreshing installed version");
+    console.info("Refreshing installed version");
 
     const dirList = (await readDir(installationPath)).filter(
         (e) => e.isDirectory,
@@ -207,7 +207,9 @@ export const atomInstalledVersions = atomKeepLast(atomInstalledVersionsRaw);
         try {
             const path = defaultStore.get(atomEmuInstallsPath);
             if (path) {
-                await mkdir(path, { recursive: true });
+                if (!(await exists(path))) {
+                    await mkdir(path, { recursive: true });
+                }
                 unsub = await watch(path, (e) => {
                     if (typeof e.type === "object" && "access" in e.type) {
                         if (

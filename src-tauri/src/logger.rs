@@ -1,7 +1,8 @@
+use log::kv::{Key, ToKey};
 use log::LevelFilter;
 use std::env;
 use tauri::plugin::TauriPlugin;
-use tauri::Runtime;
+use tauri::Wry;
 use tauri_plugin_log::fern::colors::{Color, ColoredLevelConfig};
 use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
 
@@ -61,9 +62,14 @@ fn parse_spec(spec: &str) -> ParseResult {
     result
 }
 
-pub fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
+pub fn build_log_plugin() -> TauriPlugin<Wry> {
+    let tz = tauri_plugin_log::TimezoneStrategy::UseLocal;
+    let format =
+        time::format_description::parse("[[[year]-[month]-[day]][[[hour]:[minute]:[second]]")
+            .unwrap();
+    let column_key = Key::from_str("column");
+
     let mut log_plugin = tauri_plugin_log::Builder::new()
-        .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
         .rotation_strategy(RotationStrategy::KeepAll)
         .max_file_size(1024 * 1024 * 32) // 32MB
         .targets([
@@ -102,6 +108,38 @@ pub fn build_log_plugin<R: Runtime>() -> TauriPlugin<R> {
             log_plugin = log_plugin.level(directive.level)
         }
     }
+
+    let log_plugin = log_plugin.format(move |out, message, record| {
+        let target = record.target();
+        if target.starts_with("webview") {
+            match (
+                record.file(),
+                record.line(),
+                record.key_values().get(column_key.to_key()),
+            ) {
+                (Some(file), Some(line), Some(column)) => {
+                    out.finish(format_args!(
+                        "{}[{}][webview {}:{}:{}] {}",
+                        tz.get_now().format(&format).unwrap(),
+                        record.level(),
+                        file,
+                        line,
+                        column,
+                        message
+                    ));
+                    return;
+                }
+                _ => {}
+            }
+        }
+        out.finish(format_args!(
+            "{}[{}][{}] {}",
+            tz.get_now().format(&format).unwrap(),
+            record.level(),
+            record.target(),
+            message
+        ))
+    });
 
     log_plugin.build()
 }

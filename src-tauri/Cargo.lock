@@ -4140,6 +4140,7 @@ dependencies = [
  "tauri-plugin-updater",
  "tauri-plugin-upload",
  "thiserror 2.0.12",
+ "time",
  "tokio",
  "zerocopy",
  "zerocopy-derive",

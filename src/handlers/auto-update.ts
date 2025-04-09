@@ -76,7 +76,7 @@ export async function installUpdate() {
         console.info("Update Installed. Restarting app");
         await relaunch();
     } catch (e: unknown) {
-        console.error(e);
+        console.error("download update error", e);
         toast.error("Error downloading update: " + stringifyError(e));
     }
 }

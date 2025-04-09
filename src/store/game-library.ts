@@ -43,15 +43,8 @@ export const atomGameLibraryRaw = atom(async (get) => {
     const knownPaths: string[] = [];
 
     async function isGame(path: string) {
-        const paramSfoPath = await join(path, "sce_sys", "param.sfo");
-        if (await exists(paramSfoPath)) {
-            return true;
-        }
         const eBootPath = await join(path, "eboot.bin");
-        if (await exists(eBootPath)) {
-            return true;
-        }
-        return false;
+        return await exists(eBootPath);
     }
 
     async function discoverGame(path: string, recursionLevel: number) {
@@ -66,88 +59,88 @@ export const atomGameLibraryRaw = atom(async (get) => {
                 knownPaths.push(path);
                 return;
             }
-            void (await Promise.all(
-                (
-                    await readDir(path)
-                ).map(async (child) => {
+            const children = await readDir(path);
+            await Promise.all(
+                children.map(async (child) => {
                     if (child.isDirectory) {
-                        await discoverGame(
-                            await join(path, child.name),
-                            recursionLevel + 1,
-                        );
+                        const childPath = await join(path, child.name);
+                        await discoverGame(childPath, recursionLevel + 1);
                     }
                 }),
-            ));
-        } catch (error) {
-            console.error(`Error discovering game: ${path}. ${error}`);
+            );
+        } catch (e: unknown) {
+            console.error(`Error discovering game at "${path}"`, e);
         }
     }
 
     const v = get(atomGamesPath);
-    if (!v || !(await exists(v))) {
+    if (typeof v !== "string" || !(await exists(v))) {
         return [];
     }
 
-    console.log("Refreshing game library");
+    console.info("Refreshing game library");
 
-    void (await discoverGame(v, 0));
+    await discoverGame(v, 0);
 
     return await Promise.all(
         knownPaths.map(async (path): Promise<GameEntry | null> => {
-            const b = await basename(path);
+            try {
+                const base = await basename(path);
 
-            const paramSfo = await join(path, "sce_sys", "param.sfo");
+                const paramSfo = await join(path, "sce_sys", "param.sfo");
 
-            if (!(await exists(paramSfo))) {
+                if (Math.random() > 0.9) {
+                    throw new Error("random stuff happened");
+                }
+
+                if (!(await exists(paramSfo))) {
+                    return {
+                        path,
+                        id: "N/A - " + base,
+                        title: base,
+                        cover: null,
+                        version: "N/A",
+                        fw_version: "N/A",
+                    };
+                }
+
+                const sfo = await readPsf(paramSfo);
+                const e = sfo.entries;
+
+                let cover: string | null = await join(
+                    path,
+                    "sce_sys",
+                    "icon0.png",
+                );
+                if (!(await exists(cover))) {
+                    cover = null;
+                } else {
+                    cover = convertFileSrc(cover);
+                }
+
+                let fw_version = e.SYSTEM_VER?.Integer?.toString(16)
+                    .padStart(8, "0")
+                    .slice(0, 4);
+                if (fw_version) {
+                    fw_version = `${fw_version.slice(0, 2).trimStart()}.${fw_version.slice(2)}`;
+                    if (fw_version.startsWith("0")) {
+                        fw_version = fw_version.slice(1);
+                    }
+                }
+
                 return {
                     path,
-                    id: "N/A - " + b,
-                    title: b,
-                    cover: null,
-                    version: "N/A",
-                    fw_version: "N/A",
+                    id: e.TITLE_ID?.Text || base,
+                    title: e.TITLE?.Text || "Unknown",
+                    cover,
+                    version: e.APP_VER?.Text || "UNK",
+                    fw_version: fw_version || "UNK",
+                    sfo,
                 };
-            }
-
-            let sfo: PSF;
-            try {
-                sfo = await readPsf(paramSfo);
             } catch (e: unknown) {
-                console.error(
-                    "could not read sfo at:",
-                    paramSfo,
-                    stringifyError(e),
-                );
+                console.error(`could not read game info at: "${path}"`, e);
                 return null;
             }
-            const e = sfo.entries;
-
-            let cover: string | null = await join(path, "sce_sys", "icon0.png");
-            if (!(await exists(cover))) {
-                cover = null;
-            } else {
-                cover = convertFileSrc(cover);
-            }
-
-            let fw_version = e.SYSTEM_VER?.Integer?.toString(16)
-                .padStart(8, "0")
-                .slice(0, 4);
-            if (fw_version) {
-                fw_version = `${fw_version.slice(0, 2).trimStart()}.${fw_version.slice(2)}`;
-                if (fw_version.startsWith("0")) {
-                    fw_version = fw_version.slice(1);
-                }
-            }
-
-            return {
-                path,
-                id: e.TITLE_ID?.Text || b,
-                title: e.TITLE?.Text || "Unknown",
-                cover,
-                version: e.APP_VER?.Text || "UNK",
-                fw_version: fw_version || "UNK",
-                sfo,
-            };
         }),
     ).then((e) => e.filter((e) => e != null));
 });
@@ -166,7 +159,9 @@ export function refreshGameLibrary(s: JotaiStore) {
         try {
             const path = defaultStore.get(atomGamesPath);
             if (path) {
-                await mkdir(path, { recursive: true });
+                if (!(await exists(path))) {
+                    await mkdir(path, { recursive: true });
+                }
                 unsub = await watch(path, (e) => {
                     if (typeof e.type === "object" && "access" in e.type) {
                         if (
@@ -181,7 +176,7 @@ export function refreshGameLibrary(s: JotaiStore) {
                 });
             }
         } catch (e: unknown) {
-            console.error(e);
+            console.error("error watching path", stringifyError(e));
             toast.error("Error watching games path: " + stringifyError(e));
         }
     });

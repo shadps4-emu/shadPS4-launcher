@@ -1,6 +1,7 @@
 use crate::game_process::state::GameBridge;
 use log::info;
 use tauri::Manager;
+use crate::logger::build_log_plugin;
 
 mod file_format;
 mod game_process;
@@ -9,9 +10,10 @@ mod logger;
 mod utility_commands;
 
 pub fn run() {
+    let logger_plugin = build_log_plugin();
     tauri::Builder::default()
         .invoke_handler(handlers::all_handlers())
-        .plugin(logger::build_log_plugin())
+        .plugin(logger_plugin)
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
