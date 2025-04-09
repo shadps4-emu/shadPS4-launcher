@@ -89,10 +89,6 @@ export const atomGameLibraryRaw = atom(async (get) => {
 
                 const paramSfo = await join(path, "sce_sys", "param.sfo");
 
-                if (Math.random() > 0.9) {
-                    throw new Error("random stuff happened");
-                }
-
                 if (!(await exists(paramSfo))) {
                     return {
                         path,

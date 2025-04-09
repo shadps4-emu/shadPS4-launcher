@@ -43,7 +43,7 @@ function forwardConsole(
         if (callFrame) {
             opts = {
                 file: callFrame.fileName?.replace(
-                    /^http:\/\/(localhost|127\.0\.0\.1)(:\d{1,5})?/,
+                    /^(http|tauri):\/\/(localhost|127\.0\.0\.1)(:\d{1,5})?/,
                     "",
                 ),
                 line: callFrame.lineNumber,
