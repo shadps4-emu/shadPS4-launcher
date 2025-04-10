@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { LoadingScreen } from "./components/loading-overlay";
 import { MainPage } from "./components/main-page";
-import { ConfigModal } from "./components/modals/config-modal";
+import { FolderConfigModal } from "./components/modals/folder-config-modal";
 import { RunningGameModal } from "./components/modals/running-game-modal";
 import { VersionManagerModal } from "./components/modals/version-manager-modal";
 import { UpdateIcon } from "./components/update-icon";
@@ -15,7 +15,7 @@ export function App() {
             onContextMenu={(e) => e.preventDefault()}
         >
             <Suspense fallback={<LoadingScreen />}>
-                <ConfigModal />
+                <FolderConfigModal />
                 <VersionManagerModal />
                 <UpdateIcon />
                 <RunningGameModal />

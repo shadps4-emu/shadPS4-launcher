@@ -58,7 +58,7 @@ function RunningGameDialog({ runningGame }: { runningGame: RunningGame }) {
     return (
         <Dialog onOpenChange={close} open>
             <DialogContent
-                aria-describedby="running game console"
+                aria-describedby={undefined}
                 className={cn("flex flex-col gap-4", {
                     "h-[calc(100vh-100px)] p-10 md:max-w-[800px]": !maximized,
                     "h-screen w-screen max-w-full": maximized,

@@ -171,7 +171,7 @@ function AddNewVersion() {
     }
 
     return (
-        <DialogContent className="min-w-[525px]">
+        <DialogContent aria-describedby={undefined} className="min-w-[525px]">
             <DialogHeader>
                 <DialogTitle>Add New Version</DialogTitle>
             </DialogHeader>

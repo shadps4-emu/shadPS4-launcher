@@ -1,8 +1,8 @@
 import { TooltipTrigger } from "@radix-ui/react-tooltip";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Gamepad2, Search, Settings } from "lucide-react";
+import { FolderCog, Gamepad2, Search } from "lucide-react";
 import { type ComponentProps, useState } from "react";
-import { atomModalConfigIsOpen, oficialRepo } from "@/store/common";
+import { atomFolderConfigModalIsOpen, oficialRepo } from "@/store/common";
 import {
     atomInstalledVersions,
     atomModalVersionManagerIsOpen,
@@ -97,7 +97,7 @@ function ToolbarButton({
 }
 
 export function Toolbar() {
-    const setConfigModalOpen = useSetAtom(atomModalConfigIsOpen);
+    const setConfigModalOpen = useSetAtom(atomFolderConfigModalIsOpen);
 
     return (
         <div className="sticky top-0 z-30 flex justify-between bg-secondary p-3">
@@ -116,7 +116,7 @@ export function Toolbar() {
                         onClick={() => setConfigModalOpen(true)}
                         tooltip="Settings"
                     >
-                        <Settings className="h-6 w-6" />
+                        <FolderCog className="h-6 w-6" />
                     </ToolbarButton>
                     <ToolbarButton>
                         <Gamepad2 className="h-6 w-6" />
