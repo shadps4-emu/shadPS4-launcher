@@ -2,7 +2,7 @@
     "$schema": "../gen/schemas/desktop-schema.json",
     "identifier": "default",
     "description": "Capability for the main window",
-    "windows": ["main"],
+    "windows": ["main", "emu_config"],
     "permissions": [
         "core:default",
         "dialog:allow-open",
@@ -27,6 +27,10 @@
         "store:default",
         "updater:default",
         "upload:default",
+        "core:window:allow-show",
+        "core:window:allow-hide",
+        "core:webview:allow-webview-show",
+        "core:webview:allow-webview-hide",
         {
             "identifier": "fs:scope",
             "allow": ["**/*"]

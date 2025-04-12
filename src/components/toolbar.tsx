@@ -1,7 +1,8 @@
 import { TooltipTrigger } from "@radix-ui/react-tooltip";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { FolderCog, Gamepad2, Search } from "lucide-react";
+import { FolderCog, Gamepad2, Search, Settings } from "lucide-react";
 import { type ComponentProps, useState } from "react";
+import { openEmuConfigWindow } from "@/handlers/window";
 import { atomFolderConfigModalIsOpen, oficialRepo } from "@/store/common";
 import {
     atomInstalledVersions,
@@ -97,7 +98,7 @@ function ToolbarButton({
 }
 
 export function Toolbar() {
-    const setConfigModalOpen = useSetAtom(atomFolderConfigModalIsOpen);
+    const setFolderConfigModalOpen = useSetAtom(atomFolderConfigModalIsOpen);
 
     return (
         <div className="sticky top-0 z-30 flex justify-between bg-secondary p-3">
@@ -113,8 +114,14 @@ export function Toolbar() {
                 </div>
                 <div className="flex items-center gap-2">
                     <ToolbarButton
-                        onClick={() => setConfigModalOpen(true)}
-                        tooltip="Settings"
+                        onClick={() => openEmuConfigWindow()}
+                        tooltip="Emulator Settings"
+                    >
+                        <Settings />
+                    </ToolbarButton>
+                    <ToolbarButton
+                        onClick={() => setFolderConfigModalOpen(true)}
+                        tooltip="Folder Settings"
                     >
                         <FolderCog className="h-6 w-6" />
                     </ToolbarButton>

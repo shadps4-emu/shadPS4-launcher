@@ -19,6 +19,9 @@ async function doCheck() {
 }
 
 export function startUpdateChecker() {
+    if (import.meta.env.VITE_DO_NOT_UPDATE) {
+        return;
+    }
     if (window.UPDATE_CHECKER_LOOP) {
         clearInterval(window.UPDATE_CHECKER_LOOP);
     }
