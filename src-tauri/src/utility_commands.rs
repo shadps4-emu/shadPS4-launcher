@@ -62,6 +62,10 @@ pub fn extract_zip(zip_path: FilePath, extract_path: FilePath) -> anyhow_tauri::
     Ok(())
 }
 
+fn something() -> fs::Permissions {
+    todo!()
+}
+
 #[allow(unused_variables)]
 #[tauri::command]
 pub fn make_it_executable(path: FilePath) -> anyhow_tauri::TAResult<()> {
@@ -71,8 +75,14 @@ pub fn make_it_executable(path: FilePath) -> anyhow_tauri::TAResult<()> {
             .as_path()
             .ok_or(anyhow::anyhow!("`path` is not a valid path"))
             .into_ta_result()?;
-        fs::set_permissions(path, fs::Permissions::from_mode(0o744))
-            .map_err(|e| anyhow::anyhow!("could not set permission: path={?:}, err={}",path e))
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o744))
+            .map_err(|e| {
+                anyhow::anyhow!(
+                    "could not set permission: path={}, err={}",
+                    path.display(),
+                    e
+                )
+            })
             .into_ta_result()?;
     }
     Ok(())
