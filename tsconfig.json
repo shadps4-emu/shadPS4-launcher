@@ -9,7 +9,7 @@
 
         /* LANGUAGE COMPILATION OPTIONS */
         "target": "ES2022",
-        "lib": ["DOM", "DOM.Iterable", "ES2021"],
+        "lib": ["DOM", "DOM.Iterable", "ES2022"],
         "module": "ESNext",
 
         "moduleResolution": "bundler",

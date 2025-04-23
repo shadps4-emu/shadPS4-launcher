@@ -13,13 +13,18 @@ function SingleGameIcon({
     ...props
 }: ComponentProps<"div"> & { runningGame: RunningGame }) {
     const { game } = runningGame;
+    const data = useAtomValue(game.data);
     const setShowingRunningGame = useSetAtom(atomShowingRunningGame);
 
+    if (data instanceof Error) {
+        return <span>Error: {data.message}</span>;
+    }
+
     let content: ReactElement;
-    if (game.cover == null) {
-        content = <span>{game.title.slice(0, 4)}</span>;
+    if (data.cover == null) {
+        content = <span>{data.title.slice(0, 4)}</span>;
     } else {
-        content = <img alt={game.title} src={game.cover} />;
+        content = <img alt={data.title} src={data.cover} />;
     }
 
     return (

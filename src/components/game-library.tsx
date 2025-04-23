@@ -1,6 +1,6 @@
 import { exists, mkdir } from "@tauri-apps/plugin-fs";
-import { useAtom, useStore } from "jotai";
-import { CircleHelp, Globe, ImageOff, Play } from "lucide-react";
+import { useAtom, useAtomValue, useStore } from "jotai";
+import { CircleHelp, FrownIcon, Globe, ImageOff, Play } from "lucide-react";
 import { Suspense, useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import CN from "@/assets/flags/cn.svg";
@@ -9,6 +9,7 @@ import JP from "@/assets/flags/jp.svg";
 import US from "@/assets/flags/us.svg";
 import { startGame } from "@/handlers/run-emu";
 import { openPath } from "@/lib/native/common";
+import type { PSF } from "@/lib/native/psf";
 import { atomGameLibrary, type GameEntry } from "@/store/game-library";
 import { gamepadActiveAtom } from "@/store/gamepad";
 import { atomGamesPath } from "@/store/paths";
@@ -20,10 +21,7 @@ import { ScrollArea } from "./ui/scroll-area";
 import { Skeleton } from "./ui/skeleton";
 import { Spinner } from "./ui/spinner";
 
-function Flag({
-    sfo,
-    className,
-}: Pick<GameEntry, "sfo"> & { className?: string }) {
+function Flag({ sfo, className }: { sfo: PSF | null; className?: string }) {
     const region = useMemo(() => {
         const { CONTENT_ID } = sfo?.entries ?? {};
         return CONTENT_ID?.Text?.[0] ?? undefined;
@@ -45,9 +43,16 @@ function Flag({
     }
 }
 
+function GameBoxSkeleton() {
+    return (
+        <Skeleton className="relative aspect-square rounded-md bg-zinc-800" />
+    );
+}
+
 function GameBox({ game, isFirst }: { game: GameEntry; isFirst?: boolean }) {
     const [isPending, startTransaction] = useTransition();
 
+    const data = useAtomValue(game.data);
     const isGamepad = useAtom(gamepadActiveAtom);
     const store = useStore();
 
@@ -84,11 +89,21 @@ function GameBox({ game, isFirst }: { game: GameEntry; isFirst?: boolean }) {
         }
     }, [clickCount]);
 
+    if (data instanceof Error) {
+        return (
+            <div className="relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform focus-within:scale-110 hover:scale-110">
+                <div className="flex flex-col items-center justify-center gap-2">
+                    <FrownIcon className="h-8" />
+                    <span className="text-sm">Error: {data.message}</span>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div
             className="relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform focus-within:scale-110 hover:scale-110"
             data-gamepad-selectable
-            key={game.id}
             onBlur={onBlur}
             onClick={onClick}
             onDoubleClick={openGame}
@@ -98,11 +113,11 @@ function GameBox({ game, isFirst }: { game: GameEntry; isFirst?: boolean }) {
                     <Spinner />
                 </div>
             )}
-            {game.cover ? (
+            {data.cover ? (
                 <img
-                    alt={game.title}
+                    alt={data.title}
                     className="col-span-full row-span-full object-cover"
-                    src={game.cover}
+                    src={data.cover}
                 />
             ) : (
                 <div className="center col-span-full row-span-full">
@@ -113,11 +128,11 @@ function GameBox({ game, isFirst }: { game: GameEntry; isFirst?: boolean }) {
             <div className="grid grid-cols-3 grid-rows-3 bg-black/50 opacity-0 backdrop-blur-[2px] transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
                 <span className="col-span-full row-start-1 row-end-2 truncate px-3 py-2 text-center font-semibold text-lg">
                     {/* TODO: scroll text on overflow */}
-                    {game.title}
+                    {data.title}
                 </span>
 
                 <div className="col-start-3 col-end-4 row-start-3 row-end-4 m-2 size-6 place-self-end">
-                    <Flag className="rounded-full" sfo={game.sfo} />
+                    <Flag className="rounded-full" sfo={data.sfo} />
                 </div>
 
                 <button
@@ -173,13 +188,11 @@ function Grid() {
 
     return (
         <ScrollArea className="z-20 flex-1" type="scroll">
-            <div className="flex flex-row flex-wrap justify-center gap-4 p-8">
+            <div className="flex flex-row flex-wrap justify-start gap-4 p-8">
                 {games.map((game, index) => (
-                    <GameBox
-                        game={game}
-                        isFirst={index === 0}
-                        key={game.path}
-                    />
+                    <Suspense fallback={<GameBoxSkeleton />} key={game.path}>
+                        <GameBox game={game} isFirst={index === 0} />
+                    </Suspense>
                 ))}
             </div>
         </ScrollArea>
@@ -192,8 +205,7 @@ function GridSkeleton() {
             {Array(50)
                 .fill(0)
                 .map((_, i) => (
-                    <Skeleton
-                        className="relative aspect-square rounded-md bg-zinc-800"
+                    <GameBoxSkeleton
                         // biome-ignore lint/suspicious/noArrayIndexKey: Just skeleton, order doesn't matter
                         key={i}
                     />

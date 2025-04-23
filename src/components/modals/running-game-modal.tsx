@@ -35,6 +35,7 @@ function RunningGameDialog({ runningGame }: { runningGame: RunningGame }) {
     const setShowingGame = useSetAtom(atomShowingRunningGame);
 
     const { game, process, atomRunning, atomLog } = runningGame;
+    const data = useAtomValue(game.data);
     const runningFlag = useAtomValue(atomRunning);
     const isRunning = runningFlag === true;
 
@@ -55,6 +56,16 @@ function RunningGameDialog({ runningGame }: { runningGame: RunningGame }) {
         close();
     };
 
+    if (data instanceof Error) {
+        return (
+            <Dialog onOpenChange={close} open>
+                <DialogContent aria-describedby={undefined}>
+                    <div className="text-red-500">Error: {data.message}</div>
+                </DialogContent>
+            </Dialog>
+        );
+    }
+
     return (
         <Dialog onOpenChange={close} open>
             <DialogContent
@@ -67,11 +78,11 @@ function RunningGameDialog({ runningGame }: { runningGame: RunningGame }) {
                 <DialogHeader>
                     <div className="flex items-center gap-4">
                         <div className="relative h-16 w-16 overflow-hidden rounded-md border">
-                            {game.cover ? (
+                            {data.cover ? (
                                 <img
-                                    alt={game.title}
+                                    alt={data.title}
                                     className="object-cover"
-                                    src={game.cover}
+                                    src={data.cover}
                                 />
                             ) : (
                                 <Skeleton />
@@ -79,7 +90,7 @@ function RunningGameDialog({ runningGame }: { runningGame: RunningGame }) {
                         </div>
                         <div>
                             <DialogTitle className="text-xl">
-                                {game.title}
+                                {data.title}
                             </DialogTitle>
                             <DialogDescription className="mt-1 flex items-center gap-2">
                                 <span className="text-muted-foreground text-xs">
