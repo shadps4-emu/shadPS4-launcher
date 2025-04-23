@@ -1,11 +1,13 @@
-use std::{fs, fs::File, io, path::Path};
-
 use anyhow_tauri::IntoTAResult;
 use log::error;
+use std::{fs, fs::File, io, path::Path};
 use tauri::{State, Wry};
 use tauri_plugin_fs::FilePath;
 use tauri_plugin_opener::Opener;
 use zip::ZipArchive;
+
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 
 fn extract_zip_internal(zip_path: &Path, extract_path: &Path) -> anyhow::Result<()> {
     let file = File::open(zip_path)?;
@@ -57,6 +59,22 @@ pub fn extract_zip(zip_path: FilePath, extract_path: FilePath) -> anyhow_tauri::
         .into_ta_result()?;
     extract_zip_internal(zip_path, extract_path)
         .inspect_err(|e| error!("could not extract zip: err={}", e))?;
+    Ok(())
+}
+
+#[allow(unused_variables)]
+#[tauri::command]
+pub fn make_it_executable(path: FilePath) -> anyhow_tauri::TAResult<()> {
+    #[cfg(unix)]
+    {
+        let path = path
+            .as_path()
+            .ok_or(anyhow::anyhow!("`path` is not a valid path"))
+            .into_ta_result()?;
+        fs::set_permissions(path, fs::Permissions::from_mode(0o744))
+            .map_err(|e| anyhow::anyhow!("could not set permission: path={?:}, err={}",path e))
+            .into_ta_result()?;
+    }
     Ok(())
 }
 

@@ -8,7 +8,7 @@ import {
 import { download } from "@tauri-apps/plugin-upload";
 import { toast } from "sonner";
 import * as superjson from "superjson";
-import { extractZip } from "@/lib/native/common";
+import { extractZip, makeItExecutable } from "@/lib/native/common";
 import { defaultStore } from "@/store";
 import { atomDownloadingOverlay } from "@/store/common";
 import {
@@ -97,6 +97,8 @@ export async function installNewVersion(
             );
             return;
         }
+
+        await makeItExecutable(await join(installPath, executable.name));
 
         await writeConfig({
             ...version,
