@@ -11,7 +11,7 @@ import "./app.css";
 export function App() {
     return (
         <main
-            className="flex h-screen max-h-screen flex-col justify-stretch align-top"
+            className="flex h-screen max-h-screen flex-col justify-stretch bg-gradient-to-r from-blue-800 via-blue-600 to-sky-500 align-top dark:from-blue-900 dark:via-blue-950 dark:to-sky-950"
             onContextMenu={(e) => e.preventDefault()}
         >
             <Suspense fallback={<LoadingScreen />}>

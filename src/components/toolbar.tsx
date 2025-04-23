@@ -101,7 +101,7 @@ export function Toolbar() {
     const setFolderConfigModalOpen = useSetAtom(atomFolderConfigModalIsOpen);
 
     return (
-        <div className="sticky top-0 z-30 flex justify-between bg-secondary p-3">
+        <div className="sticky top-0 z-30 flex justify-between border-b-2 p-3 px-10">
             <div className="flex items-center gap-4">
                 <div className="relative">
                     <Search className="absolute top-2.5 left-2 size-4 text-muted-foreground" />
