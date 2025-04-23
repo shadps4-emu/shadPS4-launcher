@@ -87,6 +87,7 @@ async function registerGamePath(path: string) {
             .concat({
                 path,
                 data: atom(async () => {
+                    console.log(`Loading game from ${path}`);
                     return await loadGameData(path);
                 }),
             })

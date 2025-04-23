@@ -1,7 +1,16 @@
+import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { exists, mkdir } from "@tauri-apps/plugin-fs";
 import { useAtom, useAtomValue, useStore } from "jotai";
 import { CircleHelp, FrownIcon, Globe, ImageOff, Play } from "lucide-react";
-import { Suspense, useEffect, useMemo, useState, useTransition } from "react";
+import {
+    Suspense,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    useTransition,
+} from "react";
 import { toast } from "sonner";
 import CN from "@/assets/flags/cn.svg";
 import EU from "@/assets/flags/eu.svg";
@@ -17,7 +26,7 @@ import { atomShowingRunningGame } from "@/store/running-games";
 import { atomSelectedVersion } from "@/store/version-manager";
 import { stringifyError } from "@/utils/error";
 import GamepadIcon from "./gamepad-icon";
-import { ScrollArea } from "./ui/scroll-area";
+import { ScrollBar } from "./ui/scroll-area";
 import { Skeleton } from "./ui/skeleton";
 import { Spinner } from "./ui/spinner";
 
@@ -159,43 +168,118 @@ function GameBox({ game, isFirst }: { game: GameEntry; isFirst?: boolean }) {
     );
 }
 
-function Grid() {
-    const [games] = useAtom(atomGameLibrary);
+function NoGameFound() {
     const store = useStore();
 
-    if (games.length === 0) {
-        async function openGameFolder() {
-            const path = store.get(atomGamesPath);
-            if (path) {
-                if (!(await exists(path))) {
-                    await mkdir(path, { recursive: true });
-                }
-                await openPath(path);
+    async function openGameFolder() {
+        const path = store.get(atomGamesPath);
+        if (path) {
+            if (!(await exists(path))) {
+                await mkdir(path, { recursive: true });
             }
+            await openPath(path);
         }
-        return (
-            <div className="flex h-full items-center justify-center">
-                <div
-                    className="flex h-[150px] w-[300px] cursor-pointer flex-col items-center justify-center rounded-md border border-dashed text-sm"
-                    onClick={() => void openGameFolder()}
-                >
-                    <span>No game found :(</span>
-                    <span>Click here to open game folder</span>
-                </div>
+    }
+    return (
+        <div className="flex h-full items-center justify-center">
+            <div
+                className="flex h-[150px] w-[300px] cursor-pointer flex-col items-center justify-center rounded-md border border-dashed text-sm"
+                onClick={() => void openGameFolder()}
+            >
+                <span>No game found :(</span>
+                <span>Click here to open game folder</span>
             </div>
-        );
+        </div>
+    );
+}
+
+function Grid() {
+    "use no memo"; // Temporary while https://github.com/TanStack/virtual/pull/851 is not merged
+
+    const parentRef = useRef<HTMLDivElement | null>(null);
+    const [games] = useAtom(atomGameLibrary);
+    const [itemPerRow, setItemPerRow] = useState(1);
+
+    const rowCount = Math.ceil(games.length / itemPerRow);
+
+    const virtualizer = useVirtualizer({
+        count: rowCount,
+        getScrollElement: () => parentRef.current,
+        estimateSize: () => 50,
+        overscan: 1,
+    });
+    const items = virtualizer.getVirtualItems();
+
+    // biome-ignore lint/correctness/useExhaustiveDependencies: In the first render, the game length running empty will be miss-leading
+    useEffect(() => {
+        const target = parentRef.current;
+        if (target == null) {
+            return;
+        }
+        const observer = new ResizeObserver((entries) => {
+            if (entries[0]) {
+                const { width } = entries[0].contentRect;
+                setItemPerRow(Math.ceil(width / 200));
+            }
+        });
+        observer.observe(target);
+        return () => {
+            observer.disconnect();
+        };
+    }, [parentRef.current]);
+
+    if (games.length === 0) {
+        return <NoGameFound />;
     }
 
     return (
-        <ScrollArea className="z-20 flex-1" type="scroll">
-            <div className="flex flex-row flex-wrap justify-start gap-4 p-8">
-                {games.map((game, index) => (
-                    <Suspense fallback={<GameBoxSkeleton />} key={game.path}>
-                        <GameBox game={game} isFirst={index === 0} />
-                    </Suspense>
-                ))}
-            </div>
-        </ScrollArea>
+        <ScrollAreaPrimitive.Root
+            className="z-20 flex-1 overflow-y-auto p-8 contain-strict"
+            ref={parentRef}
+            type="scroll"
+        >
+            <ScrollAreaPrimitive.Viewport
+                className="relative w-full rounded-[inherit]"
+                style={{
+                    height: virtualizer.getTotalSize(),
+                }}
+            >
+                <div
+                    className="absolute inset-x-0 top-0"
+                    style={{
+                        transform: `translateY(${items[0]?.start ?? 0}px)`,
+                    }}
+                >
+                    {items.map((row, idx) => {
+                        const firstIdx = row.index * itemPerRow;
+                        const lastIdx = firstIdx + itemPerRow;
+                        const entries = games.slice(firstIdx, lastIdx);
+                        return (
+                            <div
+                                className="flex gap-4 pb-4"
+                                data-index={row.index}
+                                key={row.key}
+                                ref={virtualizer.measureElement}
+                            >
+                                {entries.map((game, jdx) => (
+                                    <Suspense
+                                        fallback={<GameBoxSkeleton />}
+                                        key={game.path}
+                                    >
+                                        <GameBox
+                                            game={game}
+                                            isFirst={idx === 0 && jdx === 0}
+                                        />
+                                    </Suspense>
+                                ))}
+                            </div>
+                        );
+                    })}
+                </div>
+            </ScrollAreaPrimitive.Viewport>
+            <ScrollBar />
+            <ScrollAreaPrimitive.Corner />
+        </ScrollAreaPrimitive.Root>
     );
 }
 
