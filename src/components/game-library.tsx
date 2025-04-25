@@ -282,7 +282,7 @@ function Grid() {
                                         key={game.path}
                                     />
                                 ))}
-                                {Array(5 - entries.length)
+                                {Array(itemPerRow - entries.length)
                                     .fill(0)
                                     .map((_, i) => (
                                         <EmptyGameBox key={i} />

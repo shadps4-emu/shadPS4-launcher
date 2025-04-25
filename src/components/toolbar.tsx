@@ -10,7 +10,7 @@ import {
     atomSelectedVersion,
 } from "@/store/version-manager";
 import { cn } from "@/utils/ui";
-import { RunningGameIcon } from "./running-game-icon";
+import { RunningGameIcons } from "./running-game-icons";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import {
@@ -131,7 +131,7 @@ export function Toolbar() {
                 </div>
             </div>
             <div className="flex-1" />
-            <RunningGameIcon />
+            <RunningGameIcons />
             <VersionSelector />
         </div>
     );
