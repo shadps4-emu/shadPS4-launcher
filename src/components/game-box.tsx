@@ -125,6 +125,7 @@ export function GameBox({
             onBlur={onBlur}
             onClick={onClick}
             onDoubleClick={openGame}
+            tabIndex={0}
         >
             {isPending && (
                 <div className="center absolute inset-0 bg-black/60">

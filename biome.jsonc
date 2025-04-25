@@ -96,6 +96,7 @@
             },
             "a11y": {
                 "useKeyWithClickEvents": "off",
+                "noNoninteractiveTabindex": "off",
             },
         },
     },

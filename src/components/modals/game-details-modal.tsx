@@ -49,7 +49,7 @@ function GameDetailsDialog({ gameData, onClose }: Props) {
     return (
         <Dialog onOpenChange={() => onClose()} open>
             <DialogContent
-                aria-describedby="game-details-description"
+                aria-describedby={undefined}
                 className="flex max-h-[90vh] max-w-xl flex-col md:max-w-4xl"
             >
                 <DialogHeader className="flex-shrink-0">
