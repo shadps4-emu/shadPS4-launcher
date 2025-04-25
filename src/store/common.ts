@@ -1,5 +1,6 @@
 import type { Update } from "@tauri-apps/plugin-updater";
 import { atom } from "jotai";
+import type { GameEntryData } from "./game-library";
 
 export const oficialRepo = "shadps4-emu/shadPS4";
 
@@ -17,3 +18,5 @@ export const atomDownloadingOverlay = atom<
 >(null);
 
 export const atomUpdateAvailable = atom<Update | null>(null);
+
+export const atomShowingGameDetails = atom<GameEntryData | null>(null);

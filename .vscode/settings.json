@@ -5,6 +5,7 @@
         "src-tauri/**": true,
         "dist/**": true
     },
+    "typescript.preferences.autoImportSpecifierExcludeRegexes": ["@radix-ui"],
     "[typescript]": {
         "editor.defaultFormatter": "biomejs.biome"
     },

@@ -198,7 +198,10 @@ export function VersionManagerModal() {
                 {isNew ? (
                     <AddNewVersion />
                 ) : (
-                    <DialogContent className="min-w-[525px]">
+                    <DialogContent
+                        aria-describedby={undefined}
+                        className="min-w-[525px]"
+                    >
                         <DialogHeader>
                             <DialogTitle>
                                 <div className="flex items-center gap-4">

@@ -30,7 +30,11 @@ import {
 } from "../ui/dialog";
 import { Skeleton } from "../ui/skeleton";
 
-function RunningGameDialog({ runningGame }: { runningGame: RunningGame }) {
+export function RunningGameDialog({
+    runningGame,
+}: {
+    runningGame: RunningGame;
+}) {
     const store = useStore();
     const setShowingGame = useSetAtom(atomShowingRunningGame);
 
