@@ -162,14 +162,18 @@ async function scanDirectory(
                 if (!(await exists(path))) {
                     await mkdir(path, { recursive: true });
                 }
-                const { abort, signal } = new AbortController();
-                scanDirectory(path, signal, 0);
+                const abortController = new AbortController();
+                scanDirectory(path, abortController.signal, 0);
                 const unsub = await watch(path, async (e) => {
                     if (typeof e.type === "object") {
                         if ("create" in e.type) {
                             const newPath = e.paths[0];
                             if (newPath && (await stat(newPath)).isDirectory) {
-                                scanDirectory(newPath, signal, 1);
+                                scanDirectory(
+                                    newPath,
+                                    abortController.signal,
+                                    1,
+                                );
                             }
                         } else if ("remove" in e.type) {
                             const newPath = e.paths[0];
@@ -181,7 +185,7 @@ async function scanDirectory(
                 });
                 cancel = () => {
                     unsub();
-                    abort();
+                    abortController.abort();
                 };
             }
         } catch (e: unknown) {

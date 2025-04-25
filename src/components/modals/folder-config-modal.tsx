@@ -24,6 +24,7 @@ function PathConfig() {
         })
             .then((e) => {
                 if (e) {
+                    setInputGamePath(e);
                     setGamePath(e);
                 }
             })

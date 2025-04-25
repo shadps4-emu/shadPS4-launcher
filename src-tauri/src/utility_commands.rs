@@ -62,10 +62,6 @@ pub fn extract_zip(zip_path: FilePath, extract_path: FilePath) -> anyhow_tauri::
     Ok(())
 }
 
-fn something() -> fs::Permissions {
-    todo!()
-}
-
 #[allow(unused_variables)]
 #[tauri::command]
 pub fn make_it_executable(path: FilePath) -> anyhow_tauri::TAResult<()> {
