@@ -52,20 +52,33 @@ function Flag({ sfo, className }: { sfo: PSF | null; className?: string }) {
     }
 }
 
+function EmptyGameBox() {
+    return (
+        <div className="aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 opacity-0" />
+    );
+}
+
 function GameBoxSkeleton() {
     return (
-        <Skeleton className="relative aspect-square rounded-md bg-zinc-800" />
+        <Skeleton className="aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 rounded-sm bg-zinc-800" />
     );
 }
 
 function GameBox({ game, isFirst }: { game: GameEntry; isFirst?: boolean }) {
     const [isPending, startTransaction] = useTransition();
 
-    const data = useAtomValue(game.data);
+    const valueData = useAtomValue(game.dataLoadable);
     const isGamepad = useAtom(gamepadActiveAtom);
     const store = useStore();
 
     const [clickCount, setClickCount] = useState<number>(0);
+
+    useEffect(() => {
+        if (clickCount >= 3) {
+            setClickCount(0);
+            toast.info("Do a double click to start the game");
+        }
+    }, [clickCount]);
 
     const openGame = () =>
         startTransaction(async () => {
@@ -91,27 +104,28 @@ function GameBox({ game, isFirst }: { game: GameEntry; isFirst?: boolean }) {
         setClickCount(0);
     };
 
-    useEffect(() => {
-        if (clickCount >= 3) {
-            setClickCount(0);
-            toast.info("Do a double click to start the game");
-        }
-    }, [clickCount]);
+    if (valueData.state === "loading") {
+        return <GameBoxSkeleton />;
+    }
 
-    if (data instanceof Error) {
+    if (valueData.state === "hasError") {
         return (
             <div className="relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform focus-within:scale-110 hover:scale-110">
                 <div className="flex flex-col items-center justify-center gap-2">
                     <FrownIcon className="h-8" />
-                    <span className="text-sm">Error: {data.message}</span>
+                    <span className="text-sm">
+                        Error: {stringifyError(valueData.error)}
+                    </span>
                 </div>
             </div>
         );
     }
 
+    const data = valueData.data;
+
     return (
         <div
-            className="relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform focus-within:scale-110 hover:scale-110"
+            className="group relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform focus-within:scale-110 hover:scale-110"
             data-gamepad-selectable
             onBlur={onBlur}
             onClick={onClick}
@@ -134,7 +148,7 @@ function GameBox({ game, isFirst }: { game: GameEntry; isFirst?: boolean }) {
                 </div>
             )}
 
-            <div className="grid grid-cols-3 grid-rows-3 bg-black/50 opacity-0 backdrop-blur-[2px] transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+            <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 bg-black/50 opacity-0 backdrop-blur-[2px] transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
                 <span className="col-span-full row-start-1 row-end-2 truncate px-3 py-2 text-center font-semibold text-lg">
                     {/* TODO: scroll text on overflow */}
                     {data.title}
@@ -238,7 +252,7 @@ function Grid() {
             ref={parentRef}
             type="scroll"
         >
-            <ScrollAreaPrimitive.Viewport
+            <div
                 className="relative w-full rounded-[inherit]"
                 style={{
                     height: virtualizer.getTotalSize(),
@@ -262,21 +276,22 @@ function Grid() {
                                 ref={virtualizer.measureElement}
                             >
                                 {entries.map((game, jdx) => (
-                                    <Suspense
-                                        fallback={<GameBoxSkeleton />}
+                                    <GameBox
+                                        game={game}
+                                        isFirst={idx === 0 && jdx === 0}
                                         key={game.path}
-                                    >
-                                        <GameBox
-                                            game={game}
-                                            isFirst={idx === 0 && jdx === 0}
-                                        />
-                                    </Suspense>
+                                    />
                                 ))}
+                                {Array(5 - entries.length)
+                                    .fill(0)
+                                    .map((_, i) => (
+                                        <EmptyGameBox key={i} />
+                                    ))}
                             </div>
                         );
                     })}
                 </div>
-            </ScrollAreaPrimitive.Viewport>
+            </div>
             <ScrollBar />
             <ScrollAreaPrimitive.Corner />
         </ScrollAreaPrimitive.Root>

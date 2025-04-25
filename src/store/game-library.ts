@@ -2,6 +2,8 @@ import { convertFileSrc } from "@tauri-apps/api/core";
 import { basename, join, sep } from "@tauri-apps/api/path";
 import { exists, mkdir, readDir, stat, watch } from "@tauri-apps/plugin-fs";
 import { type Atom, atom } from "jotai";
+import { loadable } from "jotai/utils";
+import type { Loadable } from "jotai/vanilla/utils/loadable";
 import { toast } from "sonner";
 import { type PSF, readPsf } from "@/lib/native/psf";
 import { stringifyError } from "@/utils/error";
@@ -19,14 +21,15 @@ export type GameEntryData = {
 };
 export type GameEntry = {
     path: string;
-    data: Atom<Promise<GameEntryData | Error>>;
+    data: Atom<Promise<GameEntryData>>;
+    dataLoadable: Atom<Loadable<GameEntryData>>;
 };
 
 const atomGameLibraryRaw = atom<GameEntry[]>([]);
 
 export const atomGameLibrary = atomKeepLast(atomGameLibraryRaw);
 
-async function loadGameData(path: string): Promise<GameEntryData | Error> {
+async function loadGameData(path: string): Promise<GameEntryData> {
     try {
         const base = await basename(path);
 
@@ -73,7 +76,7 @@ async function loadGameData(path: string): Promise<GameEntryData | Error> {
         };
     } catch (e: unknown) {
         console.error(`could not read game info at: "${path}"`, e);
-        return Error(`game read info. ${stringifyError(e)}`, {
+        throw new Error(`game read info. ${stringifyError(e)}`, {
             cause: e,
         });
     }
@@ -81,16 +84,19 @@ async function loadGameData(path: string): Promise<GameEntryData | Error> {
 
 async function registerGamePath(path: string) {
     const s = sep();
+    const atomData = atom(async () => {
+        console.debug(`Loading game from ${path}`);
+        return await loadGameData(path);
+    });
+    const e = {
+        path: path,
+        data: atomData,
+        dataLoadable: loadable(atomData),
+    };
     defaultStore.set(atomGameLibraryRaw, (prev) =>
         prev
             .filter((e) => e.path !== path)
-            .concat({
-                path,
-                data: atom(async () => {
-                    console.log(`Loading game from ${path}`);
-                    return await loadGameData(path);
-                }),
-            })
+            .concat(e)
             .sort(
                 (a, b) =>
                     a.path
