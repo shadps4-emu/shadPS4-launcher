@@ -29,8 +29,9 @@ export async function startGame(
     }
 
     const workDir = await join(await appDataDir(), "emu_data");
-    if (!(await exists(workDir))) {
-        await mkdir(workDir, { recursive: true });
+    const userDir = await join(workDir, "user");
+    if (!(await exists(userDir))) {
+        await mkdir(userDir, { recursive: true });
     }
 
     try {
