@@ -6,8 +6,8 @@ import {
     useRef,
 } from "react";
 import type { GamepadButtonEvent } from "@/handlers/gamepad";
-import { useGamepadInputStack } from "@/hooks/useGamepadInputStack";
-import type { Tuple } from "@/utils/types";
+import { useGamepadInputStack } from "@/lib/hooks/useGamepadInputStack";
+import type { Tuple } from "@/lib/utils/types";
 
 export const BUTTON_MAP = {
     confirm: 0,

@@ -9,6 +9,7 @@ import { download } from "@tauri-apps/plugin-upload";
 import { toast } from "sonner";
 import * as superjson from "superjson";
 import { extractZip, makeItExecutable } from "@/lib/native/common";
+import { stringifyError } from "@/lib/utils/error";
 import { defaultStore } from "@/store";
 import { atomDownloadingOverlay } from "@/store/common";
 import {
@@ -16,7 +17,6 @@ import {
     type RemoteEmulatorVersion,
     refreshInstalledVersion,
 } from "@/store/version-manager";
-import { stringifyError } from "@/utils/error";
 
 export async function writeConfig({ path, ...config }: EmulatorVersion) {
     const data = superjson.stringify(config);

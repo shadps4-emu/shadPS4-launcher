@@ -1,7 +1,7 @@
 import { useAtomValue } from "jotai";
 import type { ReactElement } from "react";
+import { cn } from "@/lib/utils/ui";
 import { atomDownloadingOverlay } from "@/store/common";
-import { cn } from "@/utils/ui";
 import { Progress } from "./ui/progress";
 import { Spinner } from "./ui/spinner";
 

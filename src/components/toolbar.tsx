@@ -3,13 +3,13 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { FolderCog, Gamepad2, Search, Settings } from "lucide-react";
 import { type ComponentProps, useState } from "react";
 import { openEmuConfigWindow } from "@/handlers/window";
+import { cn } from "@/lib/utils/ui";
 import { atomFolderConfigModalIsOpen, oficialRepo } from "@/store/common";
 import {
     atomInstalledVersions,
     atomModalVersionManagerIsOpen,
     atomSelectedVersion,
 } from "@/store/version-manager";
-import { cn } from "@/utils/ui";
 import { RunningGameIcons } from "./running-game-icons";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";

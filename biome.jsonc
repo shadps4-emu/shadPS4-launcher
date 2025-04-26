@@ -115,7 +115,7 @@
     },
     "overrides": [
         {
-            "includes": ["src/hooks/**/*.tsx"],
+            "includes": ["src/lib/hooks/**/*.tsx"],
             "linter": {
                 "rules": {
                     "style": {

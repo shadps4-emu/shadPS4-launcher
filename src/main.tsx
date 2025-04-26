@@ -11,8 +11,8 @@ import { TooltipProvider } from "./components/ui/tooltip";
 import { EmuConfigWindow } from "./components/window/emu-config-window";
 import { startUpdateChecker } from "./handlers/auto-update";
 import { startGamepadHandler } from "./handlers/gamepad";
+import { GamepadInputStackProvider } from "./lib/context/gamepad-input-stack";
 import { setupForwardingConsole } from "./lib/native/forward-log";
-import { GamepadInputStackProvider } from "./providers/gamepad-input-stack";
 import { defaultStore } from "./store";
 
 type Routing = "main" | "EmuConfig";

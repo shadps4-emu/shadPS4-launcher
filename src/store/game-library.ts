@@ -6,8 +6,8 @@ import { loadable } from "jotai/utils";
 import type { Loadable } from "jotai/vanilla/utils/loadable";
 import { toast } from "sonner";
 import { type PSF, readPsf } from "@/lib/native/psf";
-import { stringifyError } from "@/utils/error";
-import { atomKeepLast } from "@/utils/jotai/atom-keep-last";
+import { stringifyError } from "@/lib/utils/error";
+import { atomKeepLast } from "@/lib/utils/jotai/atom-keep-last";
 import { defaultStore } from ".";
 import { atomGamesPath } from "./paths";
 

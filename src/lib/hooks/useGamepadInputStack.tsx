@@ -1,6 +1,6 @@
 import { useCallback, useContext, useEffect, useRef } from "react";
 import type { GamepadButtonEvent } from "@/handlers/gamepad";
-import { GamepadInputStackProvider } from "@/providers/gamepad-input-stack";
+import { GamepadInputStackProvider } from "@/lib/context/gamepad-input-stack";
 
 export function useGamepadInputStack(zIndex?: number) {
     const context = useContext(GamepadInputStackProvider.Context);

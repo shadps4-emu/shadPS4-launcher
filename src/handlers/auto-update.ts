@@ -1,9 +1,9 @@
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check } from "@tauri-apps/plugin-updater";
 import { toast } from "sonner";
+import { stringifyError } from "@/lib/utils/error";
 import { defaultStore } from "@/store";
 import { atomDownloadingOverlay, atomUpdateAvailable } from "@/store/common";
-import { stringifyError } from "@/utils/error";
 
 declare global {
     interface Window {

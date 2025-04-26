@@ -1,12 +1,12 @@
 import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { Maximize, Maximize2, Pause, Trash2, Volume2, X } from "lucide-react";
 import { useState } from "react";
+import { cn } from "@/lib/utils/ui";
 import {
     atomRunningGames,
     atomShowingRunningGame,
     type RunningGame,
 } from "@/store/running-games";
-import { cn } from "@/utils/ui";
 import { LogList } from "../log-list";
 import {
     AlertDialog,

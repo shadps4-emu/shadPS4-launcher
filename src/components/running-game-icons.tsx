@@ -1,12 +1,12 @@
 import { useAtomValue, useSetAtom } from "jotai";
 import type { ComponentProps, ReactElement } from "react";
+import { stringifyError } from "@/lib/utils/error";
+import { cn } from "@/lib/utils/ui";
 import {
     atomRunningGames,
     atomShowingRunningGame,
     type RunningGame,
 } from "@/store/running-games";
-import { stringifyError } from "@/utils/error";
-import { cn } from "@/utils/ui";
 import { Spinner } from "./ui/spinner";
 
 function SingleGameIcon({

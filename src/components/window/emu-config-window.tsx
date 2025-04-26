@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils/ui";
 import { atomUserConfig } from "@/store/config";
-import { cn } from "@/utils/ui";
 import { LoadingScreen } from "../loading-overlay";
 import { Input } from "../ui/input";
 import {
