@@ -1,11 +1,30 @@
 import { defaultStore } from "@/store";
 import { gamepadActiveAtom } from "@/store/gamepad";
 
-export interface GamepadButtonEvent {
-    button: number;
-    pressed: boolean;
-    justPressed: boolean;
-    repeating: boolean;
+export class GamepadButtonEvent {
+    public button: number;
+    public pressed: boolean;
+    public justPressed: boolean;
+    public repeating: boolean;
+
+    public isPreventingDefault: boolean;
+
+    constructor(
+        button: number,
+        pressed: boolean,
+        justPressed: boolean,
+        repeating: boolean,
+    ) {
+        this.button = button;
+        this.pressed = pressed;
+        this.justPressed = justPressed;
+        this.repeating = repeating;
+        this.isPreventingDefault = false;
+    }
+
+    preventDefault() {
+        this.isPreventingDefault = true;
+    }
 }
 
 // Axis is 100+ buttons e.g. axis 0 is button 100, axis 1 is button 101
@@ -66,12 +85,12 @@ function gamepadLoop() {
                 if (pressed) {
                     gamepadAcquire();
                 }
-                const e: GamepadButtonEvent = {
-                    button: btn_id,
+                const e = new GamepadButtonEvent(
+                    btn_id,
                     pressed,
                     justPressed,
                     repeating,
-                };
+                );
 
                 for (const c of callbackList) {
                     c(e);

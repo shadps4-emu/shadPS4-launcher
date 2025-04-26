@@ -1,12 +1,14 @@
+import { GamepadNavField } from "../lib/context/gamepad-nav-field";
 import { GameLibrary } from "./game-library";
-import { GamepadNavField } from "./gamepad-nav-field";
 import { Toolbar } from "./toolbar";
 
 export function MainPage() {
     return (
-        <GamepadNavField className="flex h-full flex-col">
-            <Toolbar />
-            <GameLibrary />
+        <GamepadNavField>
+            <div className="flex h-full flex-col">
+                <Toolbar />
+                <GameLibrary />
+            </div>
         </GamepadNavField>
     );
 }

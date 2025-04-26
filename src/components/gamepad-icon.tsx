@@ -2,7 +2,7 @@ import { CircleHelp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createAbort } from "@/lib/utils/events";
 import { cn } from "@/lib/utils/ui";
-import type { GamepadButtons } from "./gamepad-nav-field";
+import type { GamepadButtons } from "../lib/context/gamepad-nav-field";
 
 export interface GamepadIconProps {
     icon: GamepadButtons;

@@ -1,5 +1,11 @@
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
-import { CircleHelp, FrownIcon, Globe, ImageOff, Play } from "lucide-react";
+import {
+    CircleHelpIcon,
+    FrownIcon,
+    GlobeIcon,
+    ImageOffIcon,
+    PlayIcon,
+} from "lucide-react";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import CN from "@/assets/flags/cn.svg";
@@ -15,6 +21,7 @@ import { gamepadActiveAtom } from "@/store/gamepad";
 import { atomShowingRunningGame } from "@/store/running-games";
 import { atomSelectedVersion } from "@/store/version-manager";
 import GamepadIcon from "./gamepad-icon";
+import { Navigable } from "./ui/navigable";
 import { Skeleton } from "./ui/skeleton";
 import { Spinner } from "./ui/spinner";
 
@@ -34,9 +41,9 @@ function Flag({ sfo, className }: { sfo: PSF | null; className?: string }) {
         case "H":
             return <img alt="CN" className={className} src={CN} />;
         case "I":
-            return <Globe className={className} />;
+            return <GlobeIcon className={className} />;
         default:
-            return <CircleHelp className={className} />;
+            return <CircleHelpIcon className={className} />;
     }
 }
 
@@ -119,62 +126,62 @@ export function GameBox({
     const data = valueData.data;
 
     return (
-        <div
-            className="group relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform focus-within:scale-110 hover:scale-110"
-            data-gamepad-selectable
-            onBlur={onBlur}
-            onClick={onClick}
-            onDoubleClick={openGame}
-            tabIndex={0}
-        >
-            {isPending && (
-                <div className="center absolute inset-0 bg-black/60">
-                    <Spinner />
+        <Navigable>
+            <div
+                className="group relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform focus-within:scale-110 hover:scale-110"
+                onBlur={onBlur}
+                onClick={onClick}
+                onDoubleClick={openGame}
+            >
+                {isPending && (
+                    <div className="center absolute inset-0 bg-black/60">
+                        <Spinner />
+                    </div>
+                )}
+                {data.cover ? (
+                    <img
+                        alt={data.title}
+                        className="col-span-full row-span-full object-cover"
+                        src={data.cover}
+                    />
+                ) : (
+                    <div className="center col-span-full row-span-full">
+                        <ImageOffIcon className="h-8" />
+                    </div>
+                )}
+
+                <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 bg-black/50 opacity-0 backdrop-blur-[2px] transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+                    <span className="col-span-full row-start-1 row-end-2 truncate px-3 py-2 text-center font-semibold text-lg">
+                        {/* TODO: scroll text on overflow */}
+                        {data.title}
+                    </span>
+
+                    <div className="col-start-3 col-end-4 row-start-3 row-end-4 m-2 size-6 place-self-end">
+                        <Flag className="rounded-full" sfo={data.sfo} />
+                    </div>
+
+                    <button
+                        className="col-span-full row-span-full grid size-16 place-items-center place-self-center rounded-full bg-black/75"
+                        data-initial-focus={isFirst ? "" : undefined}
+                        data-play-game={""}
+                        type="button"
+                    >
+                        <PlayIcon className="size-10" fill="currentColor" />
+                    </button>
+
+                    <button
+                        className="col-span-full row-start-3 row-end-4 flex flex-row items-center justify-center gap-x-2 self-end py-2 transition-colors hover:bg-secondary/75 focus:bg-secondary/75"
+                        onClick={() => setShowingDetails(data)}
+                        type="button"
+                    >
+                        {isGamepad && (
+                            <GamepadIcon className="size-6" icon="options" />
+                        )}
+                        View More
+                        {isGamepad && <div className="size-6" />}
+                    </button>
                 </div>
-            )}
-            {data.cover ? (
-                <img
-                    alt={data.title}
-                    className="col-span-full row-span-full object-cover"
-                    src={data.cover}
-                />
-            ) : (
-                <div className="center col-span-full row-span-full">
-                    <ImageOff className="h-8" />
-                </div>
-            )}
-
-            <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 bg-black/50 opacity-0 backdrop-blur-[2px] transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
-                <span className="col-span-full row-start-1 row-end-2 truncate px-3 py-2 text-center font-semibold text-lg">
-                    {/* TODO: scroll text on overflow */}
-                    {data.title}
-                </span>
-
-                <div className="col-start-3 col-end-4 row-start-3 row-end-4 m-2 size-6 place-self-end">
-                    <Flag className="rounded-full" sfo={data.sfo} />
-                </div>
-
-                <button
-                    className="col-span-full row-span-full grid size-16 place-items-center place-self-center rounded-full bg-black/75"
-                    data-initial-focus={isFirst ? "" : undefined}
-                    data-play-game={""}
-                    type="button"
-                >
-                    <Play className="size-10" fill="currentColor" />
-                </button>
-
-                <button
-                    className="col-span-full row-start-3 row-end-4 flex flex-row items-center justify-center gap-x-2 self-end py-2 transition-colors hover:bg-secondary/75 focus:bg-secondary/75"
-                    onClick={() => setShowingDetails(data)}
-                    type="button"
-                >
-                    {isGamepad && (
-                        <GamepadIcon className="size-6" icon="options" />
-                    )}
-                    View More
-                    {isGamepad && <div className="size-6" />}
-                </button>
             </div>
-        </div>
+        </Navigable>
     );
 }

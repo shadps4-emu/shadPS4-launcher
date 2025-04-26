@@ -1,6 +1,11 @@
 import { TooltipTrigger } from "@radix-ui/react-tooltip";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { FolderCog, Gamepad2, Search, Settings } from "lucide-react";
+import {
+    FolderCogIcon,
+    Gamepad2Icon,
+    SearchIcon,
+    SettingsIcon,
+} from "lucide-react";
 import { type ComponentProps, useState } from "react";
 import { openEmuConfigWindow } from "@/handlers/window";
 import { cn } from "@/lib/utils/ui";
@@ -13,6 +18,7 @@ import {
 import { RunningGameIcons } from "./running-game-icons";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { Navigable } from "./ui/navigable";
 import {
     Select,
     SelectContent,
@@ -77,14 +83,15 @@ function ToolbarButton({
     ...props
 }: ComponentProps<typeof Button> & { tooltip?: string }) {
     const content = (
-        <button
-            className={cn(
-                "rounded-md p-2 *:size-6 focus-within:bg-muted hover:bg-muted",
-                className,
-            )}
-            data-gamepad-selectable
-            {...props}
-        />
+        <Navigable>
+            <button
+                className={cn(
+                    "rounded-md p-2 *:size-6 focus-within:bg-muted hover:bg-muted",
+                    className,
+                )}
+                {...props}
+            />
+        </Navigable>
     );
     if (!tooltip) {
         return content;
@@ -104,29 +111,30 @@ export function Toolbar() {
         <div className="sticky top-0 z-30 flex justify-between border-b-2 p-3 px-10">
             <div className="flex items-center gap-4">
                 <div className="relative">
-                    <Search className="absolute top-2.5 left-2 size-4 text-muted-foreground" />
-                    <Input
-                        className="w-full pl-8"
-                        data-gamepad-selectable="CENTER_LEFT"
-                        placeholder="Search..."
-                        type="search"
-                    />
+                    <SearchIcon className="absolute top-2.5 left-2 size-4 text-muted-foreground" />
+                    <Navigable anchor="CENTER_LEFT">
+                        <Input
+                            className="w-full pl-8"
+                            placeholder="Search..."
+                            type="search"
+                        />
+                    </Navigable>
                 </div>
                 <div className="flex items-center gap-2">
                     <ToolbarButton
                         onClick={() => openEmuConfigWindow()}
                         tooltip="Emulator Settings"
                     >
-                        <Settings />
+                        <SettingsIcon />
                     </ToolbarButton>
                     <ToolbarButton
                         onClick={() => setFolderConfigModalOpen(true)}
                         tooltip="Folder Settings"
                     >
-                        <FolderCog className="h-6 w-6" />
+                        <FolderCogIcon className="h-6 w-6" />
                     </ToolbarButton>
                     <ToolbarButton>
-                        <Gamepad2 className="h-6 w-6" />
+                        <Gamepad2Icon className="h-6 w-6" />
                     </ToolbarButton>
                 </div>
             </div>

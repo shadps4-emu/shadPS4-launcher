@@ -96,7 +96,6 @@
             },
             "a11y": {
                 "useKeyWithClickEvents": "off",
-                "noNoninteractiveTabindex": "off",
             },
         },
     },
@@ -115,7 +114,7 @@
     },
     "overrides": [
         {
-            "includes": ["src/lib/hooks/**/*.tsx"],
+            "includes": ["src/lib/hooks/**/*.ts"],
             "linter": {
                 "rules": {
                     "style": {
@@ -126,6 +125,21 @@
                                 "requireAscii": true,
                                 "match": "use.*",
                                 "filenameCases": ["camelCase"],
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        {
+            "includes": ["src/lib/hooks/**/*.tsx"],
+            "linter": {
+                "rules": {
+                    "style": {
+                        "useFilenamingConvention": {
+                            "level": "error",
+                            "options": {
+                                "match": "Hook_Should_Use_Ts_Extension!",
                             },
                         },
                     },
