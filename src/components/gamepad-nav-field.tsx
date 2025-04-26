@@ -7,6 +7,7 @@ import {
 } from "react";
 import type { GamepadButtonEvent } from "@/handlers/gamepad";
 import { useGamepadInputStack } from "@/hooks/useGamepadInputStack";
+import type { Tuple } from "@/utils/types";
 
 export const BUTTON_MAP = {
     confirm: 0,
@@ -34,7 +35,6 @@ export type GamepadButtons =
     (typeof BUTTON_MAP_REVERSE)[keyof typeof BUTTON_MAP_REVERSE];
 
 const SELECTABLE_DATA_ATTR = "data-gamepad-selectable";
-const SELECTION_ANGLE = (60 * Math.PI) / 180;
 
 interface Props {
     zIndex?: number;
@@ -64,6 +64,17 @@ function rectCenter(rect: DOMRect, anchor?: string | null): Point {
     const width = rect.width * a[0];
     const height = rect.height * a[1];
     return { x: rect.x + width, y: rect.y + height };
+}
+
+function getBoundWithScroll(element: Element): DOMRect {
+    const rect = element.getBoundingClientRect();
+    let parent: Element | null = element;
+    while (parent != null) {
+        rect.y += parent.scrollTop;
+        rect.x += parent.scrollLeft;
+        parent = parent.parentElement;
+    }
+    return rect;
 }
 
 function pointDiff(p1: Point, p2: Point): Point {
@@ -102,15 +113,29 @@ export function GamepadNavField({
             return;
         }
 
-        const angleOffset = Math.atan2(y, x);
-
+        const activeRect = getBoundWithScroll(active);
         const activeCenter = rectCenter(
-            active.getBoundingClientRect(),
+            activeRect,
             active.getAttribute(SELECTABLE_DATA_ATTR),
         );
 
+        const bounds: Tuple<number, 4> = [
+            Number.NEGATIVE_INFINITY, // -x
+            Number.NEGATIVE_INFINITY, // -y
+            Number.POSITIVE_INFINITY, // +x
+            Number.POSITIVE_INFINITY, // +y
+        ];
+
+        if (x !== 0) {
+            bounds[1] = activeRect.top;
+            bounds[3] = activeRect.bottom;
+        }
+        if (y !== 0) {
+            bounds[0] = activeRect.left;
+            bounds[2] = activeRect.right;
+        }
+
         let next: HTMLElement | null = null;
-        let nextAngle = Number.MAX_VALUE;
         let nextDistance = Number.MAX_VALUE;
         let fallback: HTMLElement | null = null;
         let fallbackDistance = Number.MAX_VALUE;
@@ -119,24 +144,32 @@ export function GamepadNavField({
                 continue;
             }
 
-            const c = rectCenter(
-                e.getBoundingClientRect(),
+            const rect = getBoundWithScroll(e);
+            const center = rectCenter(
+                rect,
                 e.getAttribute(SELECTABLE_DATA_ATTR),
             );
-            const diff = pointDiff(activeCenter, c);
+            const diff = pointDiff(activeCenter, center);
 
-            let angle = Math.abs(angleOffset - Math.atan2(diff.y, diff.x));
-            if (angle > Math.PI) {
-                angle = Math.PI * 2 - angle;
+            if (x > 0 && diff.x <= 0.01) {
+                continue;
+            } else if (x < 0 && diff.x >= -0.01) {
+                continue;
             }
+            if (y > 0 && diff.y <= 0.01) {
+                continue;
+            } else if (y < 0 && diff.y >= -0.01) {
+                continue;
+            }
+
+            const inBounds =
+                center.x >= bounds[0] &&
+                center.x <= bounds[2] &&
+                center.y >= bounds[1] &&
+                center.y <= bounds[3];
             const dist = distSquared(diff);
-            if (
-                angle < SELECTION_ANGLE &&
-                (angle - nextAngle < 0.1 || angle < 0.01) &&
-                (dist < nextDistance || (angle < 0.01 && nextAngle > 0.15))
-            ) {
+            if (inBounds && dist < nextDistance) {
                 next = e;
-                nextAngle = angle;
                 nextDistance = dist;
             }
 
