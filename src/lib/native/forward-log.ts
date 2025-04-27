@@ -71,7 +71,11 @@ function forwardConsole(
                         case "symbol":
                             return String(e);
                         case "object":
-                            return JSON.stringify(e);
+                            try {
+                                return JSON.stringify(e);
+                            } catch (_e) {
+                                return "[object Object]";
+                            }
                         case "undefined":
                             return "undefined";
                     }

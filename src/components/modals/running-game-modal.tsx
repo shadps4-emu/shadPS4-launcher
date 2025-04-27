@@ -1,6 +1,17 @@
 import { useAtomValue, useSetAtom, useStore } from "jotai";
-import { Maximize, Maximize2, Pause, Trash2, Volume2, X } from "lucide-react";
+import {
+    Maximize2Icon,
+    MaximizeIcon,
+    PauseIcon,
+    Trash2Icon,
+    Volume2Icon,
+    XIcon,
+} from "lucide-react";
 import { useState } from "react";
+import {
+    type GamepadButton,
+    GamepadNavField,
+} from "@/lib/context/gamepad-nav-field";
 import { cn } from "@/lib/utils/ui";
 import {
     atomRunningGames,
@@ -28,6 +39,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "../ui/dialog";
+import { Navigable } from "../ui/navigable";
 import { Skeleton } from "../ui/skeleton";
 
 export function RunningGameDialog({
@@ -60,6 +72,13 @@ export function RunningGameDialog({
         close();
     };
 
+    const onButtonPress = (btn: GamepadButton) => {
+        if (btn === "back") {
+            close();
+            return;
+        }
+    };
+
     if (data instanceof Error) {
         return (
             <Dialog onOpenChange={close} open>
@@ -72,121 +91,152 @@ export function RunningGameDialog({
 
     return (
         <Dialog onOpenChange={close} open>
-            <DialogContent
-                aria-describedby={undefined}
-                className={cn("flex flex-col gap-4", {
-                    "h-[calc(100vh-100px)] p-10 md:max-w-[800px]": !maximized,
-                    "h-screen w-screen max-w-full": maximized,
-                })}
+            <GamepadNavField
+                debugName="running-game-modal"
+                onButtonPress={onButtonPress}
             >
-                <DialogHeader>
-                    <div className="flex items-center gap-4">
-                        <div className="relative h-16 w-16 overflow-hidden rounded-md border">
-                            {data.cover ? (
-                                <img
-                                    alt={data.title}
-                                    className="object-cover"
-                                    src={data.cover}
-                                />
+                <DialogContent
+                    aria-describedby={undefined}
+                    className={cn("flex flex-col gap-4", {
+                        "h-[calc(100vh-100px)] p-10 md:max-w-[800px]":
+                            !maximized,
+                        "h-screen w-screen max-w-full": maximized,
+                    })}
+                >
+                    <DialogHeader>
+                        <div className="flex items-center gap-4">
+                            <div className="relative h-16 w-16 overflow-hidden rounded-md border">
+                                {data.cover ? (
+                                    <img
+                                        alt={data.title}
+                                        className="object-cover"
+                                        src={data.cover}
+                                    />
+                                ) : (
+                                    <Skeleton />
+                                )}
+                            </div>
+                            <div>
+                                <DialogTitle className="text-xl">
+                                    {data.title}
+                                </DialogTitle>
+                                <DialogDescription className="mt-1 flex items-center gap-2">
+                                    <span className="text-muted-foreground text-xs">
+                                        Last played: 2025/01/01{" "}
+                                        {/* {gameData.lastPlayed} */}
+                                    </span>
+                                </DialogDescription>
+                            </div>
+                        </div>
+                    </DialogHeader>
+
+                    <div className="flex flex-1 flex-col">
+                        <div className="mb-2 flex items-center justify-between">
+                            <h3 className="font-medium text-sm">Output Log</h3>
+                            <Badge
+                                className="text-xs"
+                                variant={isRunning ? "default" : "secondary"}
+                            >
+                                {isRunning
+                                    ? "Running"
+                                    : `Exited with code ${runningFlag}`}
+                            </Badge>
+                        </div>
+
+                        <LogList atomLog={atomLog} />
+                    </div>
+
+                    <div className="flex justify-between">
+                        <div className="flex gap-2">
+                            <Navigable defaultMouse disabled>
+                                <Button disabled size="icon" variant="outline">
+                                    <PauseIcon className="h-4 w-4" />
+                                </Button>
+                            </Navigable>
+                            <Navigable defaultMouse disabled>
+                                <Button
+                                    disabled
+                                    size="icon"
+                                    // onClick={() => setIsMuted(!isMuted)}
+                                    variant="outline"
+                                >
+                                    <Volume2Icon className="h-4 w-4" />
+                                </Button>
+                            </Navigable>
+                        </div>
+                        <div className="flex gap-2">
+                            <Navigable defaultMouse>
+                                <Button size="icon" variant="outline">
+                                    <Maximize2Icon className="h-4 w-4" />
+                                </Button>
+                            </Navigable>
+                            {isRunning ? (
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Navigable defaultMouse>
+                                            <Button
+                                                size="icon"
+                                                variant="destructive"
+                                            >
+                                                <XIcon className="h-4 w-4" />
+                                            </Button>
+                                        </Navigable>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <GamepadNavField>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>
+                                                    Are you sure you want to
+                                                    kill the game?
+                                                </AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    Make sure to save the game
+                                                    first
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <Navigable defaultMouse>
+                                                    <AlertDialogCancel asChild>
+                                                        <Button variant="secondary">
+                                                            Cancel
+                                                        </Button>
+                                                    </AlertDialogCancel>
+                                                </Navigable>
+                                                <Navigable defaultMouse>
+                                                    <AlertDialogAction
+                                                        asChild
+                                                        onClick={kill}
+                                                    >
+                                                        <Button>Kill</Button>
+                                                    </AlertDialogAction>
+                                                </Navigable>
+                                            </AlertDialogFooter>
+                                        </GamepadNavField>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                             ) : (
-                                <Skeleton />
+                                <Navigable defaultMouse>
+                                    <Button
+                                        onClick={trash}
+                                        size="icon"
+                                        variant="secondary"
+                                    >
+                                        <Trash2Icon className="h-4 w-4" />
+                                    </Button>
+                                </Navigable>
                             )}
                         </div>
-                        <div>
-                            <DialogTitle className="text-xl">
-                                {data.title}
-                            </DialogTitle>
-                            <DialogDescription className="mt-1 flex items-center gap-2">
-                                <span className="text-muted-foreground text-xs">
-                                    Last played: 2025/01/01{" "}
-                                    {/* {gameData.lastPlayed} */}
-                                </span>
-                            </DialogDescription>
-                        </div>
-                    </div>
-                </DialogHeader>
-
-                <div className="flex flex-1 flex-col">
-                    <div className="mb-2 flex items-center justify-between">
-                        <h3 className="font-medium text-sm">Output Log</h3>
-                        <Badge
-                            className="text-xs"
-                            variant={isRunning ? "default" : "secondary"}
-                        >
-                            {isRunning
-                                ? "Running"
-                                : `Exited with code ${runningFlag}`}
-                        </Badge>
                     </div>
 
-                    <LogList atomLog={atomLog} />
-                </div>
-
-                <div className="flex justify-between">
-                    <div className="flex gap-2">
-                        <Button disabled size="icon" variant="outline">
-                            <Pause className="h-4 w-4" />
-                        </Button>
-                        <Button
-                            disabled
-                            size="icon"
-                            // onClick={() => setIsMuted(!isMuted)}
-                            variant="outline"
-                        >
-                            <Volume2 className="h-4 w-4" />
-                        </Button>
-                    </div>
-                    <div className="flex gap-2">
-                        <Button size="icon" variant="outline">
-                            <Maximize2 className="h-4 w-4" />
-                        </Button>
-                        {isRunning ? (
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button size="icon" variant="destructive">
-                                        <X className="h-4 w-4" />
-                                    </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>
-                                            Are you sure you want to kill the
-                                            game?
-                                        </AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            Make sure to save the game first
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>
-                                            Cancel
-                                        </AlertDialogCancel>
-                                        <AlertDialogAction onClick={kill}>
-                                            Kill
-                                        </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                        ) : (
-                            <Button
-                                onClick={trash}
-                                size="icon"
-                                variant="secondary"
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        )}
-                    </div>
-                </div>
-
-                <button
-                    className="absolute top-4 right-10 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
-                    onClick={() => setMaximized((prev) => !prev)}
-                    type="button"
-                >
-                    <Maximize className="size-4" />
-                </button>
-            </DialogContent>
+                    <button
+                        className="absolute top-4 right-10 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+                        onClick={() => setMaximized((prev) => !prev)}
+                        type="button"
+                    >
+                        <MaximizeIcon className="size-4" />
+                    </button>
+                </DialogContent>
+            </GamepadNavField>
         </Dialog>
     );
 }

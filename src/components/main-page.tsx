@@ -4,7 +4,7 @@ import { Toolbar } from "./toolbar";
 
 export function MainPage() {
     return (
-        <GamepadNavField>
+        <GamepadNavField debugName="main-page" zIndex={0}>
             <div className="flex h-full flex-col">
                 <Toolbar />
                 <GameLibrary />

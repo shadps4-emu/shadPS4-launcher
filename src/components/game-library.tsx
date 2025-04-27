@@ -3,7 +3,6 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { exists, mkdir } from "@tauri-apps/plugin-fs";
 import { useAtom, useStore } from "jotai";
 import { Suspense, useEffect, useRef, useState } from "react";
-
 import { openPath } from "@/lib/native/common";
 import { atomGameLibrary } from "@/store/game-library";
 import { atomGamesPath } from "@/store/paths";
@@ -92,7 +91,7 @@ function Grid() {
                         transform: `translateY(${items[0]?.start ?? 0}px)`,
                     }}
                 >
-                    {items.map((row, idx) => {
+                    {items.map((row) => {
                         const firstIdx = row.index * itemPerRow;
                         const lastIdx = firstIdx + itemPerRow;
                         const entries = games.slice(firstIdx, lastIdx);
@@ -103,12 +102,8 @@ function Grid() {
                                 key={row.key}
                                 ref={virtualizer.measureElement}
                             >
-                                {entries.map((game, jdx) => (
-                                    <GameBox
-                                        game={game}
-                                        isFirst={idx === 0 && jdx === 0}
-                                        key={game.path}
-                                    />
+                                {entries.map((game) => (
+                                    <GameBox game={game} key={game.path} />
                                 ))}
                                 {Array(itemPerRow - entries.length)
                                     .fill(0)

@@ -1,7 +1,7 @@
 import { format } from "date-fns";
-import { useAtom, useAtomValue, useStore } from "jotai";
-import { Check, CircleSlash, Plus } from "lucide-react";
-import { type ReactNode, useEffect, useState } from "react";
+import { useAtomValue, useSetAtom, useStore } from "jotai";
+import { CheckIcon, CircleSlashIcon, PlusIcon } from "lucide-react";
+import { type ReactNode, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +26,10 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { installNewVersion } from "@/handlers/version-manager";
+import {
+    type GamepadButton,
+    GamepadNavField,
+} from "@/lib/context/gamepad-nav-field";
 import { atomEmuInstallsPath } from "@/store/paths";
 import {
     atomAvailableVersions,
@@ -33,6 +37,7 @@ import {
     atomModalVersionManagerIsOpen,
     type RemoteEmulatorVersion,
 } from "@/store/version-manager";
+import { Navigable } from "../ui/navigable";
 
 function VersionTableRow({
     source,
@@ -83,14 +88,16 @@ function DownloadButton({
         return (
             <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
-                    <Button
-                        className="cursor-default hover:bg-inherit"
-                        size="icon"
-                        variant="ghost"
-                    >
-                        {" "}
-                        <Check />
-                    </Button>
+                    <Navigable defaultMouse>
+                        <Button
+                            className="cursor-default hover:bg-inherit"
+                            size="icon"
+                            variant="ghost"
+                        >
+                            {" "}
+                            <CheckIcon />
+                        </Button>
+                    </Navigable>
                 </TooltipTrigger>
                 <TooltipContent>
                     <span>Already Installed</span>
@@ -103,7 +110,7 @@ function DownloadButton({
         <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
                 <Button disabled size="icon" variant="outline">
-                    <CircleSlash />
+                    <CircleSlashIcon />
                 </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -113,9 +120,11 @@ function DownloadButton({
     }
 
     return (
-        <Button onClick={onClick} size="icon" variant="outline">
-            <Plus />
-        </Button>
+        <Navigable defaultMouse>
+            <Button onClick={onClick} size="icon" variant="outline">
+                <PlusIcon />
+            </Button>
+        </Navigable>
     );
 }
 
@@ -180,79 +189,96 @@ function AddNewVersion() {
     );
 }
 
-export function VersionManagerModal() {
-    const [isOpen, setIsOpen] = useAtom(atomModalVersionManagerIsOpen);
+function VersionManagerDialog() {
+    const setIsOpen = useSetAtom(atomModalVersionManagerIsOpen);
     const [isNew, setIsNew] = useState(false);
-
     const installedVersions = useAtomValue(atomInstalledVersions);
 
-    useEffect(() => {
-        if (!isOpen) {
-            setIsNew(false);
+    const onButtonPress = (btn: GamepadButton) => {
+        if (btn === "back") {
+            setIsOpen(false);
+            return;
         }
-    }, [isOpen]);
+    };
 
     return (
         <>
-            <Dialog onOpenChange={setIsOpen} open={isOpen}>
-                {isNew ? (
-                    <AddNewVersion />
-                ) : (
-                    <DialogContent
-                        aria-describedby={undefined}
-                        className="min-w-[525px]"
-                    >
-                        <DialogHeader>
-                            <DialogTitle>
-                                <div className="flex items-center gap-4">
-                                    <span>Version Manager</span>
-                                    <Button
-                                        onClick={() => setIsNew(true)}
-                                        size="sm"
-                                    >
-                                        Add
-                                    </Button>
-                                </div>
-                            </DialogTitle>
-                        </DialogHeader>
-                        <div className="flex">
-                            <Table className="gap-4">
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Source</TableHead>
-                                        <TableHead>Date</TableHead>
-                                        <TableHead>Version</TableHead>
-                                        <TableHead>Release</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {installedVersions.length === 0 ? (
-                                        <TableRow>
-                                            <TableCell
-                                                className="text-center"
-                                                colSpan={4}
+            <Dialog onOpenChange={setIsOpen} open>
+                <GamepadNavField
+                    debugName="version-manager"
+                    onButtonPress={onButtonPress}
+                >
+                    {isNew ? (
+                        <AddNewVersion />
+                    ) : (
+                        <DialogContent
+                            aria-describedby={undefined}
+                            className="min-w-[525px]"
+                        >
+                            <DialogHeader>
+                                <DialogTitle>
+                                    <div className="flex items-center gap-4">
+                                        <span>Version Manager</span>
+                                        <Navigable defaultMouse>
+                                            <Button
+                                                onClick={() => setIsNew(true)}
+                                                size="sm"
                                             >
-                                                No version installed
-                                            </TableCell>
+                                                Add
+                                            </Button>
+                                        </Navigable>
+                                    </div>
+                                </DialogTitle>
+                            </DialogHeader>
+                            <div className="flex">
+                                <Table className="gap-4">
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Source</TableHead>
+                                            <TableHead>Date</TableHead>
+                                            <TableHead>Version</TableHead>
+                                            <TableHead>Release</TableHead>
                                         </TableRow>
-                                    ) : (
-                                        installedVersions.map((v) => (
-                                            <VersionTableRow
-                                                date={format(v.date, "PP")}
-                                                key={JSON.stringify(v)}
-                                                prePelease={v.prerelease}
-                                                release={v.name}
-                                                source={v.repo}
-                                                version={v.version}
-                                            />
-                                        ))
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </DialogContent>
-                )}
+                                    </TableHeader>
+                                    <TableBody>
+                                        {installedVersions.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell
+                                                    className="text-center"
+                                                    colSpan={4}
+                                                >
+                                                    No version installed
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            installedVersions.map((v) => (
+                                                <VersionTableRow
+                                                    date={format(v.date, "PP")}
+                                                    key={JSON.stringify(v)}
+                                                    prePelease={v.prerelease}
+                                                    release={v.name}
+                                                    source={v.repo}
+                                                    version={v.version}
+                                                />
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </DialogContent>
+                    )}
+                </GamepadNavField>
             </Dialog>
         </>
     );
+}
+
+export function VersionManagerModal() {
+    const isOpen = useAtomValue(atomModalVersionManagerIsOpen);
+
+    if (!isOpen) {
+        return <></>;
+    }
+
+    return <VersionManagerDialog />;
 }

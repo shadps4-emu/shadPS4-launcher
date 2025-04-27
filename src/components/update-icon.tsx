@@ -1,5 +1,5 @@
 import { useAtomValue } from "jotai";
-import { Download } from "lucide-react";
+import { DownloadIcon } from "lucide-react";
 import { createPortal } from "react-dom";
 import { installUpdate } from "@/handlers/auto-update";
 import { atomUpdateAvailable as atomAvailableUpdate } from "@/store/common";
@@ -20,7 +20,7 @@ export function UpdateIcon() {
                         className="animate-bounce cursor-pointer rounded-full bg-green-100 p-4"
                         onClick={installUpdate}
                     >
-                        <Download className="h-5 w-5 text-green-700" />
+                        <DownloadIcon className="h-5 w-5 text-green-700" />
                     </div>
                 </TooltipTrigger>
                 <TooltipContent>

@@ -1,5 +1,5 @@
 import { useAtomValue, useStore } from "jotai";
-import { Menu } from "lucide-react";
+import { MenuIcon } from "lucide-react";
 import { Suspense, useEffect, useRef, useState } from "react";
 import type toml from "smol-toml";
 import type { TomlPrimitive } from "smol-toml";
@@ -170,7 +170,7 @@ function ConfigWindow({ defaultValues }: { defaultValues: ConfigType }) {
                 <Sheet onOpenChange={setIsMobileOpen} open={isMobileOpen}>
                     <SheetTrigger asChild>
                         <Button className="mr-4" size="icon" variant="outline">
-                            <Menu className="h-5 w-5" />
+                            <MenuIcon className="h-5 w-5" />
                             <span className="sr-only">Toggle menu</span>
                         </Button>
                     </SheetTrigger>

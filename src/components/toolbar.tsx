@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { type ComponentProps, useState } from "react";
 import { openEmuConfigWindow } from "@/handlers/window";
+import { GamepadNavField } from "@/lib/context/gamepad-nav-field";
 import { cn } from "@/lib/utils/ui";
 import { atomFolderConfigModalIsOpen, oficialRepo } from "@/store/common";
 import {
@@ -47,48 +48,58 @@ function VersionSelector() {
             value={selectVersion?.path}
         >
             <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="No version selected">
-                    {selectVersion &&
-                        `${selectVersion.version} ${selectVersion.name} ${selectVersion.repo !== oficialRepo ? selectVersion.repo : ""}`}
-                </SelectValue>
+                <Navigable defaultMouse>
+                    <SelectValue placeholder="No version selected">
+                        {selectVersion &&
+                            `${selectVersion.version} ${selectVersion.name} ${selectVersion.repo !== oficialRepo ? selectVersion.repo : ""}`}
+                    </SelectValue>
+                </Navigable>
             </SelectTrigger>
             <SelectContent>
-                <SelectGroup>
-                    <SelectLabel>Emulator Version</SelectLabel>
-                    {installedVersions.map((v) => (
-                        <SelectItem key={v.path} value={v.path}>
-                            {v.version} {v.name}{" "}
-                            {v.repo !== oficialRepo && `(${v.repo})`}
-                        </SelectItem>
-                    ))}
-                </SelectGroup>
-                <SelectSeparator />
-                <Button
-                    onClick={() => {
-                        setIsOpen(false);
-                        setVersionManagerModalOpen(true);
-                    }}
-                    variant="ghost"
-                >
-                    Open Version Manager
-                </Button>
+                {isOpen && (
+                    <GamepadNavField debugName="version-selector">
+                        <SelectGroup>
+                            <SelectLabel>Emulator Version</SelectLabel>
+                            {installedVersions.map((v) => (
+                                <Navigable defaultMouse key={v.path}>
+                                    <SelectItem value={v.path}>
+                                        {v.version} {v.name}{" "}
+                                        {v.repo !== oficialRepo &&
+                                            `(${v.repo})`}
+                                    </SelectItem>
+                                </Navigable>
+                            ))}
+                        </SelectGroup>
+                        <SelectSeparator />
+                        <Navigable defaultMouse>
+                            <Button
+                                onClick={() => {
+                                    setIsOpen(false);
+                                    setVersionManagerModalOpen(true);
+                                }}
+                                variant="ghost"
+                            >
+                                Open Version Manager
+                            </Button>
+                        </Navigable>
+                    </GamepadNavField>
+                )}
             </SelectContent>
         </Select>
     );
 }
 
 function ToolbarButton({
-    className,
     tooltip,
+    className,
     ...props
 }: ComponentProps<typeof Button> & { tooltip?: string }) {
     const content = (
-        <Navigable>
-            <button
-                className={cn(
-                    "rounded-md p-2 *:size-6 focus-within:bg-muted hover:bg-muted",
-                    className,
-                )}
+        <Navigable defaultMouse>
+            <Button
+                className={cn("[&_svg]:size-6", className)}
+                size="icon"
+                variant="ghost"
                 {...props}
             />
         </Navigable>
@@ -131,10 +142,10 @@ export function Toolbar() {
                         onClick={() => setFolderConfigModalOpen(true)}
                         tooltip="Folder Settings"
                     >
-                        <FolderCogIcon className="h-6 w-6" />
+                        <FolderCogIcon />
                     </ToolbarButton>
                     <ToolbarButton>
-                        <Gamepad2Icon className="h-6 w-6" />
+                        <Gamepad2Icon />
                     </ToolbarButton>
                 </div>
             </div>

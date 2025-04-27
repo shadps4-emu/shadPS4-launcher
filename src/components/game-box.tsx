@@ -12,7 +12,9 @@ import CN from "@/assets/flags/cn.svg";
 import EU from "@/assets/flags/eu.svg";
 import JP from "@/assets/flags/jp.svg";
 import US from "@/assets/flags/us.svg";
+import type { GamepadButtonEvent } from "@/handlers/gamepad";
 import { startGame } from "@/handlers/run-emu";
+import type { GamepadButton } from "@/lib/context/gamepad-nav-field";
 import type { PSF } from "@/lib/native/psf";
 import { stringifyError } from "@/lib/utils/error";
 import { atomShowingGameDetails } from "@/store/common";
@@ -59,13 +61,7 @@ export function EmptyGameBox() {
     );
 }
 
-export function GameBox({
-    game,
-    isFirst,
-}: {
-    game: GameEntry;
-    isFirst?: boolean;
-}) {
+export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     const [isPending, startTransaction] = useTransition();
 
     const valueData = useAtomValue(game.dataLoadable);
@@ -106,13 +102,26 @@ export function GameBox({
         setClickCount(0);
     };
 
+    const openDetails = () => {
+        setShowingDetails(data);
+    };
+
+    const onButtonPress = (btn: GamepadButton, e: GamepadButtonEvent) => {
+        if (btn === "options") {
+            openDetails();
+        } else if (btn === "confirm") {
+            e.preventDefault();
+            openGame();
+        }
+    };
+
     if (valueData.state === "loading") {
         return <GameBoxSkeleton />;
     }
 
     if (valueData.state === "hasError") {
         return (
-            <div className="relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform focus-within:scale-110 hover:scale-110">
+            <div className="relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform">
                 <div className="flex flex-col items-center justify-center gap-2">
                     <FrownIcon className="h-8" />
                     <span className="text-sm">
@@ -126,9 +135,9 @@ export function GameBox({
     const data = valueData.data;
 
     return (
-        <Navigable>
+        <Navigable defaultMouse onButtonPress={onButtonPress}>
             <div
-                className="group relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform focus-within:scale-110 hover:scale-110"
+                className="group relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform focus-within:scale-110 hover:scale-110 data-gamepad-focus:scale-110"
                 onBlur={onBlur}
                 onClick={onClick}
                 onDoubleClick={openGame}
@@ -150,7 +159,7 @@ export function GameBox({
                     </div>
                 )}
 
-                <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 bg-black/50 opacity-0 backdrop-blur-[2px] transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+                <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 bg-black/50 opacity-0 backdrop-blur-[2px] transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 group-data-gamepad-focus:opacity-100">
                     <span className="col-span-full row-start-1 row-end-2 truncate px-3 py-2 text-center font-semibold text-lg">
                         {/* TODO: scroll text on overflow */}
                         {data.title}
@@ -162,7 +171,6 @@ export function GameBox({
 
                     <button
                         className="col-span-full row-span-full grid size-16 place-items-center place-self-center rounded-full bg-black/75"
-                        data-initial-focus={isFirst ? "" : undefined}
                         data-play-game={""}
                         type="button"
                     >
@@ -170,8 +178,8 @@ export function GameBox({
                     </button>
 
                     <button
-                        className="col-span-full row-start-3 row-end-4 flex flex-row items-center justify-center gap-x-2 self-end py-2 transition-colors hover:bg-secondary/75 focus:bg-secondary/75"
-                        onClick={() => setShowingDetails(data)}
+                        className="col-span-full row-start-3 row-end-4 flex flex-row items-center justify-center gap-x-2 self-end py-2 transition-colors hover:bg-secondary/75 focus:bg-secondary/75 group-data-gamepad-focus:bg-secondary/75"
+                        onClick={openDetails}
                         type="button"
                     >
                         {isGamepad && (

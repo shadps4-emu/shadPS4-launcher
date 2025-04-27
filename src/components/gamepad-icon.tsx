@@ -1,11 +1,11 @@
-import { CircleHelp } from "lucide-react";
+import { CircleHelpIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createAbort } from "@/lib/utils/events";
 import { cn } from "@/lib/utils/ui";
-import type { GamepadButtons } from "../lib/context/gamepad-nav-field";
+import type { GamepadButton } from "../lib/context/gamepad-nav-field";
 
 export interface GamepadIconProps {
-    icon: GamepadButtons;
+    icon: GamepadButton;
     type?: "xbox";
     outline?: boolean;
     className?: string;
@@ -45,7 +45,7 @@ export default function GamepadIcon({
         return null;
     }
     if (loadedIcon === null) {
-        return <CircleHelp {...rest} className={cn("scale-90")} />;
+        return <CircleHelpIcon {...rest} className={cn("scale-90")} />;
     }
 
     return <img src={loadedIcon} {...rest} alt={icon} />;

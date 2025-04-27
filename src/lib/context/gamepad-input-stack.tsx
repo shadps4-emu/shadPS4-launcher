@@ -26,7 +26,7 @@ interface IGamepadInputStack {
     isOnTop(symbol: symbol): boolean;
     getNextZIndex(): number;
 
-    add(zIndex?: number): symbol;
+    add(zIndex?: number, debugName?: string): symbol;
     del(symbol: symbol): void;
 
     listen(symbol: symbol, button: number, callback: Callback): Unlisten;
@@ -50,13 +50,14 @@ export function GamepadInputStackProvider({ children }: PropsWithChildren) {
     }, []);
 
     const add = useCallback(
-        (_zIndex?: number): symbol => {
+        (_zIndex?: number, debugName?: string): symbol => {
             const symbol = Symbol();
-            const zIndex = _zIndex || getNextZIndex();
+            const zIndex = _zIndex ?? getNextZIndex();
             const newTarget = {
                 zIndex,
                 symbol,
                 listener: new Map(),
+                debugName,
             };
             targets.current.push(newTarget);
             targets.current.sort(compare);

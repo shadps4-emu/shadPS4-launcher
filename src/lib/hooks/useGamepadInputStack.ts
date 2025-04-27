@@ -2,7 +2,7 @@ import { useCallback, useContext, useEffect, useRef } from "react";
 import type { GamepadButtonEvent } from "@/handlers/gamepad";
 import { GamepadInputStackProvider } from "@/lib/context/gamepad-input-stack";
 
-export function useGamepadInputStack(zIndex?: number) {
+export function useGamepadInputStack(zIndex?: number, debugName?: string) {
     const context = useContext(GamepadInputStackProvider.Context);
     if (!context) {
         throw new Error(
@@ -12,7 +12,7 @@ export function useGamepadInputStack(zIndex?: number) {
 
     const symRef = useRef<symbol>(null);
     useEffect(() => {
-        symRef.current = context.add(zIndex);
+        symRef.current = context.add(zIndex, debugName);
 
         return () => {
             const sym = symRef.current;
@@ -21,7 +21,7 @@ export function useGamepadInputStack(zIndex?: number) {
             }
             context.del(sym);
         };
-    }, [context, zIndex]);
+    }, [context, zIndex, debugName]);
 
     const listen = useCallback(
         (button: number, callback: (e: GamepadButtonEvent) => void) => {

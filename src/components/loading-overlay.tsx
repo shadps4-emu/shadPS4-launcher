@@ -1,5 +1,6 @@
 import { useAtomValue } from "jotai";
 import type { ReactElement } from "react";
+import { GamepadNavField } from "@/lib/context/gamepad-nav-field";
 import { cn } from "@/lib/utils/ui";
 import { atomDownloadingOverlay } from "@/store/common";
 import { Progress } from "./ui/progress";
@@ -106,5 +107,9 @@ export function LoadingOverlay() {
         props.format = value.format;
     }
 
-    return <LoadingScreen message={value.message} {...props} />;
+    return (
+        <GamepadNavField zIndex={9999}>
+            <LoadingScreen message={value.message} {...props} />
+        </GamepadNavField>
+    );
 }

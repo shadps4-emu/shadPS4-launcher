@@ -1,3 +1,4 @@
+import type { UnlistenFn } from "@tauri-apps/api/event";
 import {
     createContext,
     type PropsWithChildren,
@@ -6,7 +7,7 @@ import {
     useEffect,
     useRef,
 } from "react";
-import type { GamepadButtonEvent } from "@/handlers/gamepad";
+import { GamepadButtonEvent } from "@/handlers/gamepad";
 import { useGamepadInputStack } from "@/lib/hooks/useGamepadInputStack";
 import type { Tuple } from "@/lib/utils/types";
 
@@ -22,22 +23,21 @@ export const BUTTON_MAP = {
 } as const;
 
 export const BUTTON_MAP_REVERSE = {
-    0: "confirm",
-    1: "back",
-    2: "extra",
-    3: "options",
-    12: "dpad_up",
-    13: "dpad_down",
-    14: "dpad_left",
-    15: "dpad_right",
-} as const;
+    "0": "confirm",
+    "1": "back",
+    "2": "extra",
+    "3": "options",
+    "12": "dpad_up",
+    "13": "dpad_down",
+    "14": "dpad_left",
+    "15": "dpad_right",
+} as const satisfies {
+    [V in (typeof BUTTON_MAP)[keyof typeof BUTTON_MAP] &
+        PropertyKey]: keyof typeof BUTTON_MAP;
+};
 
-export type GamepadButtons =
+export type GamepadButton =
     (typeof BUTTON_MAP_REVERSE)[keyof typeof BUTTON_MAP_REVERSE];
-
-type Props = PropsWithChildren<{
-    zIndex?: number;
-}>;
 
 interface Point {
     x: number;
@@ -89,40 +89,83 @@ function distSquared({ x, y }: Point): number {
 export interface INavTarget {
     element: RefObject<HTMLElement | null>;
     anchor?: Anchor | undefined;
-    onSelect?: ((e: GamepadButtonEvent) => void) | undefined;
-    onUnselect?: ((e: GamepadButtonEvent) => void) | undefined;
+    onSelect?:
+        | ((btn: GamepadButton | null, e: GamepadButtonEvent) => void)
+        | undefined;
+    onUnselect?:
+        | ((btn: GamepadButton | null, e: GamepadButtonEvent) => void)
+        | undefined;
+    onButtonPress?:
+        | ((btn: GamepadButton, e: GamepadButtonEvent) => void)
+        | undefined;
 }
 
 export interface IGamepadNavField {
-    register(target: INavTarget): void;
-    unregister(target: INavTarget): void;
+    register(target: INavTarget, grabFocus?: boolean): symbol;
+    unregister(symbol: symbol): void;
 }
 
 const context = createContext<IGamepadNavField | null>(null);
 
-export function GamepadNavField({ zIndex, children }: Props) {
-    const availableElements = useRef(new Set<INavTarget>());
+type Props = PropsWithChildren<{
+    zIndex?: number;
+    debugName?: string;
+    onButtonPress?:
+        | ((
+              btn: GamepadButton,
+              target: INavTarget | null,
+              e: GamepadButtonEvent,
+          ) => void)
+        | undefined;
+}>;
+
+export function GamepadNavField({
+    zIndex,
+    debugName,
+    onButtonPress,
+    children,
+}: Props) {
+    const { listen: listenButton } = useGamepadInputStack(zIndex, debugName);
+    const availableElements = useRef<(INavTarget & { symbol: symbol })[]>([]);
     const activeTarget = useRef<INavTarget | null>(null);
 
-    const select = useCallback((target: INavTarget, e: GamepadButtonEvent) => {
-        const active = activeTarget.current;
-        active?.onUnselect?.(e);
-        activeTarget.current = target;
-        target.onSelect?.(e);
-    }, []);
+    const select = useCallback(
+        (
+            target: INavTarget,
+            btn: GamepadButton | null,
+            e: GamepadButtonEvent,
+        ) => {
+            const active = activeTarget.current;
+            if (btn) {
+                active?.onButtonPress?.(btn, e);
+            }
+            if (e.isPreventingDefault) {
+                return;
+            }
+            active?.onUnselect?.(btn, e);
+            if (e.isPreventingDefault) {
+                return;
+            }
+            activeTarget.current = target;
+            target.onSelect?.(btn, e);
+        },
+        [],
+    );
 
     const onMove = useCallback(
-        (e: GamepadButtonEvent, x: number, y: number) => {
+        (btn: GamepadButton, e: GamepadButtonEvent, x: number, y: number) => {
             const elements = availableElements.current;
-            if (!elements) {
+
+            const active = activeTarget.current;
+            onButtonPress?.(btn, active, e);
+            if (e.isPreventingDefault) {
                 return;
             }
 
-            const active = activeTarget.current;
             if (active == null) {
                 activeTarget.current = elements.values().next().value ?? null;
                 if (activeTarget.current) {
-                    select(activeTarget.current, e);
+                    select(activeTarget.current, btn, e);
                 }
                 return;
             }
@@ -202,45 +245,97 @@ export function GamepadNavField({ zIndex, children }: Props) {
             }
 
             if (next) {
-                select(next, e);
+                select(next, btn, e);
             } else if (fallback) {
-                select(fallback, e);
+                select(fallback, btn, e);
             }
         },
-        [select],
+        [onButtonPress, select],
     );
 
-    const { listen: listenButton } = useGamepadInputStack(zIndex);
-    useEffect(() => {
-        const bindMove = (x: number, y: number) => (e: GamepadButtonEvent) => {
-            if (e.justPressed) {
-                onMove(e, x, y);
+    const onButton = useCallback(
+        (btn: GamepadButton, e: GamepadButtonEvent) => {
+            const active = activeTarget.current;
+            onButtonPress?.(btn, active, e);
+            if (e.isPreventingDefault) {
+                return;
             }
+            active?.onButtonPress?.(btn, e);
+        },
+        [onButtonPress],
+    );
+
+    useEffect(() => {
+        const unsub: UnlistenFn[] = [];
+        const bindMove = (btn: GamepadButton, x: number, y: number) => {
+            const callback = (e: GamepadButtonEvent) => {
+                if (e.justPressed) {
+                    onMove(btn, e, x, y);
+                }
+            };
+            const code = BUTTON_MAP[btn];
+            unsub.push(listenButton(code, callback));
         };
-        const unsub = [
-            listenButton(BUTTON_MAP.dpad_up, bindMove(0, -1)),
-            listenButton(BUTTON_MAP.dpad_down, bindMove(0, 1)),
-            listenButton(BUTTON_MAP.dpad_left, bindMove(-1, 0)),
-            listenButton(BUTTON_MAP.dpad_right, bindMove(1, 0)),
-        ];
+        const bindButton = (btn: GamepadButton) => {
+            const callback = (e: GamepadButtonEvent) => {
+                if (e.justPressed) {
+                    onButton(btn, e);
+                }
+            };
+            unsub.push(listenButton(BUTTON_MAP[btn], callback));
+        };
+        bindMove("dpad_up", 0, -1);
+        bindMove("dpad_down", 0, 1);
+        bindMove("dpad_left", -1, 0);
+        bindMove("dpad_right", 1, 0);
+        bindButton("confirm");
+        bindButton("back");
+        bindButton("extra");
+        bindButton("options");
         return () => {
             for (const u of unsub) {
                 u();
             }
         };
-    }, [listenButton, onMove]);
+    }, [listenButton, onMove, onButton]);
 
-    const register = (target: INavTarget) => {
-        availableElements.current.add(target);
-    };
+    const register = useCallback(
+        (target: INavTarget, grabFocus = false) => {
+            if (
+                availableElements.current.some(
+                    (e) => e.element.current === target.element.current,
+                )
+            ) {
+                throw new Error("Registering nav element twice!");
+            }
+            const symbol = Symbol();
+            availableElements.current.push({ ...target, symbol });
+            if (grabFocus) {
+                select(
+                    target,
+                    null,
+                    new GamepadButtonEvent(0, true, true, false),
+                );
+            }
+            return symbol;
+        },
+        [select],
+    );
 
-    const unregister = (target: INavTarget) => {
-        availableElements.current.delete(target);
+    const unregister = useCallback((symbol: symbol) => {
+        const idx = availableElements.current.findIndex(
+            (e) => e.symbol === symbol,
+        );
+        if (idx === -1) {
+            return;
+        }
+        const target = availableElements.current[idx];
+        availableElements.current.splice(idx, 1);
         if (activeTarget.current === target) {
             activeTarget.current =
                 availableElements.current.values().next().value ?? null;
         }
-    };
+    }, []);
 
     return (
         <context.Provider
