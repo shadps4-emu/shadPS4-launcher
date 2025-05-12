@@ -4,13 +4,26 @@ import { atom } from "jotai";
 import { toast } from "sonner";
 import { readPsf } from "@/lib/native/psf";
 import { stringifyError } from "@/lib/utils/error";
+import { atomWithTauriStore } from "@/lib/utils/jotai/tauri-store";
 import { defaultStore } from ".";
 import { db, type GameRow } from "./db";
 import { atomGamesPath } from "./paths";
 
+export enum SortType {
+    NONE = "None",
+    TITLE = "Title",
+    CUSA = "CUSA",
+}
+
+export const atomGameLibrarySorting = atomWithTauriStore<SortType, false>(
+    "config.json",
+    "game_library_sort",
+    { initialValue: SortType.NONE },
+);
+
 export const atomGameLibrary = atom<{
     indexing: boolean;
-    games: (GameRow | { path: string; error: Error })[];
+    games: (GameRow & { error?: Error })[];
 }>({
     indexing: false,
     games: [],
@@ -18,7 +31,7 @@ export const atomGameLibrary = atom<{
 
 async function loadGameData(
     path: string,
-): Promise<GameRow | { path: string; error: Error }> {
+): Promise<GameRow & { error?: Error }> {
     try {
         const base = await basename(path);
 
@@ -37,13 +50,6 @@ async function loadGameData(
 
         const sfo = await readPsf(paramSfo);
         const e = sfo.entries;
-
-        /* let cover: string | null = await join(path, "sce_sys", "icon0.png");
-        if (!(await exists(cover))) {
-            cover = null;
-        } else {
-            cover = convertFileSrc(cover);
-        } */
 
         let fw_version = e.SYSTEM_VER?.Integer?.toString(16)
             .padStart(8, "0")
@@ -67,6 +73,11 @@ async function loadGameData(
         console.error(`could not read game info at: "${path}"`, e);
         return {
             path: path,
+            cusa: "N/A",
+            title: "N/A",
+            version: "N/A",
+            fw_version: "N/A",
+            sfo: null,
             error: new Error(`game read info. ${stringifyError(e)}`, {
                 cause: e,
             }),
@@ -118,13 +129,15 @@ async function scanDirectory(
     signal: AbortSignal,
     recursionLevel: number,
 ) {
-    if (recursionLevel > 3 || signal.aborted) {
-        return;
-    }
-    if (knownPaths.has(path)) {
-        return;
-    }
     try {
+        indexingCount++;
+
+        if (recursionLevel > 3 || signal.aborted) {
+            return;
+        }
+        if (knownPaths.has(path)) {
+            return;
+        }
         if (path.endsWith("-UPDATE") || path.endsWith("-patch")) {
             return;
         }
@@ -136,26 +149,24 @@ async function scanDirectory(
         for (const c of children) {
             if (c.isDirectory) {
                 const childPath = await join(path, c.name);
-                indexingCount++;
-                setTimeout(() => {
-                    scanDirectory(
-                        childPath,
-                        knownPaths,
-                        signal,
-                        recursionLevel + 1,
-                    );
-                    indexingCount--;
-                    if (indexingCount === 0) {
-                        defaultStore.set(atomGameLibrary, (prev) => ({
-                            ...prev,
-                            indexing: false,
-                        }));
-                    }
-                }, 1);
+                scanDirectory(
+                    childPath,
+                    knownPaths,
+                    signal,
+                    recursionLevel + 1,
+                );
             }
         }
     } catch (e: unknown) {
         console.error(`Error discovering game at "${path}"`, e);
+    } finally {
+        indexingCount--;
+        if (indexingCount === 0) {
+            defaultStore.set(atomGameLibrary, (prev) => ({
+                ...prev,
+                indexing: false,
+            }));
+        }
     }
 }
 
@@ -211,23 +222,12 @@ async function scanDirectory(
                                         return;
                                     }
                                 }
-                                indexingCount++;
                                 scanDirectory(
                                     newPath,
                                     knownPaths,
                                     abortController.signal,
                                     1,
                                 );
-                                indexingCount--;
-                                if (indexingCount === 0) {
-                                    defaultStore.set(
-                                        atomGameLibrary,
-                                        (prev) => ({
-                                            ...prev,
-                                            indexing: false,
-                                        }),
-                                    );
-                                }
                             }
                         } else if ("remove" in e.type) {
                             const newPath = e.paths[0];

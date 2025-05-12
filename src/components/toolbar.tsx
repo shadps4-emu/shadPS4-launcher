@@ -1,3 +1,4 @@
+import * as SelectPrimitive from "@radix-ui/react-select";
 import { TooltipTrigger } from "@radix-ui/react-tooltip";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
@@ -11,7 +12,11 @@ import { openEmuConfigWindow } from "@/handlers/window";
 import { GamepadNavField } from "@/lib/context/gamepad-nav-field";
 import { cn } from "@/lib/utils/ui";
 import { atomFolderConfigModalIsOpen, oficialRepo } from "@/store/common";
-import { atomGameLibrary } from "@/store/game-library";
+import {
+    atomGameLibrary,
+    atomGameLibrarySorting,
+    SortType,
+} from "@/store/game-library";
 import {
     atomInstalledVersions,
     atomModalVersionManagerIsOpen,
@@ -33,6 +38,7 @@ import {
 } from "./ui/select";
 import { Spinner } from "./ui/spinner";
 import { Tooltip, TooltipContent } from "./ui/tooltip";
+import { FilterIcon } from "lucide-react";
 
 function VersionSelector() {
     const [isOpen, setIsOpen] = useState(false);
@@ -119,20 +125,42 @@ function ToolbarButton({
 
 export function Toolbar() {
     const setFolderConfigModalOpen = useSetAtom(atomFolderConfigModalIsOpen);
+    const [sort, setSort] = useAtom(atomGameLibrarySorting);
     const { indexing } = useAtomValue(atomGameLibrary);
 
     return (
         <div className="sticky top-0 z-30 flex justify-between border-b-2 p-3 px-10">
             <div className="flex items-center gap-4">
-                <div className="relative">
+                <div className="relative flex">
                     <SearchIcon className="absolute top-2.5 left-2 size-4 text-muted-foreground" />
                     <Navigable anchor="CENTER_LEFT">
                         <Input
-                            className="w-full pl-8"
+                            className="w-full rounded-r-none pl-8"
                             placeholder="Search..."
                             type="search"
                         />
                     </Navigable>
+                    <Select
+                        value={sort}
+                        onValueChange={(e) => setSort(e as SortType)}
+                    >
+                        <SelectPrimitive.Trigger asChild>
+                            <Button
+                                size="icon"
+                                variant="link"
+                                className="rounded-l-none border-1 border-l-0"
+                            >
+                                <FilterIcon />
+                            </Button>
+                        </SelectPrimitive.Trigger>
+                        <SelectContent>
+                            <SelectItem value={SortType.NONE}>None</SelectItem>
+                            <SelectItem value={SortType.TITLE}>
+                                Title
+                            </SelectItem>
+                            <SelectItem value={SortType.CUSA}>CUSA</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
                 <div className="flex items-center gap-2">
                     <ToolbarButton

@@ -2,9 +2,20 @@ import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { exists, mkdir } from "@tauri-apps/plugin-fs";
 import { useAtomValue, useStore } from "jotai";
-import { Fragment, Suspense, useEffect, useRef, useState } from "react";
+import {
+    Fragment,
+    Suspense,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import { openPath } from "@/lib/native/common";
-import { atomGameLibrary } from "@/store/game-library";
+import {
+    atomGameLibrary,
+    atomGameLibrarySorting,
+    SortType,
+} from "@/store/game-library";
 import { atomGamesPath } from "@/store/paths";
 import {
     EmptyGameBox,
@@ -44,7 +55,23 @@ function Grid() {
 
     const parentRef = useRef<HTMLDivElement | null>(null);
     const { games } = useAtomValue(atomGameLibrary);
+    const sortType = useAtomValue(atomGameLibrarySorting);
     const [itemPerRow, setItemPerRow] = useState(1);
+
+    const sortedGames = useMemo(() => {
+        switch (sortType) {
+            case SortType.NONE:
+                return games;
+            case SortType.TITLE:
+                return games.toSorted((a, b) => a.title.localeCompare(b.title));
+            case SortType.CUSA:
+                return games.toSorted((a, b) => a.cusa.localeCompare(b.cusa));
+            default: {
+                const _ret: never = sortType;
+                return _ret;
+            }
+        }
+    }, [games, sortType]);
 
     const rowCount = Math.ceil(games.length / itemPerRow);
 
@@ -99,7 +126,7 @@ function Grid() {
                     {items.map((row) => {
                         const firstIdx = row.index * itemPerRow;
                         const lastIdx = firstIdx + itemPerRow;
-                        const entries = games.slice(firstIdx, lastIdx);
+                        const entries = sortedGames.slice(firstIdx, lastIdx);
                         return (
                             <div
                                 className="flex gap-4 pb-4"
@@ -109,7 +136,7 @@ function Grid() {
                             >
                                 {entries.map((game) => (
                                     <Fragment key={game.path}>
-                                        {"error" in game ? (
+                                        {"error" in game && game.error ? (
                                             <GameBoxError err={game.error} />
                                         ) : (
                                             <GameBox game={game} />

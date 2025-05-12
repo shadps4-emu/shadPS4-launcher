@@ -13,21 +13,25 @@ function getStore(path: string): Promise<Store> {
     return s;
 }
 
-export function atomWithTauriStore<T>(
+/**
+ * This uses config store underlying. This is not safe to read directly from store,
+ * as the value prob will not be available in the first read
+ */
+export function atomWithTauriStore<T, Nullable extends boolean = true>(
     path: string,
     key: string,
     {
         initialValue,
         onMount = initialValue,
         mergeInitial = true,
-    }:
-        | {
+    }: Nullable extends false
+        ? {
               initialValue: T;
               onMount?: T | (() => Promise<T> | T);
               mergeInitial?: boolean;
           }
-        | {
-              initialValue?: T;
+        : {
+              initialValue?: T | undefined;
               onMount: T | (() => Promise<T> | T);
               mergeInitial?: boolean;
           },
@@ -43,7 +47,7 @@ export function atomWithTauriStore<T>(
         const initial: T = await Promise.resolve(initialProm);
         try {
             const store = await getStore(path);
-            const value = await store.get<T>(key);
+            const value = (await store.get<T>(key)) ?? null;
             if (mergeInitial) {
                 if (Array.isArray(initial)) {
                     return [...initial, ...((value as T[]) || [])] as T;
@@ -61,20 +65,24 @@ export function atomWithTauriStore<T>(
         }
     };
 
-    const baseAtom = atom<T | null>(initialValue ?? null);
+    const baseAtom = atom(
+        (initialValue ?? null) as Nullable extends true ? T | null : T,
+    );
     baseAtom.onMount = (setAtom) => {
-        void Promise.resolve(getInitialValue()).then(setAtom);
+        void Promise.resolve(getInitialValue()).then((e) =>
+            setAtom(e as Nullable extends true ? T | null : T),
+        );
     };
 
-    return atom<T | null, [T], void>(
+    return atom<Nullable extends true ? T | null : T, [T], void>(
         (get) => get(baseAtom),
         (get, set, update: SetStateAction<T | null>) => {
             const newValue =
                 typeof update === "function"
-                    ? (update as (prev: T | null) => T)(get(baseAtom))
+                    ? (update as (prev: T | null) => T)(get(baseAtom) ?? null)
                     : update;
 
-            set(baseAtom, newValue);
+            set(baseAtom, newValue as Nullable extends true ? T | null : T);
             void getStore(path).then((store) => void store.set(key, newValue));
         },
     );

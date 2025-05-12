@@ -8,8 +8,8 @@
         },
 
         /* LANGUAGE COMPILATION OPTIONS */
-        "target": "ES2022",
-        "lib": ["DOM", "DOM.Iterable", "ES2022"],
+        "target": "ES2023",
+        "lib": ["DOM", "DOM.Iterable", "ES2023"],
         "module": "ESNext",
 
         "moduleResolution": "bundler",
