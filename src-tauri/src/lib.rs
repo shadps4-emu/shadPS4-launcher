@@ -8,6 +8,7 @@ mod game_process;
 mod handlers;
 mod logger;
 mod utility_commands;
+mod db_migrations;
 
 pub fn run() {
     let logger_plugin = build_log_plugin();
@@ -27,6 +28,11 @@ pub fn run() {
                 .expect("no main window")
                 .set_focus();
         }))
+        .plugin(
+            tauri_plugin_sql::Builder::default()
+                .add_migrations("sqlite:data.db", db_migrations::gen_migrations())
+                .build()
+        )
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_upload::init())

@@ -1,4 +1,7 @@
-import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
+import { convertFileSrc } from "@tauri-apps/api/core";
+import { join } from "@tauri-apps/api/path";
+import { exists } from "@tauri-apps/plugin-fs";
+import { useAtom, useSetAtom, useStore } from "jotai";
 import {
     CircleHelpIcon,
     FrownIcon,
@@ -17,8 +20,9 @@ import { startGame } from "@/handlers/run-emu";
 import type { GamepadButton } from "@/lib/context/gamepad-nav-field";
 import type { PSF } from "@/lib/native/psf";
 import { stringifyError } from "@/lib/utils/error";
+import { cn } from "@/lib/utils/ui";
 import { atomShowingGameDetails } from "@/store/common";
-import type { GameEntry } from "@/store/game-library";
+import type { GameRow } from "@/store/db";
 import { gamepadActiveAtom } from "@/store/gamepad";
 import { atomShowingRunningGame } from "@/store/running-games";
 import { atomSelectedVersion } from "@/store/version-manager";
@@ -61,10 +65,71 @@ export function EmptyGameBox() {
     );
 }
 
-export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
+export function GameBoxError({ err }: { err: Error }) {
+    return (
+        <div className="relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform">
+            <div className="flex flex-col items-center justify-center gap-2">
+                <FrownIcon className="h-8" />
+                <span className="text-sm">Error: {stringifyError(err)}</span>
+            </div>
+        </div>
+    );
+}
+
+const globalGameCoverCache = new WeakMap<GameRow, string | null>();
+
+export function GameCover({
+    game,
+    className,
+}: {
+    game: GameRow;
+    className?: string | undefined;
+}) {
+    const [isLoading, setIsLoading] = useState(true);
+    const [cover, setCover] = useState<string | null>(null);
+
+    useEffect(() => {
+        const v = globalGameCoverCache.get(game);
+        if (v !== undefined) {
+            setCover(v);
+            setIsLoading(false);
+            return;
+        }
+        (async () => {
+            const path = await join(game.path, "sce_sys", "icon0.png");
+            let value: string | null = null;
+            if (await exists(path)) {
+                value = convertFileSrc(path);
+            }
+            globalGameCoverCache.set(game, value);
+            setCover(value);
+            setIsLoading(false);
+        })();
+    }, [game]);
+
+    if (isLoading) {
+        return <GameBoxSkeleton />;
+    }
+
+    return cover ? (
+        <img
+            alt={game.title}
+            className={cn(
+                "col-span-full row-span-full object-cover",
+                className,
+            )}
+            src={cover}
+        />
+    ) : (
+        <div className={cn("center col-span-full row-span-full", className)}>
+            <ImageOffIcon className="h-8" />
+        </div>
+    );
+}
+
+export function GameBox({ game }: { game: GameRow; isFirst?: boolean }) {
     const [isPending, startTransaction] = useTransition();
 
-    const valueData = useAtomValue(game.dataLoadable);
     const isGamepad = useAtom(gamepadActiveAtom);
     const store = useStore();
     const setShowingDetails = useSetAtom(atomShowingGameDetails);
@@ -103,7 +168,7 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     };
 
     const openDetails = () => {
-        setShowingDetails(data);
+        setShowingDetails(game);
     };
 
     const onButtonPress = (btn: GamepadButton, e: GamepadButtonEvent) => {
@@ -114,25 +179,6 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
             openGame();
         }
     };
-
-    if (valueData.state === "loading") {
-        return <GameBoxSkeleton />;
-    }
-
-    if (valueData.state === "hasError") {
-        return (
-            <div className="relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform">
-                <div className="flex flex-col items-center justify-center gap-2">
-                    <FrownIcon className="h-8" />
-                    <span className="text-sm">
-                        Error: {stringifyError(valueData.error)}
-                    </span>
-                </div>
-            </div>
-        );
-    }
-
-    const data = valueData.data;
 
     return (
         <Navigable defaultMouse onButtonPress={onButtonPress}>
@@ -147,26 +193,16 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
                         <Spinner />
                     </div>
                 )}
-                {data.cover ? (
-                    <img
-                        alt={data.title}
-                        className="col-span-full row-span-full object-cover"
-                        src={data.cover}
-                    />
-                ) : (
-                    <div className="center col-span-full row-span-full">
-                        <ImageOffIcon className="h-8" />
-                    </div>
-                )}
+                <GameCover game={game} />
 
                 <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 bg-black/50 opacity-0 backdrop-blur-[2px] transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 group-data-gamepad-focus:opacity-100">
                     <span className="col-span-full row-start-1 row-end-2 truncate px-3 py-2 text-center font-semibold text-lg">
                         {/* TODO: scroll text on overflow */}
-                        {data.title}
+                        {game.title}
                     </span>
 
                     <div className="col-start-3 col-end-4 row-start-3 row-end-4 m-2 size-6 place-self-end">
-                        <Flag className="rounded-full" sfo={data.sfo} />
+                        <Flag className="rounded-full" sfo={game.sfo} />
                     </div>
 
                     <button

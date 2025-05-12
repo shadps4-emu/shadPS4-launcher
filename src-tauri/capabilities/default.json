@@ -31,6 +31,8 @@
         "core:window:allow-hide",
         "core:webview:allow-webview-show",
         "core:webview:allow-webview-hide",
+        "sql:default",
+        "sql:allow-execute",
         {
             "identifier": "fs:scope",
             "allow": ["**/*"]

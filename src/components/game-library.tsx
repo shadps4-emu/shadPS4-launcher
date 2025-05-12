@@ -1,12 +1,17 @@
 import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { exists, mkdir } from "@tauri-apps/plugin-fs";
-import { useAtom, useStore } from "jotai";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { useAtomValue, useStore } from "jotai";
+import { Fragment, Suspense, useEffect, useRef, useState } from "react";
 import { openPath } from "@/lib/native/common";
 import { atomGameLibrary } from "@/store/game-library";
 import { atomGamesPath } from "@/store/paths";
-import { EmptyGameBox, GameBox, GameBoxSkeleton } from "./game-box";
+import {
+    EmptyGameBox,
+    GameBox,
+    GameBoxError,
+    GameBoxSkeleton,
+} from "./game-box";
 import { ScrollBar } from "./ui/scroll-area";
 
 function NoGameFound() {
@@ -38,7 +43,7 @@ function Grid() {
     "use no memo"; // Temporary while https://github.com/TanStack/virtual/pull/851 is not merged
 
     const parentRef = useRef<HTMLDivElement | null>(null);
-    const [games] = useAtom(atomGameLibrary);
+    const { games } = useAtomValue(atomGameLibrary);
     const [itemPerRow, setItemPerRow] = useState(1);
 
     const rowCount = Math.ceil(games.length / itemPerRow);
@@ -103,7 +108,13 @@ function Grid() {
                                 ref={virtualizer.measureElement}
                             >
                                 {entries.map((game) => (
-                                    <GameBox game={game} key={game.path} />
+                                    <Fragment key={game.path}>
+                                        {"error" in game ? (
+                                            <GameBoxError err={game.error} />
+                                        ) : (
+                                            <GameBox game={game} />
+                                        )}
+                                    </Fragment>
                                 ))}
                                 {Array(itemPerRow - entries.length)
                                     .fill(0)

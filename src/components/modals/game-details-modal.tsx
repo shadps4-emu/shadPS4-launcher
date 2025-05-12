@@ -1,5 +1,4 @@
 import { useAtom } from "jotai";
-import { ImageOffIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
     Dialog,
@@ -18,7 +17,8 @@ import {
 } from "@/components/ui/table";
 import type { PSFEntry } from "@/lib/native/psf";
 import { atomShowingGameDetails } from "@/store/common";
-import type { GameEntryData } from "@/store/game-library";
+import type { GameRow } from "@/store/db";
+import { GameCover } from "../game-box";
 
 function Entry({ value }: { value: PSFEntry }) {
     if (value === null || value === undefined) {
@@ -41,11 +41,13 @@ function Entry({ value }: { value: PSFEntry }) {
 }
 
 type Props = {
-    gameData: GameEntryData;
+    gameData: GameRow;
     onClose: () => void;
 };
 
 function GameDetailsDialog({ gameData, onClose }: Props) {
+    const sfo = gameData.sfo;
+
     return (
         <Dialog onOpenChange={() => onClose()} open>
             <DialogContent
@@ -64,17 +66,7 @@ function GameDetailsDialog({ gameData, onClose }: Props) {
                 <div className="flex-grow overflow-y-auto">
                     <div className="grid grid-cols-1 gap-6 py-4 sm:grid-cols-3">
                         <div className="flex flex-col items-center pt-2 md:col-span-1">
-                            {gameData.cover ? (
-                                <img
-                                    alt={`${gameData.title} Cover`}
-                                    className="aspect-[1/1] w-full max-w-[200px] rounded-lg object-contain shadow-md"
-                                    src={gameData.cover}
-                                />
-                            ) : (
-                                <div className="flex aspect-[1/1] w-full max-w-[200px] items-center justify-center rounded-lg bg-muted text-muted-foreground shadow-md">
-                                    <ImageOffIcon className="h-12 w-12" />
-                                </div>
-                            )}
+                            <GameCover game={gameData} />
                         </div>
 
                         <div className="space-y-4 md:col-span-2">
@@ -95,24 +87,21 @@ function GameDetailsDialog({ gameData, onClose }: Props) {
                                 </Badge>
                             </div>
 
-                            {gameData.sfo?.entries && (
+                            {sfo?.entries && (
                                 <>
-                                    {gameData.sfo.entries.CATEGORY && (
+                                    {sfo.entries.CATEGORY && (
                                         <div className="space-y-1">
                                             <h3 className="font-medium text-muted-foreground text-sm">
                                                 Category
                                             </h3>
                                             <p>
                                                 <Entry
-                                                    value={
-                                                        gameData.sfo.entries
-                                                            .CATEGORY
-                                                    }
+                                                    value={sfo.entries.CATEGORY}
                                                 />
                                             </p>
                                         </div>
                                     )}
-                                    {gameData.sfo.entries.CONTENT_ID && (
+                                    {sfo.entries.CONTENT_ID && (
                                         <div className="space-y-1">
                                             <h3 className="font-medium text-muted-foreground text-sm">
                                                 Content ID
@@ -120,8 +109,7 @@ function GameDetailsDialog({ gameData, onClose }: Props) {
                                             <p className="break-all">
                                                 <Entry
                                                     value={
-                                                        gameData.sfo.entries
-                                                            .CONTENT_ID
+                                                        sfo.entries.CONTENT_ID
                                                     }
                                                 />
                                             </p>
@@ -132,7 +120,7 @@ function GameDetailsDialog({ gameData, onClose }: Props) {
                         </div>
                     </div>
 
-                    {gameData.sfo?.entries && (
+                    {sfo?.entries && (
                         <div className="mt-4 border-t pt-4">
                             <h3 className="mb-2 font-semibold text-lg">
                                 SFO Details
@@ -147,7 +135,7 @@ function GameDetailsDialog({ gameData, onClose }: Props) {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {Object.entries(gameData.sfo.entries)
+                                    {Object.entries(sfo.entries)
                                         .filter(
                                             ([key]) =>
                                                 ![

@@ -11,6 +11,7 @@ import { openEmuConfigWindow } from "@/handlers/window";
 import { GamepadNavField } from "@/lib/context/gamepad-nav-field";
 import { cn } from "@/lib/utils/ui";
 import { atomFolderConfigModalIsOpen, oficialRepo } from "@/store/common";
+import { atomGameLibrary } from "@/store/game-library";
 import {
     atomInstalledVersions,
     atomModalVersionManagerIsOpen,
@@ -30,6 +31,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "./ui/select";
+import { Spinner } from "./ui/spinner";
 import { Tooltip, TooltipContent } from "./ui/tooltip";
 
 function VersionSelector() {
@@ -117,6 +119,7 @@ function ToolbarButton({
 
 export function Toolbar() {
     const setFolderConfigModalOpen = useSetAtom(atomFolderConfigModalIsOpen);
+    const { indexing } = useAtomValue(atomGameLibrary);
 
     return (
         <div className="sticky top-0 z-30 flex justify-between border-b-2 p-3 px-10">
@@ -147,6 +150,12 @@ export function Toolbar() {
                     <ToolbarButton>
                         <Gamepad2Icon />
                     </ToolbarButton>
+                    {indexing && (
+                        <div className="flex gap-2 [&_svg]:size-6">
+                            <Spinner />
+                            Indexing library...
+                        </div>
+                    )}
                 </div>
             </div>
             <div className="flex-1" />
