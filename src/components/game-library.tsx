@@ -50,7 +50,7 @@ function NoGameFound() {
     );
 }
 
-function Grid() {
+function Grid({ search }: { search: string }) {
     "use no memo"; // Temporary while https://github.com/TanStack/virtual/pull/851 is not merged
 
     const parentRef = useRef<HTMLDivElement | null>(null);
@@ -59,19 +59,24 @@ function Grid() {
     const [itemPerRow, setItemPerRow] = useState(1);
 
     const sortedGames = useMemo(() => {
+        const r = search.toLowerCase();
+        const list =
+            search.length === 0
+                ? games
+                : games.filter((e) => e.title.toLowerCase().includes(r));
         switch (sortType) {
             case SortType.NONE:
-                return games;
+                return list;
             case SortType.TITLE:
-                return games.toSorted((a, b) => a.title.localeCompare(b.title));
+                return list.toSorted((a, b) => a.title.localeCompare(b.title));
             case SortType.CUSA:
-                return games.toSorted((a, b) => a.cusa.localeCompare(b.cusa));
+                return list.toSorted((a, b) => a.cusa.localeCompare(b.cusa));
             default: {
                 const _ret: never = sortType;
                 return _ret;
             }
         }
-    }, [games, sortType]);
+    }, [games, search, sortType]);
 
     const rowCount = Math.ceil(games.length / itemPerRow);
 
@@ -174,10 +179,14 @@ function GridSkeleton() {
     );
 }
 
-export function GameLibrary() {
+type Props = {
+    search: string;
+};
+
+export function GameLibrary({ search }: Props) {
     return (
         <Suspense fallback={<GridSkeleton />}>
-            <Grid />
+            <Grid search={search} />
         </Suspense>
     );
 }

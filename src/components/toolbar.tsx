@@ -11,6 +11,7 @@ import {
 import { type ComponentProps, useState } from "react";
 import { openEmuConfigWindow } from "@/handlers/window";
 import { GamepadNavField } from "@/lib/context/gamepad-nav-field";
+import { useDebounceEffect } from "@/lib/hooks/useDebounceEffect";
 import { cn } from "@/lib/utils/ui";
 import { atomFolderConfigModalIsOpen, oficialRepo } from "@/store/common";
 import {
@@ -120,11 +121,18 @@ function ToolbarButton({
     );
 }
 
-export function Toolbar() {
+type Props = {
+    onSearch?: (v: string) => void;
+};
+
+export function Toolbar({ onSearch = () => void 0 }: Props) {
     const setFolderConfigModalOpen = useSetAtom(atomFolderConfigModalIsOpen);
     const [sort, setSort] = useAtom(atomGameLibrarySorting);
     const [isSortOpen, setSortOpen] = useState(false);
     const { indexing } = useAtomValue(atomGameLibrary);
+
+    const [search, setSearch] = useState("");
+    useDebounceEffect(search, 200, onSearch);
 
     return (
         <div className="sticky top-0 z-30 flex justify-between border-b-2 p-3 px-10">
@@ -134,8 +142,10 @@ export function Toolbar() {
                     <Navigable anchor="CENTER_LEFT">
                         <Input
                             className="w-full rounded-r-none pl-8"
+                            onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search..."
                             type="search"
+                            value={search}
                         />
                     </Navigable>
                     <Select
