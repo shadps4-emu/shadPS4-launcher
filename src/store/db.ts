@@ -11,6 +11,8 @@ export type GameRow = {
     version: string;
     fw_version: string;
     sfo: PSF | null;
+
+    error?: Error; // This is not stored in the database
 };
 
 export const db = {

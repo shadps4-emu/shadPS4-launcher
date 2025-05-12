@@ -1,14 +1,5 @@
-import { convertFileSrc } from "@tauri-apps/api/core";
-import { join } from "@tauri-apps/api/path";
-import { exists } from "@tauri-apps/plugin-fs";
 import { useAtom, useSetAtom, useStore } from "jotai";
-import {
-    CircleHelpIcon,
-    FrownIcon,
-    GlobeIcon,
-    ImageOffIcon,
-    PlayIcon,
-} from "lucide-react";
+import { CircleHelpIcon, FrownIcon, GlobeIcon, PlayIcon } from "lucide-react";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import CN from "@/assets/flags/cn.svg";
@@ -26,6 +17,7 @@ import type { GameRow } from "@/store/db";
 import { gamepadActiveAtom } from "@/store/gamepad";
 import { atomShowingRunningGame } from "@/store/running-games";
 import { atomSelectedVersion } from "@/store/version-manager";
+import { GameBoxCover } from "./game-cover";
 import GamepadIcon from "./gamepad-icon";
 import { Navigable } from "./ui/navigable";
 import { Skeleton } from "./ui/skeleton";
@@ -53,9 +45,14 @@ function Flag({ sfo, className }: { sfo: PSF | null; className?: string }) {
     }
 }
 
-export function GameBoxSkeleton() {
+export function GameBoxSkeleton({ className }: { className?: string }) {
     return (
-        <Skeleton className="aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 rounded-sm bg-zinc-800" />
+        <Skeleton
+            className={cn(
+                "aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 rounded-sm bg-zinc-800",
+                className,
+            )}
+        />
     );
 }
 
@@ -72,57 +69,6 @@ export function GameBoxError({ err }: { err: Error }) {
                 <FrownIcon className="h-8" />
                 <span className="text-sm">Error: {stringifyError(err)}</span>
             </div>
-        </div>
-    );
-}
-
-const globalGameCoverCache = new WeakMap<GameRow, string | null>();
-
-export function GameCover({
-    game,
-    className,
-}: {
-    game: GameRow;
-    className?: string | undefined;
-}) {
-    const [isLoading, setIsLoading] = useState(true);
-    const [cover, setCover] = useState<string | null>(null);
-
-    useEffect(() => {
-        const v = globalGameCoverCache.get(game);
-        if (v !== undefined) {
-            setCover(v);
-            setIsLoading(false);
-            return;
-        }
-        (async () => {
-            const path = await join(game.path, "sce_sys", "icon0.png");
-            let value: string | null = null;
-            if (await exists(path)) {
-                value = convertFileSrc(path);
-            }
-            globalGameCoverCache.set(game, value);
-            setCover(value);
-            setIsLoading(false);
-        })();
-    }, [game]);
-
-    if (isLoading) {
-        return <GameBoxSkeleton />;
-    }
-
-    return cover ? (
-        <img
-            alt={game.title}
-            className={cn(
-                "col-span-full row-span-full object-cover",
-                className,
-            )}
-            src={cover}
-        />
-    ) : (
-        <div className={cn("center col-span-full row-span-full", className)}>
-            <ImageOffIcon className="h-8" />
         </div>
     );
 }
@@ -193,7 +139,7 @@ export function GameBox({ game }: { game: GameRow; isFirst?: boolean }) {
                         <Spinner />
                     </div>
                 )}
-                <GameCover game={game} />
+                <GameBoxCover game={game} />
 
                 <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 bg-black/50 opacity-0 backdrop-blur-[2px] transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 group-data-gamepad-focus:opacity-100">
                     <span className="col-span-full row-start-1 row-end-2 truncate px-3 py-2 text-center font-semibold text-lg">

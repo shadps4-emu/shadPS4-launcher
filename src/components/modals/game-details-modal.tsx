@@ -18,7 +18,7 @@ import {
 import type { PSFEntry } from "@/lib/native/psf";
 import { atomShowingGameDetails } from "@/store/common";
 import type { GameRow } from "@/store/db";
-import { GameCover } from "../game-box";
+import { GameBoxCover } from "../game-cover";
 
 function Entry({ value }: { value: PSFEntry }) {
     if (value === null || value === undefined) {
@@ -66,7 +66,7 @@ function GameDetailsDialog({ gameData, onClose }: Props) {
                 <div className="flex-grow overflow-y-auto">
                     <div className="grid grid-cols-1 gap-6 py-4 sm:grid-cols-3">
                         <div className="flex flex-col items-center pt-2 md:col-span-1">
-                            <GameCover game={gameData} />
+                            <GameBoxCover game={gameData} />
                         </div>
 
                         <div className="space-y-4 md:col-span-2">

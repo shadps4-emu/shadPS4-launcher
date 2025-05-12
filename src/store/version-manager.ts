@@ -50,7 +50,7 @@ const octokit = new Octokit();
 
 export const atomModalVersionManagerIsOpen = atom<boolean>(false);
 
-const atomSelectedVersionRaw = atomWithTauriStore<string>(
+const atomSelectedVersionRaw = atomWithTauriStore<string, false>(
     "config.json",
     "selected",
     {
@@ -80,10 +80,14 @@ export const atomSelectedVersion = atom<
     },
 );
 
-export const atomRemoteList = atomWithTauriStore("config.json", "remote_list", {
-    initialValue: [oficialRepo],
-    mergeInitial: false,
-});
+export const atomRemoteList = atomWithTauriStore<string[], false>(
+    "config.json",
+    "remote_list",
+    {
+        initialValue: [oficialRepo],
+        mergeInitial: false,
+    },
+);
 
 export const atomAvailableVersions = atomWithQuery((get) => ({
     queryKey: ["github", "available", get(atomRemoteList)] as [

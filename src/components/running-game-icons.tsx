@@ -1,13 +1,12 @@
 import { useAtomValue, useSetAtom } from "jotai";
 import type { ComponentProps, ReactElement } from "react";
-import { stringifyError } from "@/lib/utils/error";
+import { useGameCover } from "@/lib/hooks/useGameCover";
 import { cn } from "@/lib/utils/ui";
 import {
     atomRunningGames,
     atomShowingRunningGame,
     type RunningGame,
 } from "@/store/running-games";
-import { Spinner } from "./ui/spinner";
 
 function SingleGameIcon({
     runningGame,
@@ -15,25 +14,17 @@ function SingleGameIcon({
     ...props
 }: ComponentProps<"div"> & { runningGame: RunningGame }) {
     const { game } = runningGame;
-    const value = useAtomValue(game.dataLoadable);
     const setShowingRunningGame = useSetAtom(atomShowingRunningGame);
     const state = useAtomValue(runningGame.atomRunning);
+    const [_, cover] = useGameCover(game);
 
-    if (value.state === "hasError") {
-        return <span>Error: {stringifyError(value.error)}</span>;
-    }
-
-    if (value.state === "loading") {
-        return <Spinner />;
-    }
-
-    const data = value.data;
+    const data = game;
 
     let content: ReactElement;
-    if (data.cover == null) {
+    if (cover == null) {
         content = <span>{data.title.slice(0, 4)}</span>;
     } else {
-        content = <img alt={data.title} className="h-full" src={data.cover} />;
+        content = <img alt={data.title} className="h-full" src={cover} />;
     }
 
     return (

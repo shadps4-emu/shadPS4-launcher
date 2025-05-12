@@ -3,13 +3,13 @@ import { exists, mkdir } from "@tauri-apps/plugin-fs";
 import { toast } from "sonner";
 import { GameProcess } from "@/lib/native/game-process";
 import { stringifyError } from "@/lib/utils/error";
-import type { GameEntry } from "@/store/game-library";
+import type { GameRow } from "@/store/db";
 import { addRunningGame, type RunningGame } from "@/store/running-games";
 import type { EmulatorVersion } from "@/store/version-manager";
 
 export async function startGame(
     emu: EmulatorVersion,
-    game: GameEntry,
+    game: GameRow,
 ): Promise<RunningGame | null> {
     const gameDir = game.path;
     const gameBinary = await join(gameDir, "eboot.bin");

@@ -46,5 +46,6 @@ export default defineConfig(async () => ({
         chunkSizeWarningLimit: Number.POSITIVE_INFINITY,
         sourcemap: true,
         minify: false,
+        target: "es2023",
     },
 }));

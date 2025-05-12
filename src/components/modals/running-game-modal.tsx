@@ -12,6 +12,8 @@ import {
     type GamepadButton,
     GamepadNavField,
 } from "@/lib/context/gamepad-nav-field";
+import { useGameCover } from "@/lib/hooks/useGameCover";
+import { stringifyError } from "@/lib/utils/error";
 import { cn } from "@/lib/utils/ui";
 import {
     atomRunningGames,
@@ -51,7 +53,8 @@ export function RunningGameDialog({
     const setShowingGame = useSetAtom(atomShowingRunningGame);
 
     const { game, process, atomRunning, atomLog } = runningGame;
-    const data = useAtomValue(game.data);
+    const [_, cover] = useGameCover(game);
+
     const runningFlag = useAtomValue(atomRunning);
     const isRunning = runningFlag === true;
 
@@ -79,11 +82,13 @@ export function RunningGameDialog({
         }
     };
 
-    if (data instanceof Error) {
+    if ("error" in game) {
         return (
             <Dialog onOpenChange={close} open>
                 <DialogContent aria-describedby={undefined}>
-                    <div className="text-red-500">Error: {data.message}</div>
+                    <div className="text-red-500">
+                        Error: {stringifyError(game.error)}
+                    </div>
                 </DialogContent>
             </Dialog>
         );
@@ -106,11 +111,11 @@ export function RunningGameDialog({
                     <DialogHeader>
                         <div className="flex items-center gap-4">
                             <div className="relative h-16 w-16 overflow-hidden rounded-md border">
-                                {data.cover ? (
+                                {cover ? (
                                     <img
-                                        alt={data.title}
+                                        alt={game.title}
                                         className="object-cover"
-                                        src={data.cover}
+                                        src={cover}
                                     />
                                 ) : (
                                     <Skeleton />
@@ -118,7 +123,7 @@ export function RunningGameDialog({
                             </div>
                             <div>
                                 <DialogTitle className="text-xl">
-                                    {data.title}
+                                    {game.title}
                                 </DialogTitle>
                                 <DialogDescription className="mt-1 flex items-center gap-2">
                                     <span className="text-muted-foreground text-xs">

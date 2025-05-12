@@ -23,15 +23,13 @@ export const atomGameLibrarySorting = atomWithTauriStore<SortType, false>(
 
 export const atomGameLibrary = atom<{
     indexing: boolean;
-    games: (GameRow & { error?: Error })[];
+    games: GameRow[];
 }>({
     indexing: false,
     games: [],
 });
 
-async function loadGameData(
-    path: string,
-): Promise<GameRow & { error?: Error }> {
+async function loadGameData(path: string): Promise<GameRow> {
     try {
         const base = await basename(path);
 
