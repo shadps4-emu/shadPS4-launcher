@@ -63,7 +63,7 @@ export function Navigable({
     const onButtonPress = useCallback(
         (btn: GamepadButton, e: GamepadButtonEvent) => {
             propOnButtonPress?.(btn, e);
-            if (!e.isPreventingDefault && defaultInput) {
+            if (!e.isPreventingDefault && defaultInput !== false) {
                 if (btn === "confirm") {
                     ref.current?.click();
                 } else if (btn === "back") {

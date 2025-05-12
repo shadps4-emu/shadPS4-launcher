@@ -181,7 +181,7 @@ export function GameBox({ game }: { game: GameRow; isFirst?: boolean }) {
     };
 
     return (
-        <Navigable defaultMouse onButtonPress={onButtonPress}>
+        <Navigable onButtonPress={onButtonPress}>
             <div
                 className="group relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform focus-within:scale-110 hover:scale-110 data-gamepad-focus:scale-110"
                 onBlur={onBlur}

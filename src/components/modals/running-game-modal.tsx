@@ -148,12 +148,12 @@ export function RunningGameDialog({
 
                     <div className="flex justify-between">
                         <div className="flex gap-2">
-                            <Navigable defaultMouse disabled>
+                            <Navigable disabled>
                                 <Button disabled size="icon" variant="outline">
                                     <PauseIcon className="h-4 w-4" />
                                 </Button>
                             </Navigable>
-                            <Navigable defaultMouse disabled>
+                            <Navigable disabled>
                                 <Button
                                     disabled
                                     size="icon"
@@ -165,7 +165,7 @@ export function RunningGameDialog({
                             </Navigable>
                         </div>
                         <div className="flex gap-2">
-                            <Navigable defaultMouse>
+                            <Navigable>
                                 <Button size="icon" variant="outline">
                                     <Maximize2Icon className="h-4 w-4" />
                                 </Button>
@@ -173,7 +173,7 @@ export function RunningGameDialog({
                             {isRunning ? (
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                        <Navigable defaultMouse>
+                                        <Navigable>
                                             <Button
                                                 size="icon"
                                                 variant="destructive"
@@ -195,14 +195,14 @@ export function RunningGameDialog({
                                                 </AlertDialogDescription>
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>
-                                                <Navigable defaultMouse>
+                                                <Navigable>
                                                     <AlertDialogCancel asChild>
                                                         <Button variant="secondary">
                                                             Cancel
                                                         </Button>
                                                     </AlertDialogCancel>
                                                 </Navigable>
-                                                <Navigable defaultMouse>
+                                                <Navigable>
                                                     <AlertDialogAction
                                                         asChild
                                                         onClick={kill}
@@ -215,7 +215,7 @@ export function RunningGameDialog({
                                     </AlertDialogContent>
                                 </AlertDialog>
                             ) : (
-                                <Navigable defaultMouse>
+                                <Navigable>
                                     <Button
                                         onClick={trash}
                                         size="icon"

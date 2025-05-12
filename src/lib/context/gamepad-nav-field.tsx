@@ -8,7 +8,10 @@ import {
     useRef,
 } from "react";
 import { GamepadButtonEvent } from "@/handlers/gamepad";
-import { useGamepadInputStack } from "@/lib/hooks/useGamepadInputStack";
+import {
+    type GamepadInputStackHookProps,
+    useGamepadInputStack,
+} from "@/lib/hooks/useGamepadInputStack";
 import type { Tuple } from "@/lib/utils/types";
 
 export const BUTTON_MAP = {
@@ -107,25 +110,25 @@ export interface IGamepadNavField {
 
 const context = createContext<IGamepadNavField | null>(null);
 
-type Props = PropsWithChildren<{
-    zIndex?: number;
-    debugName?: string;
-    onButtonPress?:
-        | ((
-              btn: GamepadButton,
-              target: INavTarget | null,
-              e: GamepadButtonEvent,
-          ) => void)
-        | undefined;
-}>;
+type Props = PropsWithChildren<
+    GamepadInputStackHookProps & {
+        onButtonPress?:
+            | ((
+                  btn: GamepadButton,
+                  target: INavTarget | null,
+                  e: GamepadButtonEvent,
+              ) => void)
+            | undefined;
+    }
+>;
 
 export function GamepadNavField({
-    zIndex,
-    debugName,
     onButtonPress,
     children,
+    ...hookProps
 }: Props) {
-    const { listen: listenButton } = useGamepadInputStack(zIndex, debugName);
+    const enabled = hookProps.enabled;
+    const { listen: listenButton } = useGamepadInputStack(hookProps);
     const availableElements = useRef<(INavTarget & { symbol: symbol })[]>([]);
     const activeTarget = useRef<INavTarget | null>(null);
 
@@ -266,6 +269,9 @@ export function GamepadNavField({
     );
 
     useEffect(() => {
+        if (enabled === false) {
+            return;
+        }
         const unsub: UnlistenFn[] = [];
         const bindMove = (btn: GamepadButton, x: number, y: number) => {
             const callback = (e: GamepadButtonEvent) => {
@@ -297,7 +303,7 @@ export function GamepadNavField({
                 u();
             }
         };
-    }, [listenButton, onMove, onButton]);
+    }, [enabled, listenButton, onMove, onButton]);
 
     const register = useCallback(
         (target: INavTarget, grabFocus = false) => {
@@ -310,11 +316,14 @@ export function GamepadNavField({
             }
             const symbol = Symbol();
             availableElements.current.push({ ...target, symbol });
-            if (grabFocus) {
+            if (
+                grabFocus ||
+                document.activeElement === target.element.current
+            ) {
                 select(
                     target,
                     null,
-                    new GamepadButtonEvent(0, true, true, false),
+                    new GamepadButtonEvent(-1, true, true, false),
                 );
             }
             return symbol;
@@ -336,6 +345,24 @@ export function GamepadNavField({
                 availableElements.current.values().next().value ?? null;
         }
     }, []);
+
+    useEffect(() => {
+        if (enabled !== false) {
+            setTimeout(() => {
+                const activeEl = document.activeElement;
+                const activeTarget = availableElements.current.find(
+                    (e) => e.element.current === activeEl,
+                );
+                if (activeTarget) {
+                    select(
+                        activeTarget,
+                        null,
+                        new GamepadButtonEvent(-1, true, true, false),
+                    );
+                }
+            }, 1);
+        }
+    }, [enabled, select]);
 
     return (
         <context.Provider

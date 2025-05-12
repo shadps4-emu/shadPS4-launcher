@@ -6,6 +6,7 @@ import {
     Gamepad2Icon,
     SearchIcon,
     SettingsIcon,
+    SortDescIcon,
 } from "lucide-react";
 import { type ComponentProps, useState } from "react";
 import { openEmuConfigWindow } from "@/handlers/window";
@@ -38,7 +39,6 @@ import {
 } from "./ui/select";
 import { Spinner } from "./ui/spinner";
 import { Tooltip, TooltipContent } from "./ui/tooltip";
-import { FilterIcon } from "lucide-react";
 
 function VersionSelector() {
     const [isOpen, setIsOpen] = useState(false);
@@ -56,7 +56,7 @@ function VersionSelector() {
             value={selectVersion?.path}
         >
             <SelectTrigger className="w-[180px]">
-                <Navigable defaultMouse>
+                <Navigable>
                     <SelectValue placeholder="No version selected">
                         {selectVersion &&
                             `${selectVersion.version} ${selectVersion.name} ${selectVersion.repo !== oficialRepo ? selectVersion.repo : ""}`}
@@ -64,34 +64,31 @@ function VersionSelector() {
                 </Navigable>
             </SelectTrigger>
             <SelectContent>
-                {isOpen && (
-                    <GamepadNavField debugName="version-selector">
-                        <SelectGroup>
-                            <SelectLabel>Emulator Version</SelectLabel>
-                            {installedVersions.map((v) => (
-                                <Navigable defaultMouse key={v.path}>
-                                    <SelectItem value={v.path}>
-                                        {v.version} {v.name}{" "}
-                                        {v.repo !== oficialRepo &&
-                                            `(${v.repo})`}
-                                    </SelectItem>
-                                </Navigable>
-                            ))}
-                        </SelectGroup>
-                        <SelectSeparator />
-                        <Navigable defaultMouse>
-                            <Button
-                                onClick={() => {
-                                    setIsOpen(false);
-                                    setVersionManagerModalOpen(true);
-                                }}
-                                variant="ghost"
-                            >
-                                Open Version Manager
-                            </Button>
-                        </Navigable>
-                    </GamepadNavField>
-                )}
+                <GamepadNavField debugName="version-selector" enabled={isOpen}>
+                    <SelectGroup>
+                        <SelectLabel>Emulator Version</SelectLabel>
+                        {installedVersions.map((v) => (
+                            <Navigable key={v.path}>
+                                <SelectItem value={v.path}>
+                                    {v.version} {v.name}{" "}
+                                    {v.repo !== oficialRepo && `(${v.repo})`}
+                                </SelectItem>
+                            </Navigable>
+                        ))}
+                    </SelectGroup>
+                    <SelectSeparator />
+                    <Navigable>
+                        <Button
+                            onClick={() => {
+                                setIsOpen(false);
+                                setVersionManagerModalOpen(true);
+                            }}
+                            variant="ghost"
+                        >
+                            Open Version Manager
+                        </Button>
+                    </Navigable>
+                </GamepadNavField>
             </SelectContent>
         </Select>
     );
@@ -103,7 +100,7 @@ function ToolbarButton({
     ...props
 }: ComponentProps<typeof Button> & { tooltip?: string }) {
     const content = (
-        <Navigable defaultMouse>
+        <Navigable>
             <Button
                 className={cn("[&_svg]:size-6", className)}
                 size="icon"
@@ -126,6 +123,7 @@ function ToolbarButton({
 export function Toolbar() {
     const setFolderConfigModalOpen = useSetAtom(atomFolderConfigModalIsOpen);
     const [sort, setSort] = useAtom(atomGameLibrarySorting);
+    const [isSortOpen, setSortOpen] = useState(false);
     const { indexing } = useAtomValue(atomGameLibrary);
 
     return (
@@ -141,24 +139,43 @@ export function Toolbar() {
                         />
                     </Navigable>
                     <Select
-                        value={sort}
+                        onOpenChange={(e) => setSortOpen(e)}
                         onValueChange={(e) => setSort(e as SortType)}
+                        open={isSortOpen}
+                        value={sort}
                     >
                         <SelectPrimitive.Trigger asChild>
-                            <Button
-                                size="icon"
-                                variant="link"
-                                className="rounded-l-none border-1 border-l-0"
-                            >
-                                <FilterIcon />
-                            </Button>
+                            <Navigable>
+                                <Button
+                                    className="rounded-l-none border-1 border-l-0"
+                                    size="icon"
+                                    variant="link"
+                                >
+                                    <SortDescIcon />
+                                </Button>
+                            </Navigable>
                         </SelectPrimitive.Trigger>
                         <SelectContent>
-                            <SelectItem value={SortType.NONE}>None</SelectItem>
-                            <SelectItem value={SortType.TITLE}>
-                                Title
-                            </SelectItem>
-                            <SelectItem value={SortType.CUSA}>CUSA</SelectItem>
+                            <GamepadNavField
+                                debugName="sort-selection"
+                                enabled={isSortOpen}
+                            >
+                                <Navigable>
+                                    <SelectItem value={SortType.NONE}>
+                                        None
+                                    </SelectItem>
+                                </Navigable>
+                                <Navigable>
+                                    <SelectItem value={SortType.TITLE}>
+                                        Title
+                                    </SelectItem>
+                                </Navigable>
+                                <Navigable>
+                                    <SelectItem value={SortType.CUSA}>
+                                        CUSA
+                                    </SelectItem>
+                                </Navigable>
+                            </GamepadNavField>
                         </SelectContent>
                     </Select>
                 </div>

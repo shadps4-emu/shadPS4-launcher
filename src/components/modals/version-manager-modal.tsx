@@ -88,7 +88,7 @@ function DownloadButton({
         return (
             <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
-                    <Navigable defaultMouse>
+                    <Navigable>
                         <Button
                             className="cursor-default hover:bg-inherit"
                             size="icon"
@@ -120,7 +120,7 @@ function DownloadButton({
     }
 
     return (
-        <Navigable defaultMouse>
+        <Navigable>
             <Button onClick={onClick} size="icon" variant="outline">
                 <PlusIcon />
             </Button>
@@ -219,7 +219,7 @@ function VersionManagerDialog() {
                                 <DialogTitle>
                                     <div className="flex items-center gap-4">
                                         <span>Version Manager</span>
-                                        <Navigable defaultMouse>
+                                        <Navigable>
                                             <Button
                                                 onClick={() => setIsNew(true)}
                                                 size="sm"
