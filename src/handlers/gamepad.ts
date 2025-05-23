@@ -105,10 +105,13 @@ function gamepadLoop() {
 
 export function startGamepadHandler() {
     requestAnimationFrame(gamepadLoop);
-    window.addEventListener("mousemove", gamepadRelease);
+    window.addEventListener("mousedown", gamepadRelease);
     window.addEventListener("keydown", gamepadRelease);
     window.addEventListener("gamepadconnected", gamepadAcquire);
     window.addEventListener("gamepaddisconnected", gamepadRelease);
+    if (navigator.getGamepads().length > 0) {
+        gamepadAcquire();
+    }
 }
 
 export function addGamepadButtonListener(

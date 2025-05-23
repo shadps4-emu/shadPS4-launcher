@@ -9,8 +9,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import {
-    type GamepadButton,
     GamepadNavField,
+    type NavButton,
 } from "@/lib/context/gamepad-nav-field";
 import { useGameCover } from "@/lib/hooks/useGameCover";
 import { stringifyError } from "@/lib/utils/error";
@@ -75,7 +75,7 @@ export function RunningGameDialog({
         close();
     };
 
-    const onButtonPress = (btn: GamepadButton) => {
+    const onButtonPress = (btn: NavButton) => {
         if (btn === "back") {
             close();
             return;

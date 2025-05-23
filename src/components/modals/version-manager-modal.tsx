@@ -27,8 +27,8 @@ import {
 } from "@/components/ui/tooltip";
 import { installNewVersion } from "@/handlers/version-manager";
 import {
-    type GamepadButton,
     GamepadNavField,
+    type NavButton,
 } from "@/lib/context/gamepad-nav-field";
 import { atomEmuInstallsPath } from "@/store/paths";
 import {
@@ -194,7 +194,7 @@ function VersionManagerDialog() {
     const [isNew, setIsNew] = useState(false);
     const installedVersions = useAtomValue(atomInstalledVersions);
 
-    const onButtonPress = (btn: GamepadButton) => {
+    const onButtonPress = (btn: NavButton) => {
         if (btn === "back") {
             setIsOpen(false);
             return;

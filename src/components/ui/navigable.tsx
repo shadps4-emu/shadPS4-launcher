@@ -8,10 +8,7 @@ import {
     useRef,
 } from "react";
 import type { GamepadButtonEvent } from "@/handlers/gamepad";
-import type {
-    GamepadButton,
-    INavTarget,
-} from "@/lib/context/gamepad-nav-field";
+import type { INavTarget, NavButton } from "@/lib/context/gamepad-nav-field";
 import { useGamepadNavField } from "@/lib/hooks/useGamepadNavField";
 
 type Props = PropsWithChildren<
@@ -45,7 +42,7 @@ export function Navigable({
     }, []);
 
     const onSelect = useCallback(
-        (btn: GamepadButton | null, e: GamepadButtonEvent) => {
+        (btn: NavButton | null, e: GamepadButtonEvent) => {
             propOnSelect?.(btn, e);
             if (!e.isPreventingDefault) {
                 document
@@ -61,7 +58,7 @@ export function Navigable({
         [propOnSelect],
     );
     const onButtonPress = useCallback(
-        (btn: GamepadButton, e: GamepadButtonEvent) => {
+        (btn: NavButton, e: GamepadButtonEvent) => {
             propOnButtonPress?.(btn, e);
             if (!e.isPreventingDefault && defaultInput !== false) {
                 if (btn === "confirm") {

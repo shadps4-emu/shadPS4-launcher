@@ -14,33 +14,34 @@ import {
 } from "@/lib/hooks/useGamepadInputStack";
 import type { Tuple } from "@/lib/utils/types";
 
-export const BUTTON_MAP = {
+export const NAV_BUTTON_MAP = {
     confirm: 0,
     back: 1,
     extra: 2,
     options: 3,
-    dpad_up: 12,
-    dpad_down: 13,
-    dpad_left: 14,
-    dpad_right: 15,
+    up: 12,
+    down: 13,
+    left: 14,
+    right: 15,
 } as const;
 
-export const BUTTON_MAP_REVERSE = {
+export const NAV_BUTTON_MAP_REVERSE = {
     "0": "confirm",
     "1": "back",
     "2": "extra",
     "3": "options",
-    "12": "dpad_up",
-    "13": "dpad_down",
-    "14": "dpad_left",
-    "15": "dpad_right",
+    "12": "up",
+    "13": "down",
+    "14": "left",
+    "15": "right",
 } as const satisfies {
-    [V in (typeof BUTTON_MAP)[keyof typeof BUTTON_MAP] &
-        PropertyKey]: keyof typeof BUTTON_MAP;
+    [V in (typeof NAV_BUTTON_MAP)[keyof typeof NAV_BUTTON_MAP] &
+        PropertyKey]: keyof typeof NAV_BUTTON_MAP;
 };
 
-export type GamepadButton =
-    (typeof BUTTON_MAP_REVERSE)[keyof typeof BUTTON_MAP_REVERSE];
+export type NavButton =
+    | (typeof NAV_BUTTON_MAP_REVERSE)[keyof typeof NAV_BUTTON_MAP_REVERSE]
+    | (typeof NAV_BUTTON_MAP)[keyof typeof NAV_BUTTON_MAP];
 
 interface Point {
     x: number;
@@ -93,13 +94,13 @@ export interface INavTarget {
     element: RefObject<HTMLElement | null>;
     anchor?: Anchor | undefined;
     onSelect?:
-        | ((btn: GamepadButton | null, e: GamepadButtonEvent) => void)
+        | ((btn: NavButton | null, e: GamepadButtonEvent) => void)
         | undefined;
     onUnselect?:
-        | ((btn: GamepadButton | null, e: GamepadButtonEvent) => void)
+        | ((btn: NavButton | null, e: GamepadButtonEvent) => void)
         | undefined;
     onButtonPress?:
-        | ((btn: GamepadButton, e: GamepadButtonEvent) => void)
+        | ((btn: NavButton, e: GamepadButtonEvent) => void)
         | undefined;
 }
 
@@ -114,7 +115,7 @@ type Props = PropsWithChildren<
     GamepadInputStackHookProps & {
         onButtonPress?:
             | ((
-                  btn: GamepadButton,
+                  btn: NavButton,
                   target: INavTarget | null,
                   e: GamepadButtonEvent,
               ) => void)
@@ -134,8 +135,8 @@ export function GamepadNavField({
 
     const select = useCallback(
         (
-            target: INavTarget,
-            btn: GamepadButton | null,
+            target: INavTarget | null,
+            btn: NavButton | null,
             e: GamepadButtonEvent,
         ) => {
             const active = activeTarget.current;
@@ -150,13 +151,13 @@ export function GamepadNavField({
                 return;
             }
             activeTarget.current = target;
-            target.onSelect?.(btn, e);
+            target?.onSelect?.(btn, e);
         },
         [],
     );
 
     const onMove = useCallback(
-        (btn: GamepadButton, e: GamepadButtonEvent, x: number, y: number) => {
+        (btn: NavButton, e: GamepadButtonEvent, x: number, y: number) => {
             const elements = availableElements.current;
 
             const active = activeTarget.current;
@@ -257,7 +258,7 @@ export function GamepadNavField({
     );
 
     const onButton = useCallback(
-        (btn: GamepadButton, e: GamepadButtonEvent) => {
+        (btn: NavButton, e: GamepadButtonEvent) => {
             const active = activeTarget.current;
             onButtonPress?.(btn, active, e);
             if (e.isPreventingDefault) {
@@ -273,27 +274,28 @@ export function GamepadNavField({
             return;
         }
         const unsub: UnlistenFn[] = [];
-        const bindMove = (btn: GamepadButton, x: number, y: number) => {
+        const bindMove = (btn: NavButton, x: number, y: number) => {
             const callback = (e: GamepadButtonEvent) => {
                 if (e.justPressed) {
                     onMove(btn, e, x, y);
                 }
             };
-            const code = BUTTON_MAP[btn];
+            const code = typeof btn === "number" ? btn : NAV_BUTTON_MAP[btn];
             unsub.push(listenButton(code, callback));
         };
-        const bindButton = (btn: GamepadButton) => {
+        const bindButton = (btn: NavButton) => {
             const callback = (e: GamepadButtonEvent) => {
                 if (e.justPressed) {
                     onButton(btn, e);
                 }
             };
-            unsub.push(listenButton(BUTTON_MAP[btn], callback));
+            const code = typeof btn === "number" ? btn : NAV_BUTTON_MAP[btn];
+            unsub.push(listenButton(code, callback));
         };
-        bindMove("dpad_up", 0, -1);
-        bindMove("dpad_down", 0, 1);
-        bindMove("dpad_left", -1, 0);
-        bindMove("dpad_right", 1, 0);
+        bindMove("up", 0, -1);
+        bindMove("down", 0, 1);
+        bindMove("left", -1, 0);
+        bindMove("right", 1, 0);
         bindButton("confirm");
         bindButton("back");
         bindButton("extra");
@@ -363,6 +365,25 @@ export function GamepadNavField({
             }, 1);
         }
     }, [enabled, select]);
+
+    useEffect(() => {
+        const c = () => {
+            if (activeTarget.current) {
+                select(
+                    null,
+                    null,
+                    new GamepadButtonEvent(-1, true, true, false),
+                );
+                document
+                    .querySelectorAll("*[data-gamepad-focus]")
+                    .forEach((el) => el.removeAttribute("data-gamepad-focus"));
+            }
+        };
+        window.addEventListener("mousedown", c);
+        return () => {
+            window.removeEventListener("mousedown", c);
+        };
+    });
 
     return (
         <context.Provider

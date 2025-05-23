@@ -1,4 +1,4 @@
-import { useAtom, useSetAtom, useStore } from "jotai";
+import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { CircleHelpIcon, FrownIcon, GlobeIcon, PlayIcon } from "lucide-react";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -8,7 +8,7 @@ import JP from "@/assets/flags/jp.svg";
 import US from "@/assets/flags/us.svg";
 import type { GamepadButtonEvent } from "@/handlers/gamepad";
 import { startGame } from "@/handlers/run-emu";
-import type { GamepadButton } from "@/lib/context/gamepad-nav-field";
+import type { NavButton } from "@/lib/context/gamepad-nav-field";
 import type { PSF } from "@/lib/native/psf";
 import { stringifyError } from "@/lib/utils/error";
 import { cn } from "@/lib/utils/ui";
@@ -18,7 +18,7 @@ import { gamepadActiveAtom } from "@/store/gamepad";
 import { atomShowingRunningGame } from "@/store/running-games";
 import { atomSelectedVersion } from "@/store/version-manager";
 import { GameBoxCover } from "./game-cover";
-import GamepadIcon from "./gamepad-icon";
+import GamepadIcon, { ButtonType } from "./gamepad-icon";
 import { Navigable } from "./ui/navigable";
 import { Skeleton } from "./ui/skeleton";
 import { Spinner } from "./ui/spinner";
@@ -76,7 +76,7 @@ export function GameBoxError({ err }: { err: Error }) {
 export function GameBox({ game }: { game: GameRow; isFirst?: boolean }) {
     const [isPending, startTransaction] = useTransition();
 
-    const isGamepad = useAtom(gamepadActiveAtom);
+    const isGamepad = useAtomValue(gamepadActiveAtom);
     const store = useStore();
     const setShowingDetails = useSetAtom(atomShowingGameDetails);
 
@@ -117,7 +117,7 @@ export function GameBox({ game }: { game: GameRow; isFirst?: boolean }) {
         setShowingDetails(game);
     };
 
-    const onButtonPress = (btn: GamepadButton, e: GamepadButtonEvent) => {
+    const onButtonPress = (btn: NavButton, e: GamepadButtonEvent) => {
         if (btn === "options") {
             openDetails();
         } else if (btn === "confirm") {
@@ -165,7 +165,10 @@ export function GameBox({ game }: { game: GameRow; isFirst?: boolean }) {
                         type="button"
                     >
                         {isGamepad && (
-                            <GamepadIcon className="size-6" icon="options" />
+                            <GamepadIcon
+                                className="size-6"
+                                icon={ButtonType.BUTTON_UP}
+                            />
                         )}
                         View More
                         {isGamepad && <div className="size-6" />}
