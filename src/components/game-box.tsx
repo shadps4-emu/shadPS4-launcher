@@ -1,6 +1,19 @@
 import { useAtomValue, useSetAtom, useStore } from "jotai";
-import { CircleHelpIcon, FrownIcon, GlobeIcon, PlayIcon } from "lucide-react";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import {
+    CircleHelpIcon,
+    EllipsisIcon,
+    FrownIcon,
+    GlobeIcon,
+    PlayIcon,
+} from "lucide-react";
+import {
+    type MouseEvent as ReactMouseEvent,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    useTransition,
+} from "react";
 import { toast } from "sonner";
 import CN from "@/assets/flags/cn.svg";
 import EU from "@/assets/flags/eu.svg";
@@ -8,7 +21,10 @@ import JP from "@/assets/flags/jp.svg";
 import US from "@/assets/flags/us.svg";
 import type { GamepadButtonEvent } from "@/handlers/gamepad";
 import { startGame } from "@/handlers/run-emu";
-import type { NavButton } from "@/lib/context/gamepad-nav-field";
+import {
+    GamepadNavField,
+    type NavButton,
+} from "@/lib/context/gamepad-nav-field";
 import type { PSF } from "@/lib/native/psf";
 import { stringifyError } from "@/lib/utils/error";
 import { cn } from "@/lib/utils/ui";
@@ -19,6 +35,13 @@ import { atomShowingRunningGame } from "@/store/running-games";
 import { atomSelectedVersion } from "@/store/version-manager";
 import { GameBoxCover } from "./game-cover";
 import GamepadIcon, { ButtonType } from "./gamepad-icon";
+import { Button } from "./ui/button";
+import {
+    ContextMenu,
+    ContextMenuContent,
+    ContextMenuItem,
+    ContextMenuTrigger,
+} from "./ui/context-menu";
 import { Navigable } from "./ui/navigable";
 import { Skeleton } from "./ui/skeleton";
 import { Spinner } from "./ui/spinner";
@@ -80,7 +103,10 @@ export function GameBox({ game }: { game: GameRow; isFirst?: boolean }) {
     const store = useStore();
     const setShowingDetails = useSetAtom(atomShowingGameDetails);
 
-    const [clickCount, setClickCount] = useState<number>(0);
+    const [clickCount, setClickCount] = useState(0);
+    const [isContextOpen, setContextOpen] = useState(false);
+    const contextMenuRef = useRef<HTMLSpanElement>(null);
+    const contextOpenButtonRef = useRef<HTMLButtonElement>(null);
 
     useEffect(() => {
         if (clickCount >= 3) {
@@ -114,12 +140,36 @@ export function GameBox({ game }: { game: GameRow; isFirst?: boolean }) {
     };
 
     const openDetails = () => {
-        setShowingDetails(game);
+        setTimeout(() => {
+            // Hack to avoid radix locking ui
+            setShowingDetails(game);
+        }, 1);
+    };
+
+    const openContext = (e: ReactMouseEvent | null) => {
+        e?.preventDefault();
+        e?.stopPropagation();
+
+        const s = contextMenuRef.current;
+        if (s) {
+            const pos = (
+                contextOpenButtonRef.current || s
+            ).getBoundingClientRect();
+            s.dispatchEvent(
+                new MouseEvent("contextmenu", {
+                    bubbles: true,
+                    screenX: pos.x,
+                    screenY: pos.y,
+                    clientX: pos.x,
+                    clientY: pos.y,
+                }),
+            );
+        }
     };
 
     const onButtonPress = (btn: NavButton, e: GamepadButtonEvent) => {
         if (btn === "options") {
-            openDetails();
+            openContext(null);
         } else if (btn === "confirm") {
             e.preventDefault();
             openGame();
@@ -127,54 +177,75 @@ export function GameBox({ game }: { game: GameRow; isFirst?: boolean }) {
     };
 
     return (
-        <Navigable onButtonPress={onButtonPress}>
-            <div
-                className="group relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform focus-within:scale-110 hover:scale-110 data-gamepad-focus:scale-110"
-                onBlur={onBlur}
-                onClick={onClick}
-                onDoubleClick={openGame}
-            >
-                {isPending && (
-                    <div className="center absolute inset-0 bg-black/60">
-                        <Spinner />
-                    </div>
-                )}
-                <GameBoxCover game={game} />
-
-                <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 bg-black/50 opacity-0 backdrop-blur-[2px] transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 group-data-gamepad-focus:opacity-100">
-                    <span className="col-span-full row-start-1 row-end-2 truncate px-3 py-2 text-center font-semibold text-lg">
-                        {/* TODO: scroll text on overflow */}
-                        {game.title}
-                    </span>
-
-                    <div className="col-start-3 col-end-4 row-start-3 row-end-4 m-2 size-6 place-self-end">
-                        <Flag className="rounded-full" sfo={game.sfo} />
-                    </div>
-
-                    <button
-                        className="col-span-full row-span-full grid size-16 place-items-center place-self-center rounded-full bg-black/75"
-                        data-play-game={""}
-                        type="button"
+        <ContextMenu onOpenChange={setContextOpen}>
+            <ContextMenuTrigger ref={contextMenuRef}>
+                <Navigable onButtonPress={onButtonPress}>
+                    <div
+                        className="group relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform focus-within:scale-110 hover:scale-110 data-gamepad-focus:scale-110"
+                        onBlur={onBlur}
+                        onClick={onClick}
+                        onDoubleClick={openGame}
                     >
-                        <PlayIcon className="size-10" fill="currentColor" />
-                    </button>
-
-                    <button
-                        className="col-span-full row-start-3 row-end-4 flex flex-row items-center justify-center gap-x-2 self-end py-2 transition-colors hover:bg-secondary/75 focus:bg-secondary/75 group-data-gamepad-focus:bg-secondary/75"
-                        onClick={openDetails}
-                        type="button"
-                    >
-                        {isGamepad && (
-                            <GamepadIcon
-                                className="size-6"
-                                icon={ButtonType.BUTTON_UP}
-                            />
+                        {isPending && (
+                            <div className="center absolute inset-0 bg-black/60">
+                                <Spinner />
+                            </div>
                         )}
-                        View More
-                        {isGamepad && <div className="size-6" />}
-                    </button>
-                </div>
-            </div>
-        </Navigable>
+                        <GameBoxCover game={game} />
+
+                        <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 bg-black/50 opacity-0 backdrop-blur-[2px] transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 group-data-gamepad-focus:opacity-100">
+                            <span className="col-span-full row-start-1 row-end-2 truncate px-3 py-2 text-center font-semibold text-lg">
+                                {/* TODO: scroll text on overflow */}
+                                {game.title}
+                            </span>
+
+                            <div className="col-start-1 col-end-4 row-start-3 row-end-4 m-2 flex h-8 justify-between self-end">
+                                <Button
+                                    className="cursor-help"
+                                    onClick={openContext}
+                                    ref={contextOpenButtonRef}
+                                    size="icon"
+                                    type="button"
+                                    variant="ghost"
+                                >
+                                    {isGamepad ? (
+                                        <GamepadIcon
+                                            className="animate-pulse"
+                                            icon={ButtonType.BUTTON_UP}
+                                        />
+                                    ) : (
+                                        <EllipsisIcon />
+                                    )}
+                                </Button>
+                                <Flag className="rounded-full" sfo={game.sfo} />
+                            </div>
+
+                            <button
+                                className="col-span-full row-span-full grid size-16 place-items-center place-self-center rounded-full bg-black/75"
+                                data-play-game={""}
+                                type="button"
+                            >
+                                <PlayIcon
+                                    className="size-10"
+                                    fill="currentColor"
+                                />
+                            </button>
+                        </div>
+                    </div>
+                </Navigable>
+            </ContextMenuTrigger>
+            <ContextMenuContent>
+                <GamepadNavField
+                    debugName="game-context-menu"
+                    enabled={isContextOpen}
+                >
+                    <Navigable>
+                        <ContextMenuItem autoFocus onClick={openDetails}>
+                            Details
+                        </ContextMenuItem>
+                    </Navigable>
+                </GamepadNavField>
+            </ContextMenuContent>
+        </ContextMenu>
     );
 }
