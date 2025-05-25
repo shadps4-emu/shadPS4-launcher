@@ -1,4 +1,4 @@
-import { useAtomValue, useSetAtom, useStore } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import {
     Maximize2Icon,
     MaximizeIcon,
@@ -16,9 +16,9 @@ import { useGameCover } from "@/lib/hooks/useGameCover";
 import { stringifyError } from "@/lib/utils/error";
 import { cn } from "@/lib/utils/ui";
 import {
-    atomRunningGames,
     atomShowingRunningGame,
     type RunningGame,
+    removeRunningGame,
 } from "@/store/running-games";
 import { LogList } from "../log-list";
 import {
@@ -49,7 +49,6 @@ export function RunningGameDialog({
 }: {
     runningGame: RunningGame;
 }) {
-    const store = useStore();
     const setShowingGame = useSetAtom(atomShowingRunningGame);
 
     const { game, process, atomRunning, atomLog } = runningGame;
@@ -69,9 +68,7 @@ export function RunningGameDialog({
     };
 
     const trash = () => {
-        store.set(atomRunningGames, (prev) =>
-            prev.filter((e) => e !== runningGame),
-        );
+        removeRunningGame(runningGame);
         close();
     };
 

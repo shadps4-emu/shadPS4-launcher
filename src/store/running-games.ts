@@ -23,10 +23,10 @@ export type RunningGame = {
 export const atomRunningGames = atom<RunningGame[]>([]);
 export const atomShowingRunningGame = atom<RunningGame | null>(null);
 
-export const addRunningGame = (
+export function addRunningGame(
     game: GameRow,
     process: GameProcess,
-): RunningGame => {
+): RunningGame {
     const atomRunning = atom<true | number>(true);
     const atomError = atom<string | null>(null);
     const atomLog = atom<Log>({ entries: [] });
@@ -67,4 +67,12 @@ export const addRunningGame = (
     };
 
     return runningGame;
-};
+}
+
+export function removeRunningGame(runningGame: RunningGame) {
+    delete (runningGame as Partial<RunningGame>).atomLog;
+    delete (runningGame as Partial<RunningGame>).process;
+    defaultStore.set(atomRunningGames, (prev) =>
+        prev.filter((e) => e !== runningGame),
+    );
+}
