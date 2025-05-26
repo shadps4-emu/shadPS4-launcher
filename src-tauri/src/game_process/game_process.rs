@@ -1,5 +1,5 @@
 use crate::game_process::ipc::GameCommand;
-use crate::game_process::log::{Entry, LogData, RowId};
+use crate::game_process::log::{Entry, LogData, LogEntry};
 use crate::game_process::{log, GameBridgeStateType};
 use anyhow::Context;
 use serde::Serialize;
@@ -15,8 +15,8 @@ use tokio::sync::mpsc::{channel, Sender};
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase", tag = "event")]
-pub enum GameEvent {
-    Log { row_id: RowId, entry: Entry },
+pub enum GameEvent<'a> {
+    Log(LogEntry<'a>),
     GameExit { status: i32 },
     IOError { err: String },
 }
@@ -29,15 +29,16 @@ enum InnerCommand {
 pub struct GameProcess {
     pid: u32,
     #[allow(dead_code)]
+    data: ProcessData,
+
+    #[allow(dead_code)]
     sender: Arc<Mutex<Sender<GameCommand>>>, // These are commands sent to the emulator
     inner_sender: Arc<Mutex<Sender<InnerCommand>>>, // These are commands sent to the launcher
-    #[allow(dead_code)]
-    data: ProcessData,
 }
 
 #[derive(Clone)]
-struct ProcessData {
-    log_data: Arc<Mutex<LogData>>,
+pub struct ProcessData {
+    pub log_data: Arc<Mutex<LogData>>,
 }
 
 impl GameProcess {
@@ -86,6 +87,10 @@ impl GameProcess {
         self.pid
     }
 
+    pub fn data(&self) -> &ProcessData {
+        &self.data
+    }
+
     pub async fn kill(&self) {
         let inner_sender = self.inner_sender.lock().await;
         inner_sender
@@ -103,7 +108,7 @@ impl GameProcess {
         let (tx, mut rx) = channel::<GameCommand>(1);
         let (inner_tx, mut inner_rx) = channel::<InnerCommand>(1);
 
-        let pid = c.id().expect("failed to get process id");
+        // let pid = c.id().expect("failed to get process id");
 
         tauri::async_runtime::spawn(async move {
             let mut stdin = c.stdin.take().expect("stdin is piped");
@@ -118,26 +123,8 @@ impl GameProcess {
 
             let mut io_err: Option<anyhow::Error> = None;
 
-            let mut interval = tokio::time::interval(tokio::time::Duration::from_millis(1));
-            let mut test_count = 0;
-
             loop {
                 tokio::select! {
-                    _ = interval.tick() => {
-                        test_count += 1;
-                        let mut log_data = data.log_data.lock().await;
-                        let entry = Entry {
-                            time: UtcDateTime::now(),
-                            level: log::Level::Error,
-                            class: "TEST",
-                            message: format!("[TEST LOG] test_count: {}", test_count),
-                        };
-                        let row_id = log_data.add_entry(entry.clone());
-                        callback(GameEvent::Log {
-                            entry,
-                            row_id,
-                        });
-                    }
                     msg = stdout_lines.next_line() => {
                        match msg {
                             Err(_) => {
@@ -156,10 +143,10 @@ impl GameProcess {
                                     }
                                 });
                                 let row_id = log_data.add_entry(entry.clone());
-                                callback(GameEvent::Log {
-                                    entry,
+                                callback(GameEvent::Log ((
                                     row_id,
-                                });
+                                    &entry,
+                                ).into()));
                             },
                         }
                     }
@@ -179,10 +166,10 @@ impl GameProcess {
                                     message: line,
                                 };
                                 let row_id = log_data.add_entry(entry.clone());
-                                callback(GameEvent::Log {
-                                    entry,
+                                callback(GameEvent::Log ((
                                     row_id,
-                                });
+                                    &entry,
+                                ).into()));
                             },
                         }
                     }
@@ -219,9 +206,6 @@ impl GameProcess {
                 .code()
                 .unwrap_or(-1);
             callback(GameEvent::GameExit { status });
-
-            let state = app_handle.state::<GameBridgeStateType>();
-            state.lock().await.process_list.remove(&pid);
         });
 
         (tx, inner_tx)

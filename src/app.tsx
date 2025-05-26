@@ -8,6 +8,7 @@ import { VersionManagerModal } from "./components/modals/version-manager-modal";
 import { UpdateIcon } from "./components/update-icon";
 
 import "./app.css";
+import "@glideapps/glide-data-grid/dist/index.css";
 
 export function App() {
     return (

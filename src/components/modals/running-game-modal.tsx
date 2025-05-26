@@ -51,7 +51,7 @@ export function RunningGameDialog({
 }) {
     const setShowingGame = useSetAtom(atomShowingRunningGame);
 
-    const { game, process, atomRunning, atomLog } = runningGame;
+    const { game, process, atomRunning } = runningGame;
     const [_, cover] = useGameCover(game);
 
     const runningFlag = useAtomValue(atomRunning);
@@ -145,7 +145,7 @@ export function RunningGameDialog({
                             </Badge>
                         </div>
 
-                        <LogList atomLog={atomLog} />
+                        <LogList runningGame={runningGame} />
                     </div>
 
                     <div className="flex justify-between">

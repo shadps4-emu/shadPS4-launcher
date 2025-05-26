@@ -1,18 +1,34 @@
 import { Channel, invoke } from "@tauri-apps/api/core";
 
+export enum LogLevel {
+    UNKNOWN = "unknown",
+    TRACE = "trace",
+    DEBUG = "debug",
+    INFO = "info",
+    WARNING = "warning",
+    ERROR = "error",
+    CRITICAL = "critical",
+}
+
+export type LogEntry = {
+    rowId: number;
+    level: LogLevel;
+    class: string;
+    message: string;
+};
+
 export type GameEvent =
-    | { event: "logLine"; line: string }
-    | { event: "errLogLine"; line: string }
+    | ({ event: "log" } & LogEntry)
     | { event: "gameExit"; status: number }
     | { event: "iOError"; err: string };
 
 export class GameProcess {
-    private pid: number;
-    private ch: Channel<GameEvent>;
+    #pid: number;
+    #ch: Channel<GameEvent>;
 
     private constructor(pid: number, ch: Channel<GameEvent>) {
-        this.pid = pid;
-        this.ch = ch;
+        this.#pid = pid;
+        this.#ch = ch;
     }
 
     static async startGame(
@@ -30,11 +46,32 @@ export class GameProcess {
         return new GameProcess(pid, ch);
     }
 
-    set onMessage(listener: (ev: GameEvent) => void) {
-        this.ch.onmessage = listener;
+    get pid() {
+        return this.#pid;
     }
 
-    kill() {
-        invoke("game_process_kill", { pid: this.pid });
+    set onMessage(listener: (ev: GameEvent) => void) {
+        this.#ch.onmessage = listener;
+    }
+
+    async kill() {
+        await invoke("game_process_kill", { pid: this.pid });
+    }
+
+    async delete() {
+        await invoke("game_process_delete", { pid: this.#pid });
+    }
+
+    async getLog(query: {
+        begin?: number | undefined;
+        end?: number | undefined;
+    }): Promise<LogEntry[]> {
+        return JSON.parse(
+            await invoke("game_process_get_log", {
+                pid: this.pid,
+                beg: query.begin,
+                end: query.end,
+            }),
+        );
     }
 }

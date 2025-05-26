@@ -17,7 +17,10 @@ pub enum Level {
     Critical,
 }
 
+pub type RowId = u32;
+
 #[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct Entry {
     pub time: UtcDateTime,
     pub level: Level,
@@ -25,18 +28,26 @@ pub struct Entry {
     pub message: String,
 }
 
-pub type RowId = u32;
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct LogEntry<'a> {
+    pub row_id: RowId,
+    pub time: UtcDateTime,
+    pub level: Level,
+    pub class: &'a str,
+    pub message: &'a str,
+}
 
 pub struct LogData {
-    rows: BTreeMap<RowId, Entry>,
-    index_level: HashMap<Level, HashSet<RowId>>,
+    pub rows: BTreeMap<RowId, Entry>,
+    pub index_level: HashMap<Level, HashSet<RowId>>,
     last_id: RowId,
 
     class_cache: RefCell<HashMap<String, &'static str>>, // This contains leaked data
 }
 
 thread_local! {
-    static ENTRY_REGEX: Regex = Regex::new(r"^\[(.*?)]\s?<.*?>\s?(.*)$").unwrap()
+    static ENTRY_REGEX: Regex = Regex::new(r"^\[(.*?)]\s?<(.*?)>\s?(.*)$").unwrap()
 }
 
 impl LogData {
@@ -91,5 +102,18 @@ impl LogData {
         self.rows.insert(row_id, entry);
         self.index_level.entry(level).or_default().insert(row_id);
         row_id
+    }
+}
+
+impl<'a> From<(RowId, &'a Entry)> for LogEntry<'a> {
+    fn from(value: (RowId, &'a Entry)) -> Self {
+        let (id, entry) = value;
+        Self {
+            row_id: id,
+            time: entry.time,
+            level: entry.level,
+            class: entry.class,
+            message: &entry.message,
+        }
     }
 }
