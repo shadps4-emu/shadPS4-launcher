@@ -1,6 +1,7 @@
 pub(crate) mod command;
 mod game_process;
 mod ipc;
+mod log;
 pub mod state;
 
 use crate::game_process::state::GameBridge;

@@ -4348,6 +4348,7 @@ dependencies = [
  "log",
  "num-derive",
  "num-traits",
+ "regex",
  "serde",
  "serde_json",
  "static_assertions",
