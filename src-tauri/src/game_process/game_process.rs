@@ -8,7 +8,7 @@ use std::process::Stdio;
 use std::sync::Arc;
 use tauri::async_runtime::Mutex;
 use tauri::{AppHandle, Manager};
-use time::UtcDateTime;
+use time::OffsetDateTime;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::process::{Child, Command};
 use tokio::sync::mpsc::{channel, Sender};
@@ -17,6 +17,7 @@ use tokio::sync::mpsc::{channel, Sender};
 #[serde(rename_all = "camelCase", tag = "event")]
 pub enum GameEvent<'a> {
     Log(LogEntry<'a>),
+    AddLogClass { value: &'a str },
     GameExit { status: i32 },
     IOError { err: String },
 }
@@ -134,18 +135,21 @@ impl GameProcess {
                             Ok(None) => break,
                             Ok(Some(line)) => {
                                 let mut log_data = data.log_data.lock().await;
-                                let entry = log_data.parse_entry(&line).unwrap_or_else(|| {
-                                    Entry {
-                                        time: UtcDateTime::now(),
+                                let (entry, new_class) = log_data.parse_entry(&line).unwrap_or_else(|| {
+                                    (Entry {
+                                        time: OffsetDateTime::now_utc(),
                                         level: log::Level::Info,
                                         class: "UNK",
                                         message: line,
-                                    }
+                                    }, false)
                                 });
-                                let row_id = log_data.add_entry(entry.clone());
+                                if new_class {
+                                    callback(GameEvent::AddLogClass{ value: entry.class })
+                                }
+                                let (row_id, entry) = log_data.add_entry(entry);
                                 callback(GameEvent::Log ((
                                     row_id,
-                                    &entry,
+                                    entry,
                                 ).into()));
                             },
                         }
@@ -160,15 +164,15 @@ impl GameProcess {
                             Ok(Some(line)) => {
                                 let mut log_data = data.log_data.lock().await;
                                 let entry = Entry {
-                                    time: UtcDateTime::now(),
+                                    time: OffsetDateTime::now_utc(),
                                     level: log::Level::Error,
                                     class: "STDERR",
                                     message: line,
                                 };
-                                let row_id = log_data.add_entry(entry.clone());
+                                let (row_id, entry) = log_data.add_entry(entry);
                                 callback(GameEvent::Log ((
                                     row_id,
-                                    &entry,
+                                    entry,
                                 ).into()));
                             },
                         }

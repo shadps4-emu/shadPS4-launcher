@@ -56,6 +56,11 @@ export function addRunningGame(
             case "iOError":
                 store.set(atomError, ev.err);
                 break;
+            default: {
+                // exaustive switch
+                const a: never = ev;
+                return a;
+            }
         }
     };
 

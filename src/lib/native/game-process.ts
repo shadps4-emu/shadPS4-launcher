@@ -12,6 +12,7 @@ export enum LogLevel {
 
 export type LogEntry = {
     rowId: number;
+    time: string;
     level: LogLevel;
     class: string;
     message: string;

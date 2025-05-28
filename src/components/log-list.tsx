@@ -10,6 +10,7 @@ import {
     type TextCell,
     type Theme,
 } from "@glideapps/glide-data-grid";
+import { format } from "date-fns";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef } from "react";
 import { useThemeStyle } from "@/lib/hooks/useThemeStyle";
@@ -19,11 +20,15 @@ import type { RunningGame } from "@/store/running-games";
 const theme = {
     bgHeader: "#ffffff",
     bgCell: "#ffffff",
+    borderColor: "#00000000",
+    horizontalBorderColor: "#e2e8f0",
 } satisfies Partial<Theme>;
 
 const darkTheme = {
     bgHeader: "#020618",
     bgCell: "#020618",
+    borderColor: "#00000000",
+    horizontalBorderColor: "#ffffff1a",
 } satisfies Partial<Theme>;
 
 type LevelTheme = {
@@ -42,12 +47,12 @@ const levelThemes = {
             text: "#6b7280",
         },
         [LogLevel.DEBUG]: {
-            bg: "#f3f4f6",
+            bg: "#aeafb1",
             text: "#4b5563",
         },
         [LogLevel.INFO]: {
-            bg: "#eff6ff",
-            text: "#1d4ed8",
+            bg: "#ffffff",
+            text: "#0f172b",
         },
         [LogLevel.WARNING]: {
             bg: "#fef3c7",
@@ -76,8 +81,8 @@ const levelThemes = {
             text: "#d1d5db",
         },
         [LogLevel.INFO]: {
-            bg: "#1e3a8a",
-            text: "#dbeafe",
+            bg: "#0f172b",
+            text: "#e2e8f0",
         },
         [LogLevel.WARNING]: {
             bg: "#78350f",
@@ -98,10 +103,11 @@ const levelThemes = {
 };
 
 const columns: GridColumn[] = [
-    /* {
+    {
         title: "Time",
         id: "time",
-    }, */
+        width: 80,
+    },
     {
         title: "Level",
         id: "level",
@@ -253,11 +259,13 @@ export function LogList({ runningGame }: Props) {
             let data = "";
             let contentAlign: "left" | "right" | "center" = "left";
             if (col === 0) {
+                data = format(new Date(entry.time), "pp");
+            } else if (col === 1) {
                 data = entry.level.toUpperCase();
                 contentAlign = "center";
-            } else if (col === 1) {
-                data = entry.class;
             } else if (col === 2) {
+                data = entry.class;
+            } else if (col === 3) {
                 data = entry.message;
             }
 
@@ -326,7 +334,7 @@ export function LogList({ runningGame }: Props) {
 
     return (
         <>
-            <div className="flex-1 overflow-y-auto rounded-md border p-4 contain-strict">
+            <div className="flex-1 overflow-y-auto rounded-md border contain-strict">
                 <DataEditor
                     columns={columns}
                     drawHeader={() => false}

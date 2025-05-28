@@ -1,6 +1,6 @@
 use crate::game_process::game_process::{GameEvent, GameProcess};
 use crate::game_process::log::{LogEntry, RowId};
-use crate::game_process::{GameBridgeState, GameBridgeStateType};
+use crate::game_process::GameBridgeState;
 use anyhow::anyhow;
 use anyhow_tauri::bail;
 use anyhow_tauri::IntoTAResult;
