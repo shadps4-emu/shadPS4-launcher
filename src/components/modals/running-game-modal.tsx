@@ -1,6 +1,8 @@
 import { useAtomValue, useSetAtom } from "jotai";
 import {
     FilterIcon,
+    FolderTreeIcon,
+    GaugeIcon,
     Maximize2Icon,
     MaximizeIcon,
     PauseIcon,
@@ -14,7 +16,9 @@ import {
     type NavButton,
 } from "@/lib/context/gamepad-nav-field";
 import { useGameCover } from "@/lib/hooks/useGameCover";
+import { LogLevel } from "@/lib/native/game-process";
 import { stringifyError } from "@/lib/utils/error";
+import { capitalize } from "@/lib/utils/strings";
 import { cn } from "@/lib/utils/ui";
 import {
     atomShowingRunningGame,
@@ -45,6 +49,12 @@ import {
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Navigable } from "../ui/navigable";
@@ -57,13 +67,19 @@ export function RunningGameDialog({
 }) {
     const setShowingGame = useSetAtom(atomShowingRunningGame);
 
-    const { game, process, atomRunning } = runningGame;
+    const { game, process, atomRunning, log } = runningGame;
     const [_, cover] = useGameCover(game);
 
     const runningFlag = useAtomValue(atomRunning);
     const isRunning = runningFlag === true;
 
     const [maximized, setMaximized] = useState(false);
+
+    const availableClassLog = useAtomValue(log.atomClassList);
+    const [logFilter, setLogFilter] = useState<{
+        logLevel?: LogLevel;
+        className?: string;
+    }>({});
 
     const close = () => {
         setShowingGame(null);
@@ -150,7 +166,78 @@ export function RunningGameDialog({
                                             <FilterIcon size={12} />
                                         </Badge>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent></DropdownMenuContent>
+                                    <DropdownMenuContent>
+                                        <DropdownMenuItem
+                                            onClick={() => setLogFilter({})}
+                                        >
+                                            <XIcon /> Show All
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSub>
+                                            <DropdownMenuSubTrigger>
+                                                <GaugeIcon
+                                                    className="mr-2 text-muted-foreground"
+                                                    size={16}
+                                                />{" "}
+                                                Level
+                                            </DropdownMenuSubTrigger>
+                                            <DropdownMenuSubContent>
+                                                <DropdownMenuRadioGroup
+                                                    onValueChange={(e) =>
+                                                        setLogFilter({
+                                                            logLevel:
+                                                                e as LogLevel,
+                                                        })
+                                                    }
+                                                    value={logFilter.logLevel}
+                                                >
+                                                    {Object.values(
+                                                        LogLevel,
+                                                    ).map((level) => (
+                                                        <DropdownMenuRadioItem
+                                                            key={level}
+                                                            value={level}
+                                                        >
+                                                            {capitalize(level)}
+                                                        </DropdownMenuRadioItem>
+                                                    ))}
+                                                </DropdownMenuRadioGroup>
+                                            </DropdownMenuSubContent>
+                                        </DropdownMenuSub>
+                                        <DropdownMenuSub>
+                                            <DropdownMenuSubTrigger>
+                                                <FolderTreeIcon
+                                                    className="mr-2 text-muted-foreground"
+                                                    size={16}
+                                                />{" "}
+                                                Class
+                                            </DropdownMenuSubTrigger>
+                                            <DropdownMenuSubContent>
+                                                <DropdownMenuRadioGroup
+                                                    onValueChange={(e) =>
+                                                        setLogFilter({
+                                                            className: e,
+                                                        })
+                                                    }
+                                                    value={logFilter.className}
+                                                >
+                                                    {availableClassLog.map(
+                                                        (className) => (
+                                                            <DropdownMenuRadioItem
+                                                                key={className}
+                                                                value={
+                                                                    className
+                                                                }
+                                                            >
+                                                                {capitalize(
+                                                                    className,
+                                                                )}
+                                                            </DropdownMenuRadioItem>
+                                                        ),
+                                                    )}
+                                                </DropdownMenuRadioGroup>
+                                            </DropdownMenuSubContent>
+                                        </DropdownMenuSub>
+                                    </DropdownMenuContent>
                                 </DropdownMenu>
                                 <h3 className="font-medium text-sm">
                                     Output Log
@@ -166,7 +253,11 @@ export function RunningGameDialog({
                             </Badge>
                         </div>
 
-                        <LogList runningGame={runningGame} />
+                        <LogList
+                            classFilter={logFilter.className}
+                            levelFilter={logFilter.logLevel}
+                            runningGame={runningGame}
+                        />
                     </div>
 
                     <div className="flex justify-between">

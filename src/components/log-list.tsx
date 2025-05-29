@@ -129,10 +129,11 @@ const baseColumns: GridColumn[] = [
 
 type Props = {
     runningGame: RunningGame;
-    levelFilter?: null | undefined | LogLevel;
+    levelFilter?: LogLevel | undefined;
+    classFilter?: string | undefined;
 };
 
-export function LogList({ runningGame }: Props) {
+export function LogList({ runningGame, levelFilter, classFilter }: Props) {
     const isDark = useThemeStyle() === "dark";
     const setLogCallback = useSetAtom(runningGame.log.atomCallback);
 
@@ -140,27 +141,38 @@ export function LogList({ runningGame }: Props) {
         baseColumns.map((e) => ({ ...e })),
     );
     const [rowCount, setRowCount] = useState(0);
-    const rowData = useRef<LogEntry[]>([]);
+    const [rowData, setRowData] = useState<LogEntry[]>([]); // Warning, this is mutable and will not trigger re-render
     const dataGridRef = useRef<DataEditorRef | null>(null);
     const prevVisibleRegion = useRef<Rectangle | null>(null);
     const isScrollFollowing = useRef(true);
 
     useEffect(() => {
-        runningGame.process.getLog().then((log) => {
-            rowData.current = log;
-            setRowCount(log.length);
-            setTimeout(() => {
-                if (isScrollFollowing.current) {
-                    dataGridRef.current?.scrollTo(0, log.length - 1);
-                }
-            }, 1);
-        });
-    }, [runningGame]);
+        runningGame.process
+            .getLog({
+                level: levelFilter,
+                logClass: classFilter,
+            })
+            .then((log) => {
+                setRowData(log);
+                setRowCount(log.length);
+                setTimeout(() => {
+                    if (isScrollFollowing.current) {
+                        dataGridRef.current?.scrollTo(0, log.length - 1);
+                    }
+                }, 1);
+            });
+    }, [runningGame, levelFilter, classFilter]);
 
     useEffect(() => {
         const c = (log: LogEntry) => {
-            rowData.current.push(log);
-            setRowCount(rowData.current.length);
+            if (levelFilter && log.level !== levelFilter) {
+                return;
+            }
+            if (classFilter && log.class !== classFilter) {
+                return;
+            }
+            rowData.push(log);
+            setRowCount(rowData.length);
             if (isScrollFollowing.current) {
                 dataGridRef.current?.scrollTo(0, log.rowId - 1);
             }
@@ -174,7 +186,7 @@ export function LogList({ runningGame }: Props) {
     const getCellContent = useCallback(
         (cell: Item): GridCell => {
             const [col, row] = cell;
-            const entry = rowData.current[row];
+            const entry = rowData[row];
             if (!entry) {
                 return {
                     kind: GridCellKind.Text,
@@ -235,7 +247,7 @@ export function LogList({ runningGame }: Props) {
                 throw new Error("Unexpected cell kind");
             }
         },
-        [isDark],
+        [rowData, isDark],
     );
 
     const getCellForSelection = useCallback(
@@ -244,7 +256,7 @@ export function LogList({ runningGame }: Props) {
                 .fill(undefined)
                 .map((_, idx): TextCell[] => {
                     const row = selection.y + idx;
-                    const entry = rowData.current[row];
+                    const entry = rowData[row];
                     if (!entry) {
                         return [];
                     }
@@ -266,7 +278,7 @@ export function LogList({ runningGame }: Props) {
                 })
                 .filter((e) => e.length > 0);
         },
-        [],
+        [rowData],
     );
 
     const onVisibleRegionChanged = useCallback(
