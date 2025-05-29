@@ -68,7 +68,7 @@ jobs:
           VERSION=$(echo "${GITHUB_REF_NAME}" | sed 's/app-v//')
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
 
-          sed -i='' "s/0.0.0-dev/${VERSION}/" src-tauri/tauri.conf.json
+          sed -i='' "s/{version_placeholder}/${VERSION}/" src-tauri/tauri.deploy.conf.json
 
       - uses: tauri-apps/tauri-action@v0
         env:
