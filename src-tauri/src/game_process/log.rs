@@ -46,7 +46,7 @@ pub struct LogData {
 }
 
 thread_local! {
-    static ENTRY_REGEX: Regex = Regex::new(r"^\[(.*?)]\s?<(.*?)>\s?(.*)$").unwrap()
+    static ENTRY_REGEX: Regex = Regex::new(r"^(?i:\x1b\[0m)?(?i:\x1b\[[\d;]*m)?\[(.*?)]\s?<(.*?)>\s?(.*)(?i:\x1b\[0m)?$").unwrap()
 }
 
 impl LogData {
