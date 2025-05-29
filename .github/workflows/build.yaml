@@ -49,7 +49,7 @@ jobs:
           bun-version: latest
 
       - name: install Rust stable
-        uses: dtolnay/rust-toolchain@stable # Set this to dtolnay/rust-toolchain@nightly
+        uses: dtolnay/rust-toolchain@nightly
         with:
           # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
@@ -79,4 +79,4 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: "App v__VERSION__"
           releaseBody: "See the assets to download this version and install."
-          args: ${{ matrix.args }}
+          args: "--config ./src-tauri/tauri.deploy.conf.json ${{ matrix.args }}"
