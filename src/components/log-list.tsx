@@ -11,8 +11,8 @@ import {
     type Theme,
 } from "@glideapps/glide-data-grid";
 import { format } from "date-fns";
-import { useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useEffect, useRef } from "react";
+import { useSetAtom } from "jotai";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useThemeStyle } from "@/lib/hooks/useThemeStyle";
 import { type LogEntry, LogLevel } from "@/lib/native/game-process";
 import type { RunningGame } from "@/store/running-games";
@@ -22,13 +22,15 @@ const theme = {
     bgCell: "#ffffff",
     borderColor: "#00000000",
     horizontalBorderColor: "#e2e8f0",
+    textDark: "#0f172b",
 } satisfies Partial<Theme>;
 
 const darkTheme = {
     bgHeader: "#020618",
-    bgCell: "#020618",
+    bgCell: "#0f172b",
     borderColor: "#00000000",
     horizontalBorderColor: "#ffffff1a",
+    textDark: "#d1d5db",
 } satisfies Partial<Theme>;
 
 type LevelTheme = {
@@ -51,8 +53,8 @@ const levelThemes = {
             text: "#4b5563",
         },
         [LogLevel.INFO]: {
-            bg: "#ffffff",
-            text: "#0f172b",
+            bg: "#eff6ff",
+            text: "#1d4ed8",
         },
         [LogLevel.WARNING]: {
             bg: "#fef3c7",
@@ -81,8 +83,8 @@ const levelThemes = {
             text: "#d1d5db",
         },
         [LogLevel.INFO]: {
-            bg: "#0f172b",
-            text: "#e2e8f0",
+            bg: "#1e3a8a",
+            text: "#dbeafe",
         },
         [LogLevel.WARNING]: {
             bg: "#78350f",
@@ -102,7 +104,7 @@ const levelThemes = {
     dark: Record<LogLevel, LevelTheme>;
 };
 
-const columns: GridColumn[] = [
+const baseColumns: GridColumn[] = [
     {
         title: "Time",
         id: "time",
@@ -116,7 +118,7 @@ const columns: GridColumn[] = [
     {
         title: "Class",
         id: "class",
-        width: 150,
+        width: 100,
     },
     {
         title: "Message",
@@ -125,87 +127,42 @@ const columns: GridColumn[] = [
     },
 ];
 
-const colSize = columns.length;
-
-const BATCH_SIZE = 1000;
-
 type Props = {
     runningGame: RunningGame;
+    levelFilter?: null | undefined | LogLevel;
 };
 
 export function LogList({ runningGame }: Props) {
-    "use no memo"; // Temporary while https://github.com/TanStack/virtual/pull/851 is not merged
-
     const isDark = useThemeStyle() === "dark";
     const setLogCallback = useSetAtom(runningGame.log.atomCallback);
-    const logCount = useAtomValue(runningGame.log.atomCount);
 
-    const groups = useRef<Record<number, LogEntry[]>>({});
-    const fetchingData = useRef(new Set());
+    const [columns, setColumns] = useState(() =>
+        baseColumns.map((e) => ({ ...e })),
+    );
+    const [rowCount, setRowCount] = useState(0);
+    const rowData = useRef<LogEntry[]>([]);
     const dataGridRef = useRef<DataEditorRef | null>(null);
     const prevVisibleRegion = useRef<Rectangle | null>(null);
     const isScrollFollowing = useRef(true);
 
-    const queryGroup = useCallback(
-        (groupId: number) => {
-            if (fetchingData.current.has(groupId)) {
-                return;
-            }
-
-            fetchingData.current.add(groupId);
-            const begin = groupId * BATCH_SIZE;
-            const end = groupId * BATCH_SIZE + BATCH_SIZE;
-            runningGame.process
-                .getLog({
-                    begin,
-                    end,
-                })
-                .then((group) => {
-                    groups.current[groupId] = group;
-                    dataGridRef.current?.updateCells(
-                        Array((end - begin) * colSize)
-                            .fill(undefined)
-                            .map((_, idx) => ({
-                                cell: [
-                                    idx % colSize,
-                                    ((idx / colSize) | 0) + begin,
-                                ],
-                            })),
-                    );
-                })
-                .finally(() => {
-                    fetchingData.current.delete(groupId);
-                });
-        },
-        [runningGame.process],
-    );
+    useEffect(() => {
+        runningGame.process.getLog().then((log) => {
+            rowData.current = log;
+            setRowCount(log.length);
+            setTimeout(() => {
+                if (isScrollFollowing.current) {
+                    dataGridRef.current?.scrollTo(0, log.length - 1);
+                }
+            }, 1);
+        });
+    }, [runningGame]);
 
     useEffect(() => {
         const c = (log: LogEntry) => {
-            const groupId = (log.rowId / BATCH_SIZE) | 0;
-            let group = groups.current[groupId];
-            if (!group) {
-                const lastGroupId = (log.rowId - 1) / BATCH_SIZE;
-                if (lastGroupId !== groupId) {
-                    group = groups.current[groupId] = [];
-                } else {
-                    return;
-                }
-            }
-            group.push(log);
-            const dataGrid = dataGridRef.current;
-            if (!dataGrid) {
-                return;
-            }
-            dataGrid.updateCells(
-                Array(colSize)
-                    .fill(undefined)
-                    .map((_, idx) => ({
-                        cell: [idx, log.rowId],
-                    })),
-            );
+            rowData.current.push(log);
+            setRowCount(rowData.current.length);
             if (isScrollFollowing.current) {
-                dataGrid.scrollTo(0, log.rowId - 1);
+                dataGridRef.current?.scrollTo(0, log.rowId - 1);
             }
         };
         setLogCallback((prev) => [...prev, c]);
@@ -217,18 +174,7 @@ export function LogList({ runningGame }: Props) {
     const getCellContent = useCallback(
         (cell: Item): GridCell => {
             const [col, row] = cell;
-            const groupId = (row / BATCH_SIZE) | 0;
-            const group = groups.current[groupId];
-            if (!group) {
-                queryGroup(groupId);
-                return {
-                    kind: GridCellKind.Text,
-                    allowOverlay: false,
-                    displayData: "",
-                    data: "",
-                };
-            }
-            const entry = group[row % BATCH_SIZE];
+            const entry = rowData.current[row];
             if (!entry) {
                 return {
                     kind: GridCellKind.Text,
@@ -238,47 +184,58 @@ export function LogList({ runningGame }: Props) {
                 };
             }
 
-            const keys = Object.keys(groups);
-            const firstGroup = groupId - 5;
-            const lastGroup = groupId + 5;
-            for (const k of keys) {
-                const kn = Number(k);
-                if (kn < firstGroup - 2 || kn > lastGroup + 2) {
-                    delete groups.current[kn];
-                }
-            }
             const themeOverride: Partial<Theme> = {};
             const style = (isDark ? levelThemes.dark : levelThemes.light)[
                 entry.level
             ];
-            themeOverride.bgCell = style.bg;
-            themeOverride.textDark = style.text;
-            themeOverride.textMedium = style.text;
-            themeOverride.textLight = style.text;
 
+            let kind = GridCellKind.Text;
             let data = "";
             let contentAlign: "left" | "right" | "center" = "left";
             if (col === 0) {
                 data = format(new Date(entry.time), "pp");
             } else if (col === 1) {
+                kind = GridCellKind.Bubble;
                 data = entry.level.toUpperCase();
                 contentAlign = "center";
+                themeOverride.bgBubble = style.bg;
+                themeOverride.bgBubbleSelected = style.bg;
+                themeOverride.textBubble = style.text;
             } else if (col === 2) {
                 data = entry.class;
+                themeOverride.textDark = "#60a5fa";
             } else if (col === 3) {
                 data = entry.message;
             }
 
-            return {
-                kind: GridCellKind.Text,
+            const level =
+                (entry.level[0]?.toUpperCase() ?? "") + entry.level.slice(1);
+            const copyData = `[${entry.class}] <${level}> ${entry.message}`;
+
+            const r = {
                 allowOverlay: true,
-                data,
                 displayData: data,
+                copyData,
                 themeOverride,
                 contentAlign,
             };
+            if (kind === GridCellKind.Text) {
+                return {
+                    kind,
+                    data,
+                    ...r,
+                };
+            } else if (kind === GridCellKind.Bubble) {
+                return {
+                    kind,
+                    data: [data],
+                    ...r,
+                };
+            } else {
+                throw new Error("Unexpected cell kind");
+            }
         },
-        [queryGroup, isDark],
+        [isDark],
     );
 
     const getCellForSelection = useCallback(
@@ -287,13 +244,7 @@ export function LogList({ runningGame }: Props) {
                 .fill(undefined)
                 .map((_, idx): TextCell[] => {
                     const row = selection.y + idx;
-                    const groupId = (row / BATCH_SIZE) | 0;
-                    const group = groups.current[groupId];
-                    if (!group) {
-                        queryGroup(groupId);
-                        return [];
-                    }
-                    const entry = group[row % BATCH_SIZE];
+                    const entry = rowData.current[row];
                     if (!entry) {
                         return [];
                     }
@@ -307,14 +258,15 @@ export function LogList({ runningGame }: Props) {
                         {
                             kind: GridCellKind.Text,
                             allowOverlay: true,
-                            data,
-                            displayData: data,
+                            data: "",
+                            displayData: "",
+                            copyData: data,
                         },
                     ];
                 })
                 .filter((e) => e.length > 0);
         },
-        [queryGroup],
+        [],
     );
 
     const onVisibleRegionChanged = useCallback(
@@ -324,12 +276,26 @@ export function LogList({ runningGame }: Props) {
                 if (prev && prev.y > range.y) {
                     isScrollFollowing.current = false;
                 }
-            } else if (range.y + range.height >= logCount) {
+            } else if (range.y + range.height >= rowCount) {
                 isScrollFollowing.current = true;
             }
             prevVisibleRegion.current = range;
         },
-        [logCount],
+        [rowCount],
+    );
+
+    const onColumnResize = useCallback(
+        (_column: GridColumn, newSize: number, colIndex: number) => {
+            setColumns((prev) =>
+                prev.map((e, idx) => {
+                    if (idx === colIndex) {
+                        return { ...e, width: newSize };
+                    }
+                    return e;
+                }),
+            );
+        },
+        [],
     );
 
     return (
@@ -340,10 +306,11 @@ export function LogList({ runningGame }: Props) {
                     drawHeader={() => false}
                     getCellContent={getCellContent}
                     getCellsForSelection={getCellForSelection}
-                    headerHeight={0}
+                    headerHeight={8}
+                    onColumnResize={onColumnResize}
                     onVisibleRegionChanged={onVisibleRegionChanged}
                     ref={dataGridRef}
-                    rows={logCount}
+                    rows={rowCount}
                     theme={isDark ? darkTheme : theme}
                     width="100%"
                 />

@@ -1,5 +1,6 @@
 import { useAtomValue, useSetAtom } from "jotai";
 import {
+    FilterIcon,
     Maximize2Icon,
     MaximizeIcon,
     PauseIcon,
@@ -41,6 +42,11 @@ import {
     DialogHeader,
     DialogTitle,
 } from "../ui/dialog";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 import { Navigable } from "../ui/navigable";
 import { Skeleton } from "../ui/skeleton";
 
@@ -134,7 +140,22 @@ export function RunningGameDialog({
 
                     <div className="flex flex-1 flex-col">
                         <div className="mb-2 flex items-center justify-between">
-                            <h3 className="font-medium text-sm">Output Log</h3>
+                            <div className="flex flex-row items-center gap-2">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Badge
+                                            className="p-1"
+                                            variant="secondary"
+                                        >
+                                            <FilterIcon size={12} />
+                                        </Badge>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent></DropdownMenuContent>
+                                </DropdownMenu>
+                                <h3 className="font-medium text-sm">
+                                    Output Log
+                                </h3>
+                            </div>
                             <Badge
                                 className="text-xs"
                                 variant={isRunning ? "default" : "secondary"}

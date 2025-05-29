@@ -140,10 +140,7 @@ export function GameBox({ game }: { game: GameRow; isFirst?: boolean }) {
     };
 
     const openDetails = () => {
-        setTimeout(() => {
-            // Hack to avoid radix locking ui
-            setShowingDetails(game);
-        }, 1);
+        setShowingDetails(game);
     };
 
     const openContext = (e: ReactMouseEvent | null) => {

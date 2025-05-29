@@ -1,10 +1,10 @@
 use regex::Regex;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::collections::{btree_map, BTreeMap, HashMap, HashSet};
 use time::OffsetDateTime;
 
-#[derive(Copy, Clone, Default, Hash, Eq, PartialEq, Debug, Serialize)]
+#[derive(Copy, Clone, Default, Hash, Eq, PartialEq, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Level {
     #[default]
@@ -42,8 +42,9 @@ pub struct LogEntry<'a> {
 pub struct LogData {
     pub rows: BTreeMap<RowId, Entry>,
     pub index_level: HashMap<Level, HashSet<RowId>>,
-    last_id: RowId,
+    pub index_class: HashMap<&'static str, HashSet<RowId>>,
 
+    last_id: RowId,
     class_cache: RefCell<HashMap<String, &'static str>>, // This contains leaked data
 }
 
@@ -56,12 +57,13 @@ impl LogData {
         Self {
             rows: BTreeMap::new(),
             index_level: HashMap::new(),
+            index_class: HashMap::new(),
             last_id: 0,
             class_cache: RefCell::new(HashMap::new()),
         }
     }
 
-    /// returns: Option<(Entry, bool)> If line is parsed successfully,
+    /// returns: Option<(Entry, bool)> If a line is parsed successfully,
     /// it returns the LogEntry and a boolean indicating if this is a new class
     pub fn parse_entry(&self, line: &str) -> Option<(Entry, bool)> {
         let cap = ENTRY_REGEX.with(|rx| rx.captures(line))?;
@@ -106,7 +108,6 @@ impl LogData {
     pub fn add_entry<'a>(&'a mut self, entry: Entry) -> (RowId, &'a Entry) {
         let row_id = self.last_id;
         self.last_id += 1;
-        let level = entry.level;
         let row_entry = self.rows.entry(row_id);
         let r: &'a Entry = match row_entry {
             btree_map::Entry::Vacant(e) => e.insert(entry),
@@ -114,7 +115,8 @@ impl LogData {
                 panic!("we shouldn't be replacing rows")
             }
         };
-        self.index_level.entry(level).or_default().insert(row_id);
+        self.index_level.entry(r.level).or_default().insert(row_id);
+        self.index_class.entry(r.class).or_default().insert(row_id);
         (row_id, r)
     }
 }

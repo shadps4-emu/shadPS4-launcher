@@ -10,8 +10,8 @@ export type RunningGame = {
     atomRunning: Atom<true | number>; // true or exit code
     atomError: Atom<string | null>;
     log: {
-        atomCount: Atom<number>;
         atomCallback: PrimitiveAtom<Callback<LogEntry>[]>;
+        atomClassList: Atom<string[]>;
     };
 };
 
@@ -26,8 +26,8 @@ export function addRunningGame(
 
     const atomRunning = atom<true | number>(true);
     const atomError = atom<string | null>(null);
-    const atomLogCount = atom(0);
     const atomLogCallback = atom<Callback<LogEntry>[]>([]);
+    const atomLogClassList = atom<string[]>(["STDERR"]);
 
     const runningGame = {
         game: game,
@@ -35,8 +35,8 @@ export function addRunningGame(
         atomRunning,
         atomError,
         log: {
-            atomCount: atomLogCount,
             atomCallback: atomLogCallback,
+            atomClassList: atomLogClassList,
         },
     } satisfies RunningGame;
 
@@ -45,10 +45,12 @@ export function addRunningGame(
     process.onMessage = (ev) => {
         switch (ev.event) {
             case "log":
-                store.set(atomLogCount, ev.rowId + 1);
                 for (const c of store.get(atomLogCallback)) {
                     c(ev);
                 }
+                break;
+            case "addLogClass":
+                store.set(atomLogClassList, (prev) => [...prev, ev.value]);
                 break;
             case "gameExit":
                 store.set(atomRunning, ev.status);

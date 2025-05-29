@@ -1,11 +1,10 @@
 use crate::game_process::game_process::{GameEvent, GameProcess};
-use crate::game_process::log::{LogEntry, RowId};
+use crate::game_process::log::{Level, LogEntry};
 use crate::game_process::GameBridgeState;
 use anyhow::anyhow;
 use anyhow_tauri::bail;
 use anyhow_tauri::IntoTAResult;
 use log::{debug, error};
-use std::ops::Bound;
 use tauri::ipc::Channel;
 use tauri_plugin_fs::FilePath;
 
@@ -44,7 +43,10 @@ pub async fn game_process_kill(state: GameBridgeState<'_>, pid: u32) -> anyhow_t
 }
 
 #[tauri::command]
-pub async fn game_process_delete(state: GameBridgeState<'_>, pid: u32) -> anyhow_tauri::TAResult<()> {
+pub async fn game_process_delete(
+    state: GameBridgeState<'_>,
+    pid: u32,
+) -> anyhow_tauri::TAResult<()> {
     let mut state = state.lock().await;
     let res = state.process_list.remove(&pid);
     if res.is_none() {
@@ -58,8 +60,8 @@ pub async fn game_process_delete(state: GameBridgeState<'_>, pid: u32) -> anyhow
 pub async fn game_process_get_log(
     state: GameBridgeState<'_>,
     pid: u32,
-    beg: Option<RowId>,
-    end: Option<RowId>,
+    level: Option<Level>,
+    log_class: Option<&str>,
 ) -> anyhow_tauri::TAResult<String> {
     let state = state.lock().await;
     let Some(proc) = state.process_list.get(&pid) else {
@@ -68,21 +70,23 @@ pub async fn game_process_get_log(
     };
 
     let log_data = proc.data().log_data.lock().await;
-    Ok(serde_json::to_string(
-        &log_data
-            .rows
-            .range((
-                beg.map(|e| Bound::Included(e)).unwrap_or(Bound::Unbounded),
-                end.map(|e| Bound::Included(e)).unwrap_or(Bound::Unbounded),
-            ))
-            .map(|(id, e)| LogEntry {
-                row_id: *id,
-                time: e.time,
-                level: e.level,
-                class: e.class,
-                message: &e.message,
-            })
-            .collect::<Vec<LogEntry>>(),
-    )
-    .into_ta_result()?)
+
+    let data = if let Some(class) = log_class {
+        let Some(map) = log_data.index_class.get(class) else {
+            return Ok("[]".to_string());
+        };
+        &map.iter()
+            .map(|i| (*i, log_data.rows.get(i).unwrap()).into())
+            .collect::<Vec<LogEntry>>()
+    } else if let Some(level) = &level {
+        let Some(map) = log_data.index_level.get(level) else {
+            return Ok("[]".to_string());
+        };
+        &map.iter()
+            .map(|i| (*i, log_data.rows.get(i).unwrap()).into())
+            .collect::<Vec<LogEntry>>()
+    } else {
+        &log_data.rows.iter().map(|(i, e)| (*i, e).into()).collect()
+    };
+    Ok(serde_json::to_string(&data).into_ta_result()?)
 }

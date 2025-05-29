@@ -12,7 +12,7 @@ export enum LogLevel {
 
 export type LogEntry = {
     rowId: number;
-    time: string;
+    time: number;
     level: LogLevel;
     class: string;
     message: string;
@@ -20,6 +20,7 @@ export type LogEntry = {
 
 export type GameEvent =
     | ({ event: "log" } & LogEntry)
+    | { event: "addLogClass"; value: string }
     | { event: "gameExit"; status: number }
     | { event: "iOError"; err: string };
 
@@ -63,15 +64,18 @@ export class GameProcess {
         await invoke("game_process_delete", { pid: this.#pid });
     }
 
-    async getLog(query: {
-        begin?: number | undefined;
-        end?: number | undefined;
-    }): Promise<LogEntry[]> {
+    async getLog({
+        level,
+        logClass,
+    }: {
+        level?: LogLevel | undefined;
+        logClass?: string | undefined;
+    } = {}): Promise<LogEntry[]> {
         return JSON.parse(
             await invoke("game_process_get_log", {
                 pid: this.pid,
-                beg: query.begin,
-                end: query.end,
+                level,
+                logClass,
             }),
         );
     }
