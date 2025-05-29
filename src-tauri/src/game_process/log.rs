@@ -1,7 +1,7 @@
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
-use std::collections::{btree_map, BTreeMap, HashMap, HashSet};
+use std::collections::{btree_map, BTreeMap, HashMap};
 use time::OffsetDateTime;
 
 #[derive(Copy, Clone, Default, Hash, Eq, PartialEq, Debug, Serialize, Deserialize)]
@@ -41,9 +41,6 @@ pub struct LogEntry<'a> {
 
 pub struct LogData {
     pub rows: BTreeMap<RowId, Entry>,
-    pub index_level: HashMap<Level, HashSet<RowId>>,
-    pub index_class: HashMap<&'static str, HashSet<RowId>>,
-
     last_id: RowId,
     class_cache: RefCell<HashMap<String, &'static str>>, // This contains leaked data
 }
@@ -56,8 +53,6 @@ impl LogData {
     pub fn new() -> Self {
         Self {
             rows: BTreeMap::new(),
-            index_level: HashMap::new(),
-            index_class: HashMap::new(),
             last_id: 0,
             class_cache: RefCell::new(HashMap::new()),
         }
@@ -115,8 +110,6 @@ impl LogData {
                 panic!("we shouldn't be replacing rows")
             }
         };
-        self.index_level.entry(r.level).or_default().insert(row_id);
-        self.index_class.entry(r.class).or_default().insert(row_id);
         (row_id, r)
     }
 }

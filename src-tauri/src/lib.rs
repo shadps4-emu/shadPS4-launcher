@@ -1,3 +1,5 @@
+#![feature(let_chains)]
+
 use crate::game_process::state::GameBridge;
 use log::info;
 use tauri::Manager;

@@ -68,8 +68,8 @@ export class GameProcess {
         level,
         logClass,
     }: {
-        level?: LogLevel | undefined;
-        logClass?: string | undefined;
+        level?: LogLevel[] | undefined;
+        logClass?: string[] | undefined;
     } = {}): Promise<LogEntry[]> {
         return JSON.parse(
             await invoke("game_process_get_log", {

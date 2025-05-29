@@ -129,8 +129,8 @@ const baseColumns: GridColumn[] = [
 
 type Props = {
     runningGame: RunningGame;
-    levelFilter?: LogLevel | undefined;
-    classFilter?: string | undefined;
+    levelFilter?: LogLevel[] | undefined;
+    classFilter?: string[] | undefined;
 };
 
 export function LogList({ runningGame, levelFilter, classFilter }: Props) {
@@ -165,23 +165,29 @@ export function LogList({ runningGame, levelFilter, classFilter }: Props) {
 
     useEffect(() => {
         const c = (log: LogEntry) => {
-            if (levelFilter && log.level !== levelFilter) {
+            if (levelFilter && !levelFilter.includes(log.level)) {
                 return;
             }
-            if (classFilter && log.class !== classFilter) {
+            if (classFilter && !classFilter.includes(log.class)) {
                 return;
             }
             rowData.push(log);
             setRowCount(rowData.length);
             if (isScrollFollowing.current) {
-                dataGridRef.current?.scrollTo(0, log.rowId - 1);
+                dataGridRef.current?.scrollTo(0, rowData.length - 1);
             }
         };
         setLogCallback((prev) => [...prev, c]);
         return () => {
             setLogCallback((prev) => prev.filter((e) => e !== c));
         };
-    });
+    }, [levelFilter, classFilter, rowData, setLogCallback]);
+
+    useEffect(() => {
+        return () => {
+            rowData.splice(0, rowData.length);
+        };
+    }, [rowData]);
 
     const getCellContent = useCallback(
         (cell: Item): GridCell => {
