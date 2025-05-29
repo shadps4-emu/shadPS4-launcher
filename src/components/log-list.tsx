@@ -12,7 +12,13 @@ import {
 } from "@glideapps/glide-data-grid";
 import { format } from "date-fns";
 import { useSetAtom } from "jotai";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+    useCallback,
+    useEffect,
+    useLayoutEffect,
+    useRef,
+    useState,
+} from "react";
 import { useThemeStyle } from "@/lib/hooks/useThemeStyle";
 import { type LogEntry, LogLevel } from "@/lib/native/game-process";
 import type { RunningGame } from "@/store/running-games";
@@ -134,6 +140,8 @@ type Props = {
 };
 
 export function LogList({ runningGame, levelFilter, classFilter }: Props) {
+    "use no memo";
+
     const isDark = useThemeStyle() === "dark";
     const setLogCallback = useSetAtom(runningGame.log.atomCallback);
 
@@ -155,11 +163,6 @@ export function LogList({ runningGame, levelFilter, classFilter }: Props) {
             .then((log) => {
                 setRowData(log);
                 setRowCount(log.length);
-                setTimeout(() => {
-                    if (isScrollFollowing.current) {
-                        dataGridRef.current?.scrollTo(0, log.length - 1);
-                    }
-                }, 1);
             });
     }, [runningGame, levelFilter, classFilter]);
 
@@ -173,9 +176,6 @@ export function LogList({ runningGame, levelFilter, classFilter }: Props) {
             }
             rowData.push(log);
             setRowCount(rowData.length);
-            if (isScrollFollowing.current) {
-                dataGridRef.current?.scrollTo(0, rowData.length - 1);
-            }
         };
         setLogCallback((prev) => [...prev, c]);
         return () => {
@@ -188,6 +188,21 @@ export function LogList({ runningGame, levelFilter, classFilter }: Props) {
             rowData.splice(0, rowData.length);
         };
     }, [rowData]);
+
+    useLayoutEffect(() => {
+        if (isScrollFollowing.current) {
+            dataGridRef.current?.scrollTo(
+                0,
+                rowCount - 1,
+                "vertical",
+                undefined,
+                undefined,
+                {
+                    vAlign: "end",
+                },
+            );
+        }
+    }, [rowCount]);
 
     const getCellContent = useCallback(
         (cell: Item): GridCell => {
@@ -291,7 +306,7 @@ export function LogList({ runningGame, levelFilter, classFilter }: Props) {
         (range: Rectangle) => {
             if (isScrollFollowing.current) {
                 const prev = prevVisibleRegion.current;
-                if (prev && prev.y > range.y) {
+                if (prev && prev.y + prev.height > range.y + range.height) {
                     isScrollFollowing.current = false;
                 }
             } else if (range.y + range.height >= rowCount) {
