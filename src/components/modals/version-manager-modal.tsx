@@ -4,12 +4,6 @@ import { CheckIcon, CircleSlashIcon, PlusIcon } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -37,6 +31,7 @@ import {
     atomModalVersionManagerIsOpen,
     type RemoteEmulatorVersion,
 } from "@/store/version-manager";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "../ui/drawer";
 import { Navigable } from "../ui/navigable";
 
 function VersionTableRow({
@@ -47,23 +42,23 @@ function VersionTableRow({
     prePelease: preRelease,
     children,
 }: {
-    source: string;
-    date: string;
-    version: string;
+    source?: string;
+    date: string | null;
+    version?: string;
     release?: string;
     prePelease?: boolean;
     children?: ReactNode;
 }) {
     return (
         <TableRow>
-            <TableCell>{source}</TableCell>
-            <TableCell>{date}</TableCell>
-            <TableCell>{version}</TableCell>
+            <TableCell>{source || "Unknown"}</TableCell>
+            <TableCell>{date || "Unknown"}</TableCell>
+            <TableCell>{version || "Unknown"}</TableCell>
             <TableCell>
                 {preRelease === true ? (
                     <Badge variant="destructive">Pre-release</Badge>
                 ) : (
-                    release
+                    release || "Unknown"
                 )}
             </TableCell>
             {children}
@@ -180,12 +175,12 @@ function AddNewVersion() {
     }
 
     return (
-        <DialogContent aria-describedby={undefined} className="min-w-[525px]">
-            <DialogHeader>
-                <DialogTitle>Add New Version</DialogTitle>
-            </DialogHeader>
+        <DrawerContent aria-describedby={undefined} className="min-w-[525px]">
+            <DrawerHeader>
+                <DrawerTitle>Add New Version</DrawerTitle>
+            </DrawerHeader>
             <ScrollArea className="max-h-[60vh]">{content}</ScrollArea>
-        </DialogContent>
+        </DrawerContent>
     );
 }
 
@@ -203,7 +198,7 @@ function VersionManagerDialog() {
 
     return (
         <>
-            <Dialog onOpenChange={setIsOpen} open>
+            <Drawer direction="right" onOpenChange={setIsOpen} open>
                 <GamepadNavField
                     debugName="version-manager"
                     onButtonPress={onButtonPress}
@@ -211,25 +206,25 @@ function VersionManagerDialog() {
                     {isNew ? (
                         <AddNewVersion />
                     ) : (
-                        <DialogContent
+                        <DrawerContent
                             aria-describedby={undefined}
-                            className="min-w-[525px]"
+                            className="min-w-[525px] p-4"
                         >
-                            <DialogHeader>
-                                <DialogTitle>
+                            <DrawerHeader>
+                                <DrawerTitle>
                                     <div className="flex items-center gap-4">
-                                        <span>Version Manager</span>
-                                        <Navigable>
-                                            <Button
-                                                onClick={() => setIsNew(true)}
-                                                size="sm"
-                                            >
-                                                Add
-                                            </Button>
-                                        </Navigable>
+                                        Version Manager
                                     </div>
-                                </DialogTitle>
-                            </DialogHeader>
+                                    <Navigable>
+                                        <Button
+                                            onClick={() => setIsNew(true)}
+                                            size="sm"
+                                        >
+                                            Add
+                                        </Button>
+                                    </Navigable>
+                                </DrawerTitle>
+                            </DrawerHeader>
                             <div className="flex">
                                 <Table className="gap-4">
                                     <TableHeader>
@@ -253,7 +248,14 @@ function VersionManagerDialog() {
                                         ) : (
                                             installedVersions.map((v) => (
                                                 <VersionTableRow
-                                                    date={format(v.date, "PP")}
+                                                    date={
+                                                        v.date
+                                                            ? format(
+                                                                  v.date,
+                                                                  "PP",
+                                                              )
+                                                            : null
+                                                    }
                                                     key={JSON.stringify(v)}
                                                     prePelease={v.prerelease}
                                                     release={v.name}
@@ -265,10 +267,10 @@ function VersionManagerDialog() {
                                     </TableBody>
                                 </Table>
                             </div>
-                        </DialogContent>
+                        </DrawerContent>
                     )}
                 </GamepadNavField>
-            </Dialog>
+            </Drawer>
         </>
     );
 }

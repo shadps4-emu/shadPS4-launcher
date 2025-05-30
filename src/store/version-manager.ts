@@ -1,18 +1,10 @@
-import { join } from "@tauri-apps/api/path";
-import { exists, mkdir, readDir, watch } from "@tauri-apps/plugin-fs";
 import { platform } from "@tauri-apps/plugin-os";
 import { atom } from "jotai";
 import { unwrap } from "jotai/utils";
 import { atomWithQuery } from "jotai-tanstack-query";
 import { Octokit } from "octokit";
-import { toast } from "sonner";
-import { readConfig } from "@/handlers/version-manager";
-import { stringifyError } from "@/lib/utils/error";
-import { atomKeepLast } from "@/lib/utils/jotai/atom-keep-last";
 import { atomWithTauriStore } from "@/lib/utils/jotai/tauri-store";
-import { defaultStore, type JotaiStore } from ".";
 import { oficialRepo } from "./common";
-import { atomEmuInstallsPath } from "./paths";
 
 const currentPlatform = (() => {
     const p = platform();
@@ -31,11 +23,11 @@ const currentPlatform = (() => {
 export interface EmulatorVersion {
     path: string; // local path directory
     binaryName: string; // Executable name
-    repo: string; // repo source
-    date: Date; // release date
-    version: string; // release version
+    repo?: string; // repo source
+    date?: number; // release date
+    version?: string; // release version
     name: string; // release name
-    prerelease: boolean;
+    prerelease?: boolean;
 }
 
 export type RemoteEmulatorVersion = Omit<
@@ -50,8 +42,24 @@ const octokit = new Octokit();
 
 export const atomModalVersionManagerIsOpen = atom<boolean>(false);
 
+export const atomRemoteList = atomWithTauriStore<string[], false>(
+    "versions.json",
+    "remote_list",
+    {
+        initialValue: [oficialRepo],
+        mergeInitial: false,
+    },
+);
+
+export const atomInstalledVersions = atomWithTauriStore<
+    EmulatorVersion[],
+    false
+>("versions.json", "installed", {
+    initialValue: [],
+});
+
 const atomSelectedVersionRaw = atomWithTauriStore<string, false>(
-    "config.json",
+    "versions.json",
     "selected",
     {
         initialValue: "",
@@ -77,15 +85,6 @@ export const atomSelectedVersion = atom<
             atomSelectedVersionRaw,
             typeof value === "string" ? value : value.path,
         );
-    },
-);
-
-export const atomRemoteList = atomWithTauriStore<string[], false>(
-    "config.json",
-    "remote_list",
-    {
-        initialValue: [oficialRepo],
-        mergeInitial: false,
     },
 );
 
@@ -148,16 +147,18 @@ export const atomAvailableVersions = atomWithQuery((get) => ({
                                 version = release.tag_name;
                             }
 
+                            const url = asset?.browser_download_url || "";
+
                             return {
                                 repo: repoSource,
                                 date: new Date(
                                     asset?.updated_at || release.created_at,
-                                ),
+                                ).getTime(),
                                 version,
                                 name,
                                 prerelease: release.prerelease,
-                                url: asset?.browser_download_url || "",
-                                notSupported: asset == null,
+                                url,
+                                notSupported: asset == null || !url,
                             } satisfies RemoteEmulatorVersion;
                         })
                         .filter((e) => e != null);
@@ -166,70 +167,3 @@ export const atomAvailableVersions = atomWithQuery((get) => ({
         ).flat();
     },
 }));
-
-export const atomInstalledVersionsRefresh = atom(0);
-
-export function refreshInstalledVersion(s: JotaiStore) {
-    s.set(atomInstalledVersionsRefresh, (prev) => prev + 1);
-}
-
-export const atomInstalledVersionsRaw = atom(async (get) => {
-    get(atomInstalledVersionsRefresh);
-    const installationPath = get(atomEmuInstallsPath);
-
-    if (!installationPath) {
-        return [];
-    }
-
-    if (!(await exists(installationPath))) {
-        return [];
-    }
-
-    console.info("Refreshing installed version");
-
-    const dirList = (await readDir(installationPath)).filter(
-        (e) => e.isDirectory,
-    );
-
-    return (
-        await Promise.all(
-            dirList.map(async (dir) => {
-                const path = await join(installationPath, dir.name);
-                return await readConfig(path);
-            }),
-        )
-    ).filter((e) => e != null);
-});
-export const atomInstalledVersions = atomKeepLast(atomInstalledVersionsRaw);
-
-(() => {
-    let unsub: (() => void) | undefined;
-    defaultStore.sub(atomEmuInstallsPath, async () => {
-        unsub?.();
-        unsub = undefined;
-
-        try {
-            const path = defaultStore.get(atomEmuInstallsPath);
-            if (path) {
-                if (!(await exists(path))) {
-                    await mkdir(path, { recursive: true });
-                }
-                unsub = await watch(path, (e) => {
-                    if (typeof e.type === "object" && "access" in e.type) {
-                        if (
-                            e.type.access.kind === "open" &&
-                            e.paths.length === 1 &&
-                            e.paths[0] === path
-                        ) {
-                            return;
-                        }
-                    }
-                    refreshInstalledVersion(defaultStore);
-                });
-            }
-        } catch (e: unknown) {
-            console.error(e);
-            toast.error("Error watching install path: " + stringifyError(e));
-        }
-    });
-})();

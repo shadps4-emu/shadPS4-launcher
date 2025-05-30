@@ -1,47 +1,16 @@
 import { join, tempDir } from "@tauri-apps/api/path";
-import {
-    exists,
-    readDir,
-    readTextFile,
-    writeTextFile,
-} from "@tauri-apps/plugin-fs";
+import { exists, readDir } from "@tauri-apps/plugin-fs";
 import { download } from "@tauri-apps/plugin-upload";
 import { toast } from "sonner";
-import * as superjson from "superjson";
 import { extractZip, makeItExecutable } from "@/lib/native/common";
 import { stringifyError } from "@/lib/utils/error";
 import { defaultStore } from "@/store";
 import { atomDownloadingOverlay } from "@/store/common";
 import {
+    atomInstalledVersions,
     type EmulatorVersion,
     type RemoteEmulatorVersion,
-    refreshInstalledVersion,
 } from "@/store/version-manager";
-
-export async function writeConfig({ path, ...config }: EmulatorVersion) {
-    const data = superjson.stringify(config);
-    const metaPath = await join(path, "meta.json");
-    await writeTextFile(metaPath, data);
-}
-
-export async function readConfig(
-    path: string,
-): Promise<EmulatorVersion | null> {
-    const metaPath = await join(path, "meta.json");
-    if (!(await exists(metaPath))) {
-        return null;
-    }
-    const rawData = await readTextFile(metaPath);
-    const data = superjson.parse<EmulatorVersion>(rawData);
-    if (!("binaryName" in data)) {
-        // FIXME Remove in the future. Backwards compatibility
-        return null;
-    }
-    return {
-        ...data,
-        path,
-    };
-}
 
 export async function installNewVersion(
     version: RemoteEmulatorVersion,
@@ -100,15 +69,20 @@ export async function installNewVersion(
 
         await makeItExecutable(await join(installPath, executable.name));
 
-        await writeConfig({
-            ...version,
+        const data: EmulatorVersion = {
+            name: version.name,
+            version: version.version,
+            date: version.date,
+            repo: version.repo,
+            prerelease: version.prerelease,
             path: installPath,
             binaryName: executable.name,
-        });
+        };
 
+        const prev = defaultStore.get(atomInstalledVersions);
+        defaultStore.set(atomInstalledVersions, [...prev, data]);
         defaultStore.set(atomDownloadingOverlay, null);
 
-        refreshInstalledVersion(defaultStore);
         toast.success("Installed");
     } catch (e: unknown) {
         toast.error(stringifyError(e));

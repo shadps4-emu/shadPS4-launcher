@@ -5,6 +5,7 @@ pub fn gen_migrations() -> Vec<Migration> {
         Migration {
             version: 1,
             description: "create game list",
+            // language=sqlite
             sql: r#"CREATE TABLE games
 (
     id         INTEGER PRIMARY KEY,
