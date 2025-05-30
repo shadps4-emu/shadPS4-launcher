@@ -67,7 +67,8 @@ export async function installNewVersion(
             return;
         }
 
-        await makeItExecutable(await join(installPath, executable.name));
+        const path = await join(installPath, executable.name);
+        await makeItExecutable(path);
 
         const data: EmulatorVersion = {
             name: version.name,
@@ -75,8 +76,7 @@ export async function installNewVersion(
             date: version.date,
             repo: version.repo,
             prerelease: version.prerelease,
-            path: installPath,
-            binaryName: executable.name,
+            path,
         };
 
         const prev = defaultStore.get(atomInstalledVersions);

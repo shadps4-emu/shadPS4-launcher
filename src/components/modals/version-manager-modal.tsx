@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { CheckIcon, CircleSlashIcon, PlusIcon } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -31,6 +31,13 @@ import {
     atomModalVersionManagerIsOpen,
     type RemoteEmulatorVersion,
 } from "@/store/version-manager";
+import {
+    Tabs,
+    TabsContent,
+    TabsContents,
+    TabsList,
+    TabsTrigger,
+} from "../animate-ui/radix/tabs";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "../ui/drawer";
 import { Navigable } from "../ui/navigable";
 
@@ -123,7 +130,7 @@ function DownloadButton({
     );
 }
 
-function AddNewVersion() {
+function TabAvailableVersion() {
     const { data, isLoading, error } = useAtomValue(atomAvailableVersions);
     const rootInstallPath = useAtomValue(atomEmuInstallsPath);
     const store = useStore();
@@ -135,13 +142,52 @@ function AddNewVersion() {
         store.set(atomModalVersionManagerIsOpen, false);
     };
 
-    let content = null;
     if (isLoading) {
-        content = <Spinner />;
-    } else if (error) {
-        content = <span className="text-red-500">{error.message}</span>;
-    } else {
-        content = (
+        return <Spinner />;
+    }
+
+    if (error) {
+        return <span className="text-red-500">{error.message}</span>;
+    }
+
+    return (
+        <Table className="gap-4">
+            <TableHeader>
+                <TableRow>
+                    <TableHead>Source</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Version</TableHead>
+                    <TableHead>Release</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {data?.map((v) => (
+                    <VersionTableRow
+                        date={format(v.date, "PP")}
+                        key={JSON.stringify(v)}
+                        prePelease={v.prerelease}
+                        release={v.name}
+                        source={v.repo}
+                        version={v.version}
+                    >
+                        <TableCell>
+                            <DownloadButton
+                                onClick={() => install(v)}
+                                version={v}
+                            />
+                        </TableCell>
+                    </VersionTableRow>
+                ))}
+            </TableBody>
+        </Table>
+    );
+}
+
+function TabListInstalled() {
+    const installedVersions = useAtomValue(atomInstalledVersions);
+
+    return (
+        <div className="flex">
             <Table className="gap-4">
                 <TableHeader>
                     <TableRow>
@@ -152,42 +198,32 @@ function AddNewVersion() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {data?.map((v) => (
-                        <VersionTableRow
-                            date={format(v.date, "PP")}
-                            key={JSON.stringify(v)}
-                            prePelease={v.prerelease}
-                            release={v.name}
-                            source={v.repo}
-                            version={v.version}
-                        >
-                            <TableCell>
-                                <DownloadButton
-                                    onClick={() => install(v)}
-                                    version={v}
-                                />
+                    {installedVersions.length === 0 ? (
+                        <TableRow>
+                            <TableCell className="text-center" colSpan={4}>
+                                No version installed
                             </TableCell>
-                        </VersionTableRow>
-                    ))}
+                        </TableRow>
+                    ) : (
+                        installedVersions.map((v) => (
+                            <VersionTableRow
+                                date={v.date ? format(v.date, "PP") : null}
+                                key={JSON.stringify(v)}
+                                prePelease={v.prerelease}
+                                release={v.name}
+                                source={v.repo}
+                                version={v.version}
+                            />
+                        ))
+                    )}
                 </TableBody>
             </Table>
-        );
-    }
-
-    return (
-        <DrawerContent aria-describedby={undefined} className="min-w-[525px]">
-            <DrawerHeader>
-                <DrawerTitle>Add New Version</DrawerTitle>
-            </DrawerHeader>
-            <ScrollArea className="max-h-[60vh]">{content}</ScrollArea>
-        </DrawerContent>
+        </div>
     );
 }
 
 function VersionManagerDialog() {
     const setIsOpen = useSetAtom(atomModalVersionManagerIsOpen);
-    const [isNew, setIsNew] = useState(false);
-    const installedVersions = useAtomValue(atomInstalledVersions);
 
     const onButtonPress = (btn: NavButton) => {
         if (btn === "back") {
@@ -198,77 +234,41 @@ function VersionManagerDialog() {
 
     return (
         <>
-            <Drawer direction="right" onOpenChange={setIsOpen} open>
+            <Drawer direction="right" dismissible onOpenChange={setIsOpen} open>
                 <GamepadNavField
                     debugName="version-manager"
                     onButtonPress={onButtonPress}
                 >
-                    {isNew ? (
-                        <AddNewVersion />
-                    ) : (
-                        <DrawerContent
-                            aria-describedby={undefined}
-                            className="min-w-[525px] p-4"
-                        >
-                            <DrawerHeader>
-                                <DrawerTitle>
-                                    <div className="flex items-center gap-4">
-                                        Version Manager
-                                    </div>
-                                    <Navigable>
-                                        <Button
-                                            onClick={() => setIsNew(true)}
-                                            size="sm"
-                                        >
-                                            Add
-                                        </Button>
-                                    </Navigable>
-                                </DrawerTitle>
-                            </DrawerHeader>
-                            <div className="flex">
-                                <Table className="gap-4">
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Source</TableHead>
-                                            <TableHead>Date</TableHead>
-                                            <TableHead>Version</TableHead>
-                                            <TableHead>Release</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {installedVersions.length === 0 ? (
-                                            <TableRow>
-                                                <TableCell
-                                                    className="text-center"
-                                                    colSpan={4}
-                                                >
-                                                    No version installed
-                                                </TableCell>
-                                            </TableRow>
-                                        ) : (
-                                            installedVersions.map((v) => (
-                                                <VersionTableRow
-                                                    date={
-                                                        v.date
-                                                            ? format(
-                                                                  v.date,
-                                                                  "PP",
-                                                              )
-                                                            : null
-                                                    }
-                                                    key={JSON.stringify(v)}
-                                                    prePelease={v.prerelease}
-                                                    release={v.name}
-                                                    source={v.repo}
-                                                    version={v.version}
-                                                />
-                                            ))
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </div>
-                        </DrawerContent>
-                    )}
+                    <DrawerContent
+                        aria-describedby={undefined}
+                        className="min-w-[525px] p-4"
+                    >
+                        <DrawerHeader>
+                            <DrawerTitle>Version Manager</DrawerTitle>
+                        </DrawerHeader>
+                        <Tabs className="min-h-0" defaultValue="installed">
+                            <TabsList className="w-full">
+                                <TabsTrigger value="installed">
+                                    Installed
+                                </TabsTrigger>
+                                <TabsTrigger value="available">
+                                    Download New
+                                </TabsTrigger>
+                            </TabsList>
+                            <ScrollArea>
+                                <div className="min-h-0">
+                                    <TabsContents>
+                                        <TabsContent value="installed">
+                                            <TabListInstalled />
+                                        </TabsContent>
+                                        <TabsContent value="available">
+                                            <TabAvailableVersion />
+                                        </TabsContent>
+                                    </TabsContents>
+                                </div>
+                            </ScrollArea>
+                        </Tabs>
+                    </DrawerContent>
                 </GamepadNavField>
             </Drawer>
         </>

@@ -21,8 +21,7 @@ const currentPlatform = (() => {
 })();
 
 export interface EmulatorVersion {
-    path: string; // local path directory
-    binaryName: string; // Executable name
+    path: string; // Executable dir
     repo?: string; // repo source
     date?: number; // release date
     version?: string; // release version
@@ -30,10 +29,7 @@ export interface EmulatorVersion {
     prerelease?: boolean;
 }
 
-export type RemoteEmulatorVersion = Omit<
-    EmulatorVersion,
-    "path" | "binaryName"
-> & {
+export type RemoteEmulatorVersion = Omit<EmulatorVersion, "path"> & {
     url: string; // download url
     notSupported?: boolean; // no available for the current platform
 };
