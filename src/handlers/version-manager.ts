@@ -79,9 +79,7 @@ export async function installNewVersion(
             path,
         };
 
-        const prev = defaultStore.get(atomInstalledVersions);
-        defaultStore.set(atomInstalledVersions, [...prev, data]);
-        defaultStore.set(atomDownloadingOverlay, null);
+        defaultStore.set(atomInstalledVersions, (prev) => [...prev, data]);
 
         toast.success("Installed");
     } catch (e: unknown) {

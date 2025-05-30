@@ -10,7 +10,7 @@ export type RunningGame = {
     atomRunning: Atom<true | number>; // true or exit code
     atomError: Atom<string | null>;
     log: {
-        atomCallback: PrimitiveAtom<Callback<LogEntry>[]>;
+        atomCallback: PrimitiveAtom<Callback<[LogEntry]>[]>;
         atomClassList: Atom<string[]>;
     };
 };
@@ -26,7 +26,7 @@ export function addRunningGame(
 
     const atomRunning = atom<true | number>(true);
     const atomError = atom<string | null>(null);
-    const atomLogCallback = atom<Callback<LogEntry>[]>([]);
+    const atomLogCallback = atom<Callback<[LogEntry]>[]>([]);
     const atomLogClassList = atom<string[]>(["STDERR"]);
 
     const runningGame = {

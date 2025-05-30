@@ -1,5 +1,6 @@
 import { Store } from "@tauri-apps/plugin-store";
-import { atom, type SetStateAction } from "jotai";
+import { atom } from "jotai";
+import type { Callback } from "../types";
 
 const __store = new Map<string, Promise<Store>>();
 
@@ -36,6 +37,7 @@ export function atomWithTauriStore<T, Nullable extends boolean = true>(
               mergeInitial?: boolean;
           },
 ) {
+    type Value = Nullable extends true ? T | null : T;
     const getInitialValue = async () => {
         const initialProm =
             typeof onMount === "function"
@@ -65,21 +67,21 @@ export function atomWithTauriStore<T, Nullable extends boolean = true>(
         }
     };
 
-    const baseAtom = atom(
-        (initialValue ?? null) as Nullable extends true ? T | null : T,
-    );
+    const baseAtom = atom((initialValue ?? null) as Value);
     baseAtom.onMount = (setAtom) => {
         void Promise.resolve(getInitialValue()).then((e) =>
-            setAtom(e as Nullable extends true ? T | null : T),
+            setAtom(e as Value),
         );
     };
 
-    return atom<Nullable extends true ? T | null : T, [T], void>(
+    return atom<Value, [Value | Callback<[Value], Value>], void>(
         (get) => get(baseAtom),
-        (get, set, update: SetStateAction<T | null>) => {
+        (get, set, update) => {
             const newValue =
                 typeof update === "function"
-                    ? (update as (prev: T | null) => T)(get(baseAtom) ?? null)
+                    ? (update as Callback<[Value], Value>)(
+                          get(baseAtom) ?? (null as Value),
+                      )
                     : update;
 
             set(baseAtom, newValue as Nullable extends true ? T | null : T);

@@ -60,7 +60,7 @@ function VersionSelector() {
                 <Navigable>
                     <SelectValue placeholder="No version selected">
                         {selectVersion &&
-                            `${selectVersion.version} ${selectVersion.name} ${selectVersion.repo !== oficialRepo ? selectVersion.repo : ""}`}
+                            `${selectVersion.version ?? ""} ${selectVersion.name} ${selectVersion.repo !== oficialRepo ? selectVersion.repo : ""}`}
                     </SelectValue>
                 </Navigable>
             </SelectTrigger>
@@ -71,7 +71,7 @@ function VersionSelector() {
                         {installedVersions.map((v) => (
                             <Navigable key={v.path}>
                                 <SelectItem value={v.path}>
-                                    {v.version} {v.name}{" "}
+                                    {v.version ?? ""} {v.name}{" "}
                                     {v.repo !== oficialRepo && `(${v.repo})`}
                                 </SelectItem>
                             </Navigable>

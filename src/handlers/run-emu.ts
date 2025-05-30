@@ -20,8 +20,7 @@ export async function startGame(
         return null;
     }
 
-    const emuBinary = await join(emu.path, emu.binaryName);
-    if (!(await exists(emuBinary))) {
+    if (!(await exists(emu.path))) {
         const msg = "Emulator binary not found";
         toast.error(msg);
         console.warn(msg);
@@ -36,7 +35,7 @@ export async function startGame(
 
     try {
         const process = await GameProcess.startGame(
-            emuBinary,
+            emu.path,
             workDir,
             gameBinary,
         );
