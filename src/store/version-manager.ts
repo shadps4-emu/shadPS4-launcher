@@ -3,6 +3,8 @@ import { atom } from "jotai";
 import { unwrap } from "jotai/utils";
 import { atomWithQuery } from "jotai-tanstack-query";
 import { Octokit } from "octokit";
+import { stringifyError } from "@/lib/utils/error";
+import { timeout, tryCatch } from "@/lib/utils/flow";
 import { atomWithTauriStore } from "@/lib/utils/jotai/tauri-store";
 import { oficialRepo } from "./common";
 
@@ -90,6 +92,7 @@ export const atomAvailableVersions = atomWithQuery((get) => ({
         string,
         string[],
     ],
+    retry: false,
     queryFn: async ({
         queryKey: [, , list],
     }: {
@@ -102,13 +105,22 @@ export const atomAvailableVersions = atomWithQuery((get) => ({
                     if (!owner || !repo) {
                         return [];
                     }
-                    const releaseList = await octokit.rest.repos.listReleases({
-                        owner,
-                        repo,
-                    });
-                    if (releaseList.status !== 200) {
+                    const { data: releaseList, error } = await tryCatch(
+                        timeout(
+                            octokit.rest.repos.listReleases({
+                                owner,
+                                repo,
+                            }),
+                            10000,
+                            new Error("GitHub Timeout"),
+                        ),
+                    );
+                    if (error != null || releaseList.status !== 200) {
                         throw new Error(
-                            `Failed to fetch releases ${repoSource}`,
+                            `Failed to fetch releases from the following repo: '${repoSource}'. ` +
+                                (error != null
+                                    ? stringifyError(error)
+                                    : `HTTP Status: ${releaseList.status}}`),
                         );
                     }
                     return releaseList.data
@@ -126,12 +138,14 @@ export const atomAvailableVersions = atomWithQuery((get) => ({
                                 name = "Pre-release";
                             } else {
                                 name = release.name || "Unknown";
-                                name = name.replaceAll(
-                                    /-|(codename)|(shadps4)|(v\.?\d+\.\d+\.\d+)/g,
-                                    "",
-                                );
-                                name = name.replaceAll("  ", "");
-                                name = name.trim();
+                                name = name
+                                    .replaceAll(
+                                        /(codename)|(shadps4)|(v\.?\d+\.\d+\.\d+)/g,
+                                        "",
+                                    )
+                                    .replaceAll("  ", "")
+                                    .trim()
+                                    .replaceAll(/(^-)|(-$)/g, "");
                             }
 
                             let version = "";
@@ -160,6 +174,8 @@ export const atomAvailableVersions = atomWithQuery((get) => ({
                         .filter((e) => e != null);
                 }),
             )
-        ).flat();
+        )
+            .flat()
+            .toSorted((a, b) => b.date - a.date);
     },
 }));

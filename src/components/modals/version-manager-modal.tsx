@@ -2,9 +2,16 @@ import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { exists } from "@tauri-apps/plugin-fs";
 import { platform } from "@tauri-apps/plugin-os";
 import { format } from "date-fns";
-import { useAtomValue, useSetAtom, useStore } from "jotai";
-import { CheckIcon, CircleSlashIcon, PlusIcon } from "lucide-react";
+import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
+import {
+    AlertCircleIcon,
+    CheckIcon,
+    CircleSlashIcon,
+    PlusIcon,
+    XIcon,
+} from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -29,11 +36,13 @@ import {
 } from "@/lib/context/gamepad-nav-field";
 import { stringifyError } from "@/lib/utils/error";
 import type { Callback } from "@/lib/utils/types";
+import { oficialRepo } from "@/store/common";
 import { atomEmuInstallsPath } from "@/store/paths";
 import {
     atomAvailableVersions,
     atomInstalledVersions,
     atomModalVersionManagerIsOpen,
+    atomRemoteList,
     type EmulatorVersion,
     type RemoteEmulatorVersion,
 } from "@/store/version-manager";
@@ -44,9 +53,10 @@ import {
     TabsList,
     TabsTrigger,
 } from "../animate-ui/radix/tabs";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "../ui/drawer";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { Input } from "../ui/input";
 import { Navigable } from "../ui/navigable";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
 
 enum TabName {
     installed = "installed",
@@ -160,17 +170,25 @@ function TabAvailableVersion() {
     }
 
     if (error) {
-        return <span className="text-red-500">{error.message}</span>;
+        return (
+            <Alert variant="destructive">
+                <AlertCircleIcon />
+                <AlertTitle>Error loading remote versions</AlertTitle>
+                <AlertDescription>
+                    <p>{error.message}</p>
+                </AlertDescription>
+            </Alert>
+        );
     }
 
     return (
         <Table className="gap-4">
             <TableHeader>
                 <TableRow>
+                    <TableHead>Release</TableHead>
+                    <TableHead>Version</TableHead>
                     <TableHead>Source</TableHead>
                     <TableHead>Date</TableHead>
-                    <TableHead>Version</TableHead>
-                    <TableHead>Release</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -339,10 +357,85 @@ function AddCustom({ reset }: { reset: Callback }) {
     );
 }
 
+function RepoEdit() {
+    const [repoList, setRepoList] = useAtom(atomRemoteList);
+    const [newRepo, setNewRepo] = useState("");
+
+    const validateName = () => {
+        let name = newRepo;
+        const dotCom = name.indexOf(".com/");
+        if (dotCom !== -1) {
+            name = name.slice(dotCom + 5);
+            setNewRepo(name);
+        }
+        return /^[\w\-]+\/[\w\-]+$/.test(name) ? name : null;
+    };
+
+    const addRepo = () => {
+        const name = validateName();
+        if (!name) {
+            toast.warning("Invalid repository name. Format: 'owner/repo'");
+            return;
+        }
+        if (repoList.includes(name)) {
+            toast.warning("Repository already added");
+            return;
+        }
+        setRepoList([...repoList, newRepo]);
+        setNewRepo("");
+    };
+
+    const removeRepo = (repo: string) => {
+        setRepoList(repoList.filter((r) => r !== repo));
+    };
+
+    return (
+        <div className="mt-4 grid grid-cols-[1fr_auto] justify-stretch gap-y-4 rounded-lg p-4 ring-1 ring-accent">
+            <p className="col-span-2 font-semibold text-lg">
+                Remote Repositories
+            </p>
+            <div className="col-span-2 flex flex-col">
+                {repoList.map((repo) => (
+                    <div className="group relative border-b" key={repo}>
+                        <Input
+                            className="border-none"
+                            disabled={repo === oficialRepo}
+                            readOnly
+                            value={repo}
+                        />
+                        {repo !== oficialRepo && (
+                            <Button
+                                className="absolute top-0 right-0 rounded-none opacity-0 transition-opacity group-hover:opacity-100"
+                                onClick={() => removeRepo(repo)}
+                                size="icon"
+                                variant="destructive"
+                            >
+                                <XIcon />
+                            </Button>
+                        )}
+                    </div>
+                ))}
+            </div>
+            <Input
+                className="rounded-r-none"
+                onBlur={validateName}
+                onChange={(e) => setNewRepo(e.target.value.trim())}
+                placeholder="Add new repository URL (github url only)"
+                type="text"
+                value={newRepo}
+            />
+            <Button className="rounded-l-none" onClick={addRepo}>
+                Add
+            </Button>
+        </div>
+    );
+}
+
 function TabAdvanced({ reset }: { reset: Callback }) {
     return (
         <div className="flex flex-col p-2">
             <AddCustom reset={reset} />
+            <RepoEdit />
         </div>
     );
 }
@@ -363,20 +456,20 @@ function VersionManagerDialog() {
     };
 
     return (
-        <Drawer direction="right" dismissible onOpenChange={setIsOpen} open>
+        <Sheet onOpenChange={setIsOpen} open>
             <GamepadNavField
                 debugName="version-manager"
                 onButtonPress={onButtonPress}
             >
-                <DrawerContent
+                <SheetContent
                     aria-describedby={undefined}
                     className="min-w-[525px] p-4"
                 >
-                    <DrawerHeader>
-                        <DrawerTitle>Version Manager</DrawerTitle>
-                    </DrawerHeader>
+                    <SheetHeader>
+                        <SheetTitle>Version Manager</SheetTitle>
+                    </SheetHeader>
                     <Tabs
-                        className="min-h-0"
+                        className="min-h-0 flex-1"
                         onValueChange={(e) => setName(e as TabName)}
                         value={tab}
                     >
@@ -407,9 +500,9 @@ function VersionManagerDialog() {
                             </div>
                         </ScrollArea>
                     </Tabs>
-                </DrawerContent>
+                </SheetContent>
             </GamepadNavField>
-        </Drawer>
+        </Sheet>
     );
 }
 
