@@ -21,13 +21,8 @@ export const atomGameLibrarySorting = atomWithTauriStore<SortType, false>(
     { initialValue: SortType.NONE },
 );
 
-export const atomGameLibrary = atom<{
-    indexing: boolean;
-    games: GameRow[];
-}>({
-    indexing: false,
-    games: [],
-});
+export const atomGameLibraryIsIndexing = atom(false);
+export const atomGameLibrary = atom<GameRow[]>([]);
 
 async function loadGameData(path: string): Promise<GameRow> {
     try {
@@ -83,43 +78,52 @@ async function loadGameData(path: string): Promise<GameRow> {
     }
 }
 
-async function registerGamePath(path: string) {
-    console.debug(`Loading game from ${path}`);
-    const gameData = await loadGameData(path);
-    if (!("error" in gameData)) {
-        db.addGame(gameData);
+const gameRegisterQueue: string[] = [];
+let gameRegisterQueueIsUse = false;
+
+async function registerGamePath(workPath: string) {
+    console.debug(`Loading game from ${workPath}`);
+    gameRegisterQueue.push(workPath);
+    if (gameRegisterQueueIsUse) {
+        return;
     }
-    defaultStore.set(atomGameLibrary, (prev) => ({
-        ...prev,
-        games: prev.games.filter((e) => e.path !== path).concat(gameData),
-    }));
+    gameRegisterQueueIsUse = true;
+    while (gameRegisterQueue.length > 0) {
+        const path = gameRegisterQueue.shift();
+        if (!path) {
+            break;
+        }
+        const gameData = await loadGameData(path);
+        if (!("error" in gameData)) {
+            db.addGame(gameData);
+        }
+        defaultStore.set(atomGameLibrary, (prev) =>
+            prev.filter((e) => e.path !== path).concat(gameData),
+        );
+    }
+    gameRegisterQueueIsUse = false;
 }
 
 async function unregisterGamePathPrefix(
     pathPrefix: string,
     knownPaths: Set<string>,
 ) {
-    defaultStore.set(atomGameLibrary, (prev) => {
-        return {
-            ...prev,
-            games: prev.games.filter((e) => {
-                const toRemove = e.path.startsWith(pathPrefix);
-                if (toRemove) {
-                    knownPaths.delete(e.path);
-                    db.removeGame(e.path);
-                }
-                return !toRemove;
-            }),
-        };
-    });
+    defaultStore.set(atomGameLibrary, (prev) =>
+        prev.filter((e) => {
+            const toRemove = e.path.startsWith(pathPrefix);
+            if (toRemove) {
+                knownPaths.delete(e.path);
+                db.removeGame(e.path);
+            }
+            return !toRemove;
+        }),
+    );
 }
 
 async function isGame(path: string) {
     const eBootPath = await join(path, "eboot.bin");
     return await exists(eBootPath);
 }
-
-let indexingCount = 0;
 
 async function scanDirectory(
     path: string,
@@ -128,8 +132,6 @@ async function scanDirectory(
     recursionLevel: number,
 ) {
     try {
-        indexingCount++;
-
         if (recursionLevel > 3 || signal.aborted) {
             return;
         }
@@ -140,14 +142,14 @@ async function scanDirectory(
             return;
         }
         if (await isGame(path)) {
-            setTimeout(() => registerGamePath(path), 1);
+            void registerGamePath(path);
             return;
         }
         const children = await readDir(path);
         for (const c of children) {
             if (c.isDirectory) {
                 const childPath = await join(path, c.name);
-                scanDirectory(
+                await scanDirectory(
                     childPath,
                     knownPaths,
                     signal,
@@ -157,23 +159,13 @@ async function scanDirectory(
         }
     } catch (e: unknown) {
         console.error(`Error discovering game at "${path}"`, e);
-    } finally {
-        indexingCount--;
-        if (indexingCount === 0) {
-            defaultStore.set(atomGameLibrary, (prev) => ({
-                ...prev,
-                indexing: false,
-            }));
-        }
     }
 }
 
 (async () => {
     const cachedGames = await db.listGames();
-    defaultStore.set(atomGameLibrary, {
-        indexing: true,
-        games: cachedGames,
-    });
+    defaultStore.set(atomGameLibraryIsIndexing, true);
+    defaultStore.set(atomGameLibrary, cachedGames);
 
     const knownPaths = new Set<string>();
 
@@ -181,30 +173,33 @@ async function scanDirectory(
         knownPaths.add(e.path);
     }
 
-    let first = true;
-
+    let prevPath: string | null = null;
     let cancel: (() => void) | undefined;
+
     defaultStore.sub(atomGamesPath, async () => {
         cancel?.();
         cancel = undefined;
 
         try {
-            if (!first) {
-                first = false;
-                defaultStore.set(atomGameLibrary, {
-                    indexing: true,
-                    games: [],
-                });
+            const path = defaultStore.get(atomGamesPath);
+            if (prevPath != null && prevPath !== path) {
+                await db.removeAllGames();
+                defaultStore.set(atomGameLibraryIsIndexing, true);
+                defaultStore.set(atomGameLibrary, []);
                 knownPaths.clear();
             }
-            indexingCount = 0;
-            const path = defaultStore.get(atomGamesPath);
+            prevPath = path;
             if (path) {
                 if (!(await exists(path))) {
                     await mkdir(path, { recursive: true });
                 }
                 const abortController = new AbortController();
-                scanDirectory(path, knownPaths, abortController.signal, 0);
+                await scanDirectory(
+                    path,
+                    knownPaths,
+                    abortController.signal,
+                    0,
+                );
                 const unsub = await watch(path, async (e) => {
                     if (typeof e.type === "object") {
                         if ("create" in e.type) {
@@ -220,11 +215,19 @@ async function scanDirectory(
                                         return;
                                     }
                                 }
-                                scanDirectory(
+                                defaultStore.set(
+                                    atomGameLibraryIsIndexing,
+                                    true,
+                                );
+                                await scanDirectory(
                                     newPath,
                                     knownPaths,
                                     abortController.signal,
                                     1,
+                                );
+                                defaultStore.set(
+                                    atomGameLibraryIsIndexing,
+                                    false,
                                 );
                             }
                         } else if ("remove" in e.type) {
@@ -235,6 +238,7 @@ async function scanDirectory(
                         }
                     }
                 });
+                defaultStore.set(atomGameLibraryIsIndexing, false);
                 cancel = () => {
                     unsub();
                     abortController.abort();

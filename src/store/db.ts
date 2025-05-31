@@ -30,6 +30,9 @@ export const db = {
     async removeGame(path: string): Promise<void> {
         await conn.execute("DELETE FROM games WHERE path = $1", [path]);
     },
+    async removeAllGames(): Promise<void> {
+        await conn.execute("DELETE FROM games");
+    },
     async addGame(data: GameRow): Promise<void> {
         await conn.execute(
             "INSERT INTO games (path, cusa, title, version, fw_version, sfo_json) VALUES ($1, $2, $3, $4, $5, $6)",

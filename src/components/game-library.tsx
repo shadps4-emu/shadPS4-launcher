@@ -54,7 +54,7 @@ function Grid({ search }: { search: string }) {
     "use no memo"; // Temporary while https://github.com/TanStack/virtual/pull/851 is not merged
 
     const parentRef = useRef<HTMLDivElement | null>(null);
-    const { games } = useAtomValue(atomGameLibrary);
+    const games = useAtomValue(atomGameLibrary);
     const sortType = useAtomValue(atomGameLibrarySorting);
     const [itemPerRow, setItemPerRow] = useState(1);
 

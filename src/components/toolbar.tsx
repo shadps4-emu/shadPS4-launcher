@@ -15,7 +15,7 @@ import { useDebounceEffect } from "@/lib/hooks/useDebounceEffect";
 import { cn } from "@/lib/utils/ui";
 import { atomFolderConfigModalIsOpen, oficialRepo } from "@/store/common";
 import {
-    atomGameLibrary,
+    atomGameLibraryIsIndexing,
     atomGameLibrarySorting,
     SortType,
 } from "@/store/game-library";
@@ -129,7 +129,7 @@ export function Toolbar({ onSearch = () => void 0 }: Props) {
     const setFolderConfigModalOpen = useSetAtom(atomFolderConfigModalIsOpen);
     const [sort, setSort] = useAtom(atomGameLibrarySorting);
     const [isSortOpen, setSortOpen] = useState(false);
-    const { indexing } = useAtomValue(atomGameLibrary);
+    const indexing = useAtomValue(atomGameLibraryIsIndexing);
 
     const [search, setSearch] = useState("");
     useDebounceEffect(search, 200, onSearch);

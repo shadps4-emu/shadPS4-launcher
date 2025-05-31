@@ -97,7 +97,7 @@ export const atomAvailableVersions = atomWithQuery((get) => ({
         queryKey: [, , list],
     }: {
         queryKey: [string, string, string[]];
-    }) => {
+    }): Promise<RemoteEmulatorVersion[]> => {
         return (
             await Promise.all(
                 list.map(async (repoSource) => {

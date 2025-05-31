@@ -194,7 +194,7 @@ function TabAvailableVersion() {
             <TableBody>
                 {data?.map((v) => (
                     <VersionTableRow
-                        date={format(v.date, "PP")}
+                        date={v.date ? format(v.date, "PP") : "Unknown"}
                         key={JSON.stringify(v)}
                         prePelease={v.prerelease}
                         release={v.name}
