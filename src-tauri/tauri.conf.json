@@ -1,6 +1,6 @@
 {
     "$schema": "https://schema.tauri.app/config/2",
-    "productName": "ShadPS4",
+    "productName": "shadPS4",
     "version": "0.0.1",
     "identifier": "net.shadps4.launcher",
     "build": {
@@ -13,14 +13,14 @@
         "windows": [
             {
                 "label": "main",
-                "title": "ShadPS4 Launcher",
+                "title": "shadPS4 Launcher",
                 "width": 930,
                 "height": 650,
                 "url": "/"
             },
             {
                 "label": "emu_config",
-                "title": "ShadPS4 - Emulator Config",
+                "title": "shadPS4 - Emulator Config",
                 "width": 1200,
                 "height": 850,
                 "visible": false,

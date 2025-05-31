@@ -290,12 +290,12 @@ function AddCustom({ reset }: { reset: Callback }) {
             extensions.push("AppImage");
         }
         openDialog({
-            title: "ShadPS4 emulator binary",
+            title: "shadPS4 emulator binary",
             filters:
                 extensions.length > 0
                     ? [
                           {
-                              name: "ShadPS4 binary",
+                              name: "shadPS4 binary",
                               extensions,
                           },
                       ]
