@@ -81,16 +81,20 @@ function VersionTableRow({
 }) {
     return (
         <TableRow>
-            <TableCell>
+            <TableCell className="wrap-anywhere">
                 {preRelease === true ? (
                     <Badge variant="destructive">Pre-release</Badge>
                 ) : (
                     release || "Unknown"
                 )}
             </TableCell>
-            <TableCell>{version || "Unknown"}</TableCell>
-            <TableCell>{source || "Unknown"}</TableCell>
-            <TableCell>{date || "Unknown"}</TableCell>
+            <TableCell className="wrap-anywhere">
+                {version || "Unknown"}
+            </TableCell>
+            <TableCell className="wrap-anywhere">
+                {source || "Unknown"}
+            </TableCell>
+            <TableCell className="wrap-anywhere">{date || "Unknown"}</TableCell>
             {children}
         </TableRow>
     );
@@ -463,7 +467,7 @@ function VersionManagerDialog() {
             >
                 <SheetContent
                     aria-describedby={undefined}
-                    className="min-w-[525px] p-4"
+                    className="min-w-full p-4 md:min-w-[625px] lg:min-w-[900px]"
                 >
                     <SheetHeader>
                         <SheetTitle>Version Manager</SheetTitle>
