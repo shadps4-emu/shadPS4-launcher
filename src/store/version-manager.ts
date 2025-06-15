@@ -40,29 +40,25 @@ const octokit = new Octokit();
 
 export const atomModalVersionManagerIsOpen = atom<boolean>(false);
 
-export const atomRemoteList = atomWithTauriStore<string[], false>(
+export const atomRemoteList = atomWithTauriStore<string[]>(
     "versions.json",
     "remote_list",
     {
         initialValue: [oficialRepo],
-        mergeInitial: false,
     },
 );
 
-export const atomInstalledVersions = atomWithTauriStore<
-    EmulatorVersion[],
-    false
->("versions.json", "installed", {
-    initialValue: [],
-});
-
-const atomSelectedVersionRaw = atomWithTauriStore<string, false>(
+export const atomInstalledVersions = atomWithTauriStore<EmulatorVersion[]>(
     "versions.json",
-    "selected",
+    "installed",
     {
-        initialValue: "",
+        initialValue: [],
     },
 );
+
+const atomSelectedVersionRaw = atomWithTauriStore("versions.json", "selected", {
+    initialValue: "",
+});
 
 export const atomSelectedVersion = atom<
     EmulatorVersion | null,

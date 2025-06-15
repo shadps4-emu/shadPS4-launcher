@@ -102,9 +102,10 @@ export async function setupForwardingConsole() {
         const message =
             event.error instanceof Error
                 ? event.error.stack || event.error
-                : event.error;
+                : event.error || event.message;
 
         error(message);
+        c.error(event.error);
     });
 
     window.addEventListener("unhandledrejection", (event) => {
@@ -114,6 +115,7 @@ export async function setupForwardingConsole() {
                 : `Uncaught (in promise) ${event.reason}`;
 
         error(message);
+        c.error(event.reason);
     });
 
     await attachLogger(({ level, message }) => {

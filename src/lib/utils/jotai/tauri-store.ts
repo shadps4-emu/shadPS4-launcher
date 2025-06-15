@@ -1,4 +1,5 @@
 import { Store } from "@tauri-apps/plugin-store";
+import cloneDeep from "clone-deep";
 import { atom } from "jotai";
 import type { Callback } from "../types";
 
@@ -18,74 +19,85 @@ function getStore(path: string): Promise<Store> {
  * This uses config store underlying. This is not safe to read directly from store,
  * as the value prob will not be available in the first read
  */
-export function atomWithTauriStore<T, Nullable extends boolean = true>(
+export function atomWithTauriStore<T>(
     path: string,
     key: string,
-    {
-        initialValue,
-        onMount = initialValue,
-        mergeInitial = true,
-    }: Nullable extends false
-        ? {
-              initialValue: T;
-              onMount?: T | (() => Promise<T> | T);
-              mergeInitial?: boolean;
-          }
-        : {
-              initialValue?: T | undefined;
-              onMount: T | (() => Promise<T> | T);
-              mergeInitial?: boolean;
-          },
+    props: {
+        initialValue: T;
+        queryInitialValue?: () => Promise<T> | T;
+        doNotCopy?: boolean;
+    },
 ) {
-    type Value = Nullable extends true ? T | null : T;
-    const getInitialValue = async () => {
-        const initialProm =
-            typeof onMount === "function"
-                ? (onMount as () => Promise<T> | T)()
-                : onMount;
-        if (initialProm == null) {
-            throw new Error("Initial value or onMount must be defined");
-        }
-        const initial: T = await Promise.resolve(initialProm);
-        try {
-            const store = await getStore(path);
-            const value = (await store.get<T>(key)) ?? null;
-            if (mergeInitial) {
-                if (Array.isArray(initial)) {
-                    return [...initial, ...((value as T[]) || [])] as T;
+    let initialValue = props.initialValue;
+
+    let deferSet: Callback<[T]>[] | null = [];
+    let onInitCallback: Callback[] | null = [];
+
+    void getStore(path)
+        .then((store) => store.get<T>(key))
+        .then((e) => {
+            if (e) {
+                initialValue = e;
+                deferSet?.forEach((c) => c(props.doNotCopy ? e : cloneDeep(e)));
+                deferSet = null;
+                onInitCallback?.forEach((c) => c());
+                onInitCallback = null;
+            } else if (
+                "queryInitialValue" in props &&
+                props.queryInitialValue
+            ) {
+                void Promise.resolve(props.queryInitialValue()).then((e) => {
+                    initialValue = e;
+                    onInitCallback?.forEach((c) => c());
+                    onInitCallback = null;
+                });
+            } else {
+                if (!("initialValue" in props)) {
+                    throw new Error(
+                        "Unexpected state. Prop don't have initial neither query function",
+                    );
                 }
-                if (typeof initial === "object") {
-                    return {
-                        ...initial,
-                        ...(value || {}),
-                    };
-                }
+                onInitCallback?.forEach((c) => c());
+                onInitCallback = null;
             }
-            return value || initial;
-        } catch {
-            return initial;
+        });
+
+    const getInitialValue = () => {
+        if (initialValue === null) {
+            throw new Error("initial value did not initialize");
+        }
+        return <T>(props.doNotCopy ? initialValue : cloneDeep(initialValue));
+    };
+
+    const baseAtom = atom(initialValue);
+    baseAtom.onMount = (setAtom) => {
+        setAtom(getInitialValue());
+        if (deferSet) {
+            deferSet.push(setAtom);
         }
     };
 
-    const baseAtom = atom((initialValue ?? null) as Value);
-    baseAtom.onMount = (setAtom) => {
-        void Promise.resolve(getInitialValue()).then((e) =>
-            setAtom(e as Value),
-        );
-    };
-
-    return atom<Value, [Value | Callback<[Value], Value>], void>(
-        (get) => get(baseAtom),
+    const atomValue = atom<T, [T | Callback<[T], T>], void>(
+        (get) => get(baseAtom) ?? getInitialValue(),
         (get, set, update) => {
             const newValue =
                 typeof update === "function"
-                    ? (update as Callback<[Value], Value>)(
-                          get(baseAtom) ?? (null as Value),
-                      )
+                    ? (update as Callback<[T], T>)(get(baseAtom))
                     : update;
 
-            set(baseAtom, newValue as Nullable extends true ? T | null : T);
+            initialValue = newValue;
+            set(baseAtom, newValue);
             void getStore(path).then((store) => void store.set(key, newValue));
         },
     );
+    return {
+        ...atomValue,
+        addOnInit: (c: Callback) => {
+            if (onInitCallback) {
+                onInitCallback.push(c);
+            } else {
+                c();
+            }
+        },
+    };
 }

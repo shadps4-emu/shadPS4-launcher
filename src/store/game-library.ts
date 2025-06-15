@@ -15,7 +15,7 @@ export enum SortType {
     CUSA = "CUSA",
 }
 
-export const atomGameLibrarySorting = atomWithTauriStore<SortType, false>(
+export const atomGameLibrarySorting = atomWithTauriStore<SortType>(
     "config.json",
     "game_library_sort",
     { initialValue: SortType.NONE },
@@ -162,7 +162,7 @@ async function scanDirectory(
     }
 }
 
-(async () => {
+setTimeout(async () => {
     const cachedGames = await db.listGames();
     defaultStore.set(atomGameLibraryIsIndexing, true);
     defaultStore.set(atomGameLibrary, cachedGames);
@@ -249,4 +249,4 @@ async function scanDirectory(
             toast.error("Error watching games path: " + stringifyError(e));
         }
     });
-})();
+}, 3000);

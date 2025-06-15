@@ -33,6 +33,7 @@
         "@tauri-apps/plugin-updater": "^2.7.1",
         "@tauri-apps/plugin-upload": "^2.2.1",
         "class-variance-authority": "^0.7.1",
+        "clone-deep": "^4.0.1",
         "clsx": "^2.1.1",
         "date-fns": "^4.1.0",
         "dequal": "^2.0.3",
