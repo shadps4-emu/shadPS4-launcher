@@ -33,3 +33,7 @@ export function timeout<T, E = Error>(
         }),
     ]);
 }
+
+export function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}

@@ -190,8 +190,11 @@ pub mod js {
     use tauri_plugin_fs::{FsExt, OpenOptions, SafeFilePath};
 
     #[tauri::command]
-    pub fn read_psf(app: AppHandle, path: SafeFilePath) -> anyhow_tauri::TAResult<PSF> {
-        _read_psf(app, path).into_ta_result()
+    pub async fn read_psf(app: AppHandle, path: SafeFilePath) -> anyhow_tauri::TAResult<PSF> {
+        tokio::task::spawn_blocking(|| _read_psf(app, path))
+            .await
+            .into_ta_result()?
+            .into_ta_result()
     }
 
     fn _read_psf(app: AppHandle, path: SafeFilePath) -> anyhow::Result<PSF> {

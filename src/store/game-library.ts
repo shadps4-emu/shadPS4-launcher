@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { readPsf } from "@/lib/native/psf";
 import { stringifyError } from "@/lib/utils/error";
 import { atomWithTauriStore } from "@/lib/utils/jotai/tauri-store";
+import type { Callback } from "@/lib/utils/types";
 import { defaultStore } from ".";
 import { db, type GameRow } from "./db";
 import { atomGamesPath } from "./paths";
@@ -162,9 +163,8 @@ async function scanDirectory(
     }
 }
 
-setTimeout(async () => {
+(async () => {
     const cachedGames = await db.listGames();
-    defaultStore.set(atomGameLibraryIsIndexing, true);
     defaultStore.set(atomGameLibrary, cachedGames);
 
     const knownPaths = new Set<string>();
@@ -174,79 +174,106 @@ setTimeout(async () => {
     }
 
     let prevPath: string | null = null;
-    let cancel: (() => void) | undefined;
+    let cancel: (() => Promise<void>) | undefined;
 
-    defaultStore.sub(atomGamesPath, async () => {
-        cancel?.();
-        cancel = undefined;
-
-        try {
-            const path = defaultStore.get(atomGamesPath);
-            if (prevPath != null && prevPath !== path) {
-                await db.removeAllGames();
-                defaultStore.set(atomGameLibraryIsIndexing, true);
-                defaultStore.set(atomGameLibrary, []);
-                knownPaths.clear();
+    const onChange = () => {
+        const c = cancel;
+        let unsub: Callback | undefined;
+        const abortController = new AbortController();
+        const signal = abortController.signal;
+        const prom = (async () => {
+            if (c) {
+                await c();
             }
-            prevPath = path;
-            if (path) {
-                if (!(await exists(path))) {
-                    await mkdir(path, { recursive: true });
+            try {
+                const path = defaultStore.get(atomGamesPath);
+                if (!path || path === prevPath) {
+                    return;
                 }
-                const abortController = new AbortController();
-                await scanDirectory(
-                    path,
-                    knownPaths,
-                    abortController.signal,
-                    0,
-                );
-                const unsub = await watch(path, async (e) => {
-                    if (typeof e.type === "object") {
-                        if ("create" in e.type) {
-                            const newPath = e.paths[0];
-                            if (newPath && (await stat(newPath)).isDirectory) {
-                                let idx = Number.POSITIVE_INFINITY;
-                                while (true) {
-                                    idx = newPath.lastIndexOf(sep(), idx - 1);
-                                    if (idx === -1) {
-                                        break;
+                console.log("Indexing games at", path);
+                if (prevPath != null) {
+                    prevPath = path; // set this before await
+                    defaultStore.set(atomGameLibraryIsIndexing, true);
+                    defaultStore.set(atomGameLibrary, []);
+                    knownPaths.clear();
+                    await db.removeAllGames();
+                }
+                prevPath = path;
+                if (path) {
+                    if (!(await exists(path))) {
+                        await mkdir(path, { recursive: true });
+                    }
+                    if (signal.aborted) {
+                        return;
+                    }
+                    await scanDirectory(path, knownPaths, signal, 0);
+                    if (signal.aborted) {
+                        return;
+                    }
+                    unsub = await watch(path, async (e) => {
+                        if (typeof e.type === "object") {
+                            if ("create" in e.type) {
+                                const newPath = e.paths[0];
+                                if (
+                                    newPath &&
+                                    (await stat(newPath)).isDirectory
+                                ) {
+                                    let idx = Number.POSITIVE_INFINITY;
+                                    while (true) {
+                                        idx = newPath.lastIndexOf(
+                                            sep(),
+                                            idx - 1,
+                                        );
+                                        if (idx === -1) {
+                                            break;
+                                        }
+                                        if (
+                                            knownPaths.has(
+                                                newPath.slice(0, idx),
+                                            )
+                                        ) {
+                                            return;
+                                        }
                                     }
-                                    if (knownPaths.has(newPath.slice(0, idx))) {
-                                        return;
-                                    }
+                                    defaultStore.set(
+                                        atomGameLibraryIsIndexing,
+                                        true,
+                                    );
+                                    await scanDirectory(
+                                        newPath,
+                                        knownPaths,
+                                        signal,
+                                        1,
+                                    );
+                                    defaultStore.set(
+                                        atomGameLibraryIsIndexing,
+                                        false,
+                                    );
                                 }
-                                defaultStore.set(
-                                    atomGameLibraryIsIndexing,
-                                    true,
-                                );
-                                await scanDirectory(
-                                    newPath,
-                                    knownPaths,
-                                    abortController.signal,
-                                    1,
-                                );
-                                defaultStore.set(
-                                    atomGameLibraryIsIndexing,
-                                    false,
-                                );
-                            }
-                        } else if ("remove" in e.type) {
-                            const newPath = e.paths[0];
-                            if (newPath) {
-                                unregisterGamePathPrefix(newPath, knownPaths);
+                            } else if ("remove" in e.type) {
+                                const newPath = e.paths[0];
+                                if (newPath) {
+                                    unregisterGamePathPrefix(
+                                        newPath,
+                                        knownPaths,
+                                    );
+                                }
                             }
                         }
-                    }
-                });
-                defaultStore.set(atomGameLibraryIsIndexing, false);
-                cancel = () => {
-                    unsub();
-                    abortController.abort();
-                };
+                    });
+                    defaultStore.set(atomGameLibraryIsIndexing, false);
+                }
+            } catch (e: unknown) {
+                console.error("error watching path", stringifyError(e));
+                toast.error("Error watching games path: " + stringifyError(e));
             }
-        } catch (e: unknown) {
-            console.error("error watching path", stringifyError(e));
-            toast.error("Error watching games path: " + stringifyError(e));
-        }
-    });
-}, 3000);
+        })();
+        cancel = () => {
+            abortController.abort();
+            unsub?.();
+            return prom;
+        };
+    };
+    defaultStore.sub(atomGamesPath, onChange);
+    atomGamesPath.addOnInit(onChange);
+})();
