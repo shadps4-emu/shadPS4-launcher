@@ -14,3 +14,15 @@ export const atomEmuInstallsPath = atomWithTauriStore(
         queryInitialValue: async () => join(await appDataDir(), "versions"),
     },
 );
+
+/**
+ * `true` to use emulator binary path
+ */
+export const atomEmuUserPath = atomWithTauriStore<true | string>(
+    "config.json",
+    "user_path",
+    {
+        initialValue: "",
+        queryInitialValue: async () => join(await appDataDir(), "emu_data"),
+    },
+);

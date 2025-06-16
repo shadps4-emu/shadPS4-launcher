@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils/ui";
 import { atomShowingGameDetails } from "@/store/common";
 import type { GameRow } from "@/store/db";
 import { gamepadActiveAtom } from "@/store/gamepad";
+import { atomEmuUserPath } from "@/store/paths";
 import { atomShowingRunningGame } from "@/store/running-games";
 import { atomSelectedVersion } from "@/store/version-manager";
 import { GameBoxCover } from "./game-cover";
@@ -124,7 +125,8 @@ export function GameBox({ game }: { game: GameRow; isFirst?: boolean }) {
                     toast.warning("No emulator selected");
                     return;
                 }
-                const r = await startGame(selectEmu, game);
+                const userDir = store.get(atomEmuUserPath);
+                const r = await startGame(selectEmu, game, userDir);
                 store.set(atomShowingRunningGame, r);
             } catch (e: unknown) {
                 toast.error("Unknown error: " + stringifyError(e));

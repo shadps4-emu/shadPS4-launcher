@@ -1,4 +1,4 @@
-import { appDataDir, join } from "@tauri-apps/api/path";
+import { dirname, join } from "@tauri-apps/api/path";
 import { exists, mkdir } from "@tauri-apps/plugin-fs";
 import { toast } from "sonner";
 import { GameProcess } from "@/lib/native/game-process";
@@ -10,6 +10,7 @@ import type { EmulatorVersion } from "@/store/version-manager";
 export async function startGame(
     emu: EmulatorVersion,
     game: GameRow,
+    userBaseDir: string | true,
 ): Promise<RunningGame | null> {
     const gameDir = game.path;
     const gameBinary = await join(gameDir, "eboot.bin");
@@ -27,7 +28,9 @@ export async function startGame(
         return null;
     }
 
-    const workDir = await join(await appDataDir(), "emu_data");
+    const workDir =
+        typeof userBaseDir === "string" ? userBaseDir : await dirname(emu.path);
+
     const userDir = await join(workDir, "user");
     if (!(await exists(userDir))) {
         await mkdir(userDir, { recursive: true });
