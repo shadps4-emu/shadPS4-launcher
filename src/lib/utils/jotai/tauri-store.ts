@@ -15,10 +15,6 @@ function getStore(path: string): Promise<Store> {
     return s;
 }
 
-/**
- * This uses config store underlying. This is not safe to read directly from store,
- * as the value prob will not be available in the first read
- */
 export function atomWithTauriStore<T>(
     path: string,
     key: string,
