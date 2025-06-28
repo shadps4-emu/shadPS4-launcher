@@ -186,7 +186,6 @@ async function scanDirectory(
                 await c();
             }
             try {
-                const path = defaultStore.get(atomGamesPath);
                 if (!path || path === prevPath) {
                     return;
                 }
@@ -274,6 +273,5 @@ async function scanDirectory(
             return prom;
         };
     };
-    defaultStore.sub(atomGamesPath, onChange);
-    atomGamesPath.addOnInit(onChange);
+    atomGamesPath.listen(onChange);
 })();

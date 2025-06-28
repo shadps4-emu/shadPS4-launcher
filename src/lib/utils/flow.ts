@@ -11,10 +11,10 @@ type Failure<E> = {
 type Result<T, E = Error> = Success<T> | Failure<E>;
 
 export async function tryCatch<T, E = Error>(
-    promise: Promise<T>,
+    call: Promise<T> | (() => Promise<T> | T),
 ): Promise<Result<T, E>> {
     try {
-        const data = await promise;
+        const data = await (typeof call === "function" ? call() : call);
         return { data, error: null };
     } catch (error) {
         return { data: null, error: error as E };
@@ -22,10 +22,11 @@ export async function tryCatch<T, E = Error>(
 }
 
 export function timeout<T, E = Error>(
-    promise: Promise<T>,
+    call: Promise<T> | (() => Promise<T> | T),
     ms: number,
     timeoutError: E,
 ): Promise<T> {
+    const promise = typeof call === "function" ? call() : call;
     return Promise.race([
         promise,
         new Promise<T>((_, reject) => {
