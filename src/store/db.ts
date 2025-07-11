@@ -1,12 +1,13 @@
 import Database from "@tauri-apps/plugin-sql";
 import type { PSF } from "@/lib/native/psf";
+import type { CUSA } from "./common";
 
 const conn = await Database.load("sqlite:data.db");
 
 export type GameRow = {
     id?: number;
     path: string;
-    cusa: string;
+    cusa: CUSA;
     title: string;
     version: string;
     fw_version: string;

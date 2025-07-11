@@ -7,6 +7,7 @@ import { stringifyError } from "@/lib/utils/error";
 import { atomWithTauriStore } from "@/lib/utils/jotai/tauri-store";
 import type { Callback } from "@/lib/utils/types";
 import { defaultStore } from ".";
+import type { CUSA } from "./common";
 import { db, type GameRow } from "./db";
 import { atomGamesPath } from "./paths";
 
@@ -34,7 +35,7 @@ async function loadGameData(path: string): Promise<GameRow> {
         if (!(await exists(paramSfo))) {
             return {
                 path: path,
-                cusa: "N/A - " + base,
+                cusa: ("N/A - " + base) as CUSA,
                 title: base,
                 version: "N/A",
                 fw_version: "N/A",
@@ -57,7 +58,7 @@ async function loadGameData(path: string): Promise<GameRow> {
 
         return {
             path: path,
-            cusa: e.TITLE_ID?.Text || base,
+            cusa: (e.TITLE_ID?.Text || base) as CUSA,
             title: e.TITLE?.Text || "Unknown",
             version: e.APP_VER?.Text || "UNK",
             fw_version: fw_version || "UNK",
@@ -176,7 +177,7 @@ async function scanDirectory(
     let prevPath: string | null = null;
     let cancel: (() => Promise<void>) | undefined;
 
-    const onChange = () => {
+    const onChange = (path: string) => {
         const c = cancel;
         let unsub: Callback | undefined;
         const abortController = new AbortController();

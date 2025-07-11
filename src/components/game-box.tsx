@@ -28,6 +28,7 @@ import {
 import type { PSF } from "@/lib/native/psf";
 import { stringifyError } from "@/lib/utils/error";
 import { cn } from "@/lib/utils/ui";
+import { atomShowingGameCheatAndPatch } from "@/store/cheats-and-patches";
 import { atomShowingGameDetails } from "@/store/common";
 import type { GameRow } from "@/store/db";
 import { gamepadActiveAtom } from "@/store/gamepad";
@@ -103,6 +104,7 @@ export function GameBox({ game }: { game: GameRow; isFirst?: boolean }) {
     const isGamepad = useAtomValue(gamepadActiveAtom);
     const store = useStore();
     const setShowingDetails = useSetAtom(atomShowingGameDetails);
+    const setPatchesModal = useSetAtom(atomShowingGameCheatAndPatch);
 
     const [clickCount, setClickCount] = useState(0);
     const [isContextOpen, setContextOpen] = useState(false);
@@ -143,6 +145,10 @@ export function GameBox({ game }: { game: GameRow; isFirst?: boolean }) {
 
     const openDetails = () => {
         setShowingDetails(game);
+    };
+
+    const openCheatsPatches = () => {
+        setPatchesModal(game);
     };
 
     const openContext = (e: ReactMouseEvent | null) => {
@@ -241,6 +247,11 @@ export function GameBox({ game }: { game: GameRow; isFirst?: boolean }) {
                     <Navigable>
                         <ContextMenuItem autoFocus onClick={openDetails}>
                             Details
+                        </ContextMenuItem>
+                    </Navigable>
+                    <Navigable>
+                        <ContextMenuItem onClick={openCheatsPatches}>
+                            Cheats & Patches
                         </ContextMenuItem>
                     </Navigable>
                 </GamepadNavField>

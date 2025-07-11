@@ -51,8 +51,6 @@ function NoGameFound() {
 }
 
 function Grid({ search }: { search: string }) {
-    "use no memo"; // Temporary while https://github.com/TanStack/virtual/pull/851 is not merged
-
     const parentRef = useRef<HTMLDivElement | null>(null);
     const games = useAtomValue(atomGameLibrary);
     const sortType = useAtomValue(atomGameLibrarySorting);
@@ -78,7 +76,7 @@ function Grid({ search }: { search: string }) {
         }
     }, [games, search, sortType]);
 
-    const rowCount = Math.ceil(games.length / itemPerRow);
+    const rowCount = Math.ceil(games.length / (itemPerRow || 1));
 
     const virtualizer = useVirtualizer({
         count: rowCount,
@@ -86,7 +84,7 @@ function Grid({ search }: { search: string }) {
         estimateSize: () => 50,
         overscan: 1,
     });
-    const items = virtualizer.getVirtualItems();
+    const items = useRef(virtualizer).current.getVirtualItems();
 
     // biome-ignore lint/correctness/useExhaustiveDependencies: In the first render, the game length running empty will be miss-leading
     useEffect(() => {

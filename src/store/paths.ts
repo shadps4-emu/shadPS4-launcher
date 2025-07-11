@@ -1,4 +1,5 @@
 import { appDataDir, join } from "@tauri-apps/api/path";
+import { atom } from "jotai";
 import { atomWithTauriStore } from "@/lib/utils/jotai/tauri-store";
 
 export const atomGamesPath = atomWithTauriStore("config.json", "games_path", {
@@ -25,4 +26,8 @@ export const atomEmuUserPath = atomWithTauriStore<true | string>(
         initialValue: "",
         queryInitialValue: async () => join(await appDataDir(), "emu_data"),
     },
+);
+
+export const atomPatchPath = atom(async () =>
+    join(await appDataDir(), "patches"),
 );

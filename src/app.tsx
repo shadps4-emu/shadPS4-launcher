@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { LoadingScreen } from "./components/loading-overlay";
 import { MainPage } from "./components/main-page";
+import { CheatAndPatchesModal } from "./components/modals/cheats-and-patches-modal";
 import { FolderConfigModal } from "./components/modals/folder-config-modal";
 import { GameDetailsModal } from "./components/modals/game-details-modal";
 import { RunningGameModal } from "./components/modals/running-game-modal";
@@ -22,6 +23,7 @@ export function App() {
                 <UpdateIcon />
                 <RunningGameModal />
                 <GameDetailsModal />
+                <CheatAndPatchesModal />
                 <MainPage />
             </Suspense>
         </main>
