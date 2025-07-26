@@ -27,13 +27,14 @@ import {
     GamepadNavField,
     type NavButton,
 } from "@/lib/context/gamepad-nav-field";
+import { stringifyError } from "@/lib/utils/error";
 import {
     atomAvailablePatches,
     atomPatchRepoEnabledByGame,
     atomShowingGameCheatAndPatch,
     patchRepositories,
 } from "@/store/cheats-and-patches";
-import type { GameRow } from "@/store/db";
+import type { GameEntry } from "@/store/db";
 import { atomPatchPath } from "@/store/paths";
 import {
     Tabs,
@@ -53,7 +54,7 @@ import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
 import { Toggle } from "../ui/toggle";
 
-function PatchPanel({ gameData }: { gameData: GameRow }) {
+function PatchPanel({ gameData }: { gameData: GameEntry }) {
     const store = useStore();
 
     const patchFolderPath = useAtomValue(atomPatchPath);
@@ -96,12 +97,19 @@ function PatchPanel({ gameData }: { gameData: GameRow }) {
                 setPatchFile(null);
                 return;
             }
-            const file = await PatchFile.parsePatchFile(path);
-            if (c.signal.aborted) {
-                return;
+            try {
+                const file = await PatchFile.parsePatchFile(path);
+                if (c.signal.aborted) {
+                    return;
+                }
+                setPatchFile(file);
+                setPatchLines(file.getPatchLines());
+            } catch (e) {
+                console.error("Failed to parse patch file", e);
+                toast.error("Failed to parse patch file. " + stringifyError(e));
+                setPatchFile(null);
+                setPatchLines([]);
             }
-            setPatchFile(file);
-            setPatchLines(file.getPatchLines());
         })();
         return () => c.abort();
     }, [patchPath]);
@@ -298,7 +306,7 @@ function CheatsAndPatchesDialog({
     gameData,
     onClose,
 }: {
-    gameData: GameRow;
+    gameData: GameEntry;
     onClose: () => void;
 }) {
     const onButtonPress = (btn: NavButton) => {

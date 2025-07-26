@@ -8,7 +8,7 @@ import { atomWithTauriStore } from "@/lib/utils/jotai/tauri-store";
 import type { Callback } from "@/lib/utils/types";
 import { defaultStore } from ".";
 import type { CUSA } from "./common";
-import { db, type GameRow } from "./db";
+import { db, type GameEntry } from "./db";
 import { atomGamesPath } from "./paths";
 
 export enum SortType {
@@ -24,9 +24,9 @@ export const atomGameLibrarySorting = atomWithTauriStore<SortType>(
 );
 
 export const atomGameLibraryIsIndexing = atom(false);
-export const atomGameLibrary = atom<GameRow[]>([]);
+export const atomGameLibrary = atom<GameEntry[]>([]);
 
-async function loadGameData(path: string): Promise<GameRow> {
+async function loadGameData(path: string): Promise<GameEntry> {
     try {
         const base = await basename(path);
 

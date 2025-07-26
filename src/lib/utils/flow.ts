@@ -1,38 +1,24 @@
-type Success<T> = {
-    data: T;
-    error: null;
-};
+import { ResultAsync } from "neverthrow";
 
-type Failure<E> = {
-    data: null;
-    error: E;
-};
-
-type Result<T, E = Error> = Success<T> | Failure<E>;
-
-export async function tryCatch<T, E = Error>(
-    call: Promise<T> | (() => Promise<T> | T),
-): Promise<Result<T, E>> {
-    try {
-        const data = await (typeof call === "function" ? call() : call);
-        return { data, error: null };
-    } catch (error) {
-        return { data: null, error: error as E };
-    }
-}
-
-export function timeout<T, E = Error>(
-    call: Promise<T> | (() => Promise<T> | T),
+export function withTimeout<T, E>(
+    action: ResultAsync<T, E>,
     ms: number,
     timeoutError: E,
-): Promise<T> {
-    const promise = typeof call === "function" ? call() : call;
-    return Promise.race([
-        promise,
-        new Promise<T>((_, reject) => {
-            setTimeout(() => reject(timeoutError), ms);
-        }),
-    ]);
+): ResultAsync<T, E> {
+    const timedPromise = new Promise<T>((resolve, reject) => {
+        const timer = setTimeout(() => reject(timeoutError), ms);
+
+        action.then((r) => {
+            clearTimeout(timer);
+            if (r.isOk()) {
+                resolve(r.value);
+            } else {
+                reject(r.error);
+            }
+        });
+    });
+
+    return ResultAsync.fromPromise(timedPromise, (err) => err as E);
 }
 
 export function sleep(ms: number): Promise<void> {

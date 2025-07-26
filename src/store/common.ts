@@ -1,7 +1,7 @@
 import type { Update } from "@tauri-apps/plugin-updater";
 import { atom } from "jotai";
 import type { Digit } from "@/lib/utils/types";
-import type { GameRow } from "./db";
+import type { GameEntry } from "./db";
 
 export type CUSA =
     | "N/A"
@@ -25,4 +25,4 @@ export const atomDownloadingOverlay = atom<
 
 export const atomUpdateAvailable = atom<Update | null>(null);
 
-export const atomShowingGameDetails = atom<GameRow | null>(null);
+export const atomShowingGameDetails = atom<GameEntry | null>(null);

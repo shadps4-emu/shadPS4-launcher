@@ -1,9 +1,9 @@
 import { atom } from "jotai";
 import { atomWithTauriStore } from "@/lib/utils/jotai/tauri-store";
 import type { CUSA } from "./common";
-import type { GameRow } from "./db";
+import type { GameEntry } from "./db";
 
-export const atomShowingGameCheatAndPatch = atom<GameRow | null>(null);
+export const atomShowingGameCheatAndPatch = atom<GameEntry | null>(null);
 
 export const patchRepositories = ["GoldHEN", "shadPS4"] as const;
 

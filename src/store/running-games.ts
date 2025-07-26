@@ -2,10 +2,10 @@ import { type Atom, atom, type PrimitiveAtom } from "jotai";
 import type { GameProcess, LogEntry } from "@/lib/native/game-process";
 import type { Callback } from "@/lib/utils/types";
 import { defaultStore } from ".";
-import type { GameRow } from "./db";
+import type { GameEntry } from "./db";
 
 export type RunningGame = {
-    game: GameRow;
+    game: GameEntry;
     process: GameProcess;
     atomRunning: Atom<true | number>; // true or exit code
     atomError: Atom<string | null>;
@@ -19,7 +19,7 @@ export const atomRunningGames = atom<RunningGame[]>([]);
 export const atomShowingRunningGame = atom<RunningGame | null>(null);
 
 export function addRunningGame(
-    game: GameRow,
+    game: GameEntry,
     process: GameProcess,
 ): RunningGame {
     const store = defaultStore;

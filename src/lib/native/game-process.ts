@@ -36,13 +36,13 @@ export class GameProcess {
     static async startGame(
         exe: string,
         workingDir: string,
-        gameBinary: string,
+        args: string[],
     ): Promise<GameProcess> {
         const ch = new Channel<GameEvent>();
         const pid = await invoke<number>("game_process_spawn", {
             exe,
             wd: workingDir,
-            gameBinary,
+            args,
             onEvent: ch,
         });
         return new GameProcess(pid, ch);

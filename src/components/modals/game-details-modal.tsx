@@ -21,7 +21,7 @@ import {
 } from "@/lib/context/gamepad-nav-field";
 import type { PSFEntry } from "@/lib/native/psf";
 import { atomShowingGameDetails } from "@/store/common";
-import type { GameRow } from "@/store/db";
+import type { GameEntry } from "@/store/db";
 import { GameBoxCover } from "../game-cover";
 
 function Entry({ value }: { value: PSFEntry }) {
@@ -45,7 +45,7 @@ function Entry({ value }: { value: PSFEntry }) {
 }
 
 type Props = {
-    gameData: GameRow;
+    gameData: GameEntry;
     onClose: () => void;
 };
 

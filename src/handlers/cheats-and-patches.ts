@@ -1,8 +1,8 @@
 import { join } from "@tauri-apps/api/path";
 import { mkdir, readTextFile, writeFile } from "@tauri-apps/plugin-fs";
+import { ok, ResultAsync } from "neverthrow";
 import { toast } from "sonner";
 import { stringifyError } from "@/lib/utils/error";
-import { tryCatch } from "@/lib/utils/flow";
 import type { JotaiStore } from "@/store";
 import {
     atomAvailablePatches,
@@ -37,19 +37,14 @@ export async function downloadPatches(
             download_url: string;
         }[] = await response.json();
 
-        type Patch = {
-            value: string;
-            cusaList: string[];
-        };
-
         store.set(atomDownloadingOverlay, {
             message: "Downloading patches",
             progress: "infinity",
         });
 
-        const patchList = await Promise.all(
-            data.map(async (entry) => {
-                const v = await tryCatch<Patch>(async () => {
+        const downloadResults = data.map((entry) =>
+            ResultAsync.fromPromise(
+                (async () => {
                     const r = await fetch(entry.download_url);
                     const data = await r.text();
                     const parser = new DOMParser();
@@ -66,20 +61,28 @@ export async function downloadPatches(
                     }
 
                     return {
+                        ...entry,
                         value: data,
                         cusaList,
                     };
-                });
-                return {
-                    ...v,
+                })(),
+                (error) => error,
+            ).orElse((error) =>
+                ok({
                     ...entry,
-                };
-            }),
+                    error,
+                }),
+            ),
         );
 
+        const patchList = await ResultAsync.combine(downloadResults);
+
+        if (patchList.isErr()) {
+            return;
+        }
         const patchMapping: PatchList = {};
-        for (const entry of patchList) {
-            if (entry.error) {
+        for (const entry of patchList.value) {
+            if ("error" in entry) {
                 const msg = `Could not download the patch ${entry.name}`;
                 console.error(msg, entry.error);
                 toast.error(`${msg}. ${stringifyError(entry.error)}`);
@@ -88,9 +91,9 @@ export async function downloadPatches(
 
             const savePath = await join(patchPath, entry.name);
             const encoder = new TextEncoder();
-            const encodedData = encoder.encode(entry.data.value);
+            const encodedData = encoder.encode(entry.value);
             await writeFile(savePath, encodedData, { create: true });
-            for (const cusa of entry.data.cusaList) {
+            for (const cusa of entry.cusaList) {
                 patchMapping[cusa as CUSA] = entry.name;
             }
         }

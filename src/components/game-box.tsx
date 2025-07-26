@@ -30,11 +30,9 @@ import { stringifyError } from "@/lib/utils/error";
 import { cn } from "@/lib/utils/ui";
 import { atomShowingGameCheatAndPatch } from "@/store/cheats-and-patches";
 import { atomShowingGameDetails } from "@/store/common";
-import type { GameRow } from "@/store/db";
+import type { GameEntry } from "@/store/db";
 import { gamepadActiveAtom } from "@/store/gamepad";
-import { atomEmuUserPath } from "@/store/paths";
 import { atomShowingRunningGame } from "@/store/running-games";
-import { atomSelectedVersion } from "@/store/version-manager";
 import { GameBoxCover } from "./game-cover";
 import GamepadIcon, { ButtonType } from "./gamepad-icon";
 import { Button } from "./ui/button";
@@ -98,7 +96,7 @@ export function GameBoxError({ err }: { err: Error }) {
     );
 }
 
-export function GameBox({ game }: { game: GameRow; isFirst?: boolean }) {
+export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     const [isPending, startTransaction] = useTransition();
 
     const isGamepad = useAtomValue(gamepadActiveAtom);
@@ -122,14 +120,10 @@ export function GameBox({ game }: { game: GameRow; isFirst?: boolean }) {
         startTransaction(async () => {
             try {
                 setClickCount(0);
-                const selectEmu = store.get(atomSelectedVersion);
-                if (!selectEmu) {
-                    toast.warning("No emulator selected");
-                    return;
+                const r = await startGame(store, game);
+                if (r) {
+                    store.set(atomShowingRunningGame, r);
                 }
-                const userDir = store.get(atomEmuUserPath);
-                const r = await startGame(selectEmu, game, userDir);
-                store.set(atomShowingRunningGame, r);
             } catch (e: unknown) {
                 toast.error("Unknown error: " + stringifyError(e));
             }

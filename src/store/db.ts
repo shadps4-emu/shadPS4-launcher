@@ -4,7 +4,7 @@ import type { CUSA } from "./common";
 
 const conn = await Database.load("sqlite:data.db");
 
-export type GameRow = {
+export type GameEntry = {
     id?: number;
     path: string;
     cusa: CUSA;
@@ -18,11 +18,11 @@ export type GameRow = {
 
 export const db = {
     conn,
-    async listGames(): Promise<GameRow[]> {
+    async listGames(): Promise<GameEntry[]> {
         return (
-            await conn.select<(Omit<GameRow, "sfo"> & { sfo_json: string })[]>(
-                "SELECT * FROM games",
-            )
+            await conn.select<
+                (Omit<GameEntry, "sfo"> & { sfo_json: string })[]
+            >("SELECT * FROM games")
         ).map(({ sfo_json, ...rest }) => ({
             ...rest,
             sfo: sfo_json ? JSON.parse(sfo_json) : null,
@@ -34,7 +34,7 @@ export const db = {
     async removeAllGames(): Promise<void> {
         await conn.execute("DELETE FROM games");
     },
-    async addGame(data: GameRow): Promise<void> {
+    async addGame(data: GameEntry): Promise<void> {
         await conn.execute(
             "INSERT INTO games (path, cusa, title, version, fw_version, sfo_json) VALUES ($1, $2, $3, $4, $5, $6)",
             [

@@ -2,9 +2,10 @@ import { platform } from "@tauri-apps/plugin-os";
 import { atom } from "jotai";
 import { unwrap } from "jotai/utils";
 import { atomWithQuery } from "jotai-tanstack-query";
+import { ResultAsync } from "neverthrow";
 import { Octokit } from "octokit";
 import { stringifyError } from "@/lib/utils/error";
-import { timeout, tryCatch } from "@/lib/utils/flow";
+import { withTimeout } from "@/lib/utils/flow";
 import { atomWithTauriStore } from "@/lib/utils/jotai/tauri-store";
 import { oficialRepo } from "./common";
 
@@ -101,24 +102,29 @@ export const atomAvailableVersions = atomWithQuery((get) => ({
                     if (!owner || !repo) {
                         return [];
                     }
-                    const { data: releaseList, error } = await tryCatch(
-                        timeout(
+                    const result = await withTimeout(
+                        ResultAsync.fromPromise(
                             octokit.rest.repos.listReleases({
                                 owner,
                                 repo,
                             }),
-                            10000,
-                            new Error("GitHub Timeout"),
+                            (err) =>
+                                new Error(
+                                    "GitHub API Error: " + stringifyError(err),
+                                ),
                         ),
+                        10000,
+                        new Error("GitHub Timeout"),
                     );
-                    if (error != null || releaseList.status !== 200) {
+                    if (result.isErr() || result.value.status !== 200) {
                         throw new Error(
                             `Failed to fetch releases from the following repo: '${repoSource}'. ` +
-                                (error != null
-                                    ? stringifyError(error)
-                                    : `HTTP Status: ${releaseList.status}}`),
+                                (result.isErr()
+                                    ? stringifyError(result.error)
+                                    : `HTTP Status: ${result.value.status}`),
                         );
                     }
+                    const releaseList = result.value;
                     return releaseList.data
                         .map((release) => {
                             const asset = release.assets.find(

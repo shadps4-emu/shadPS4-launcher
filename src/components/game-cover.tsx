@@ -1,14 +1,14 @@
 import { ImageOffIcon } from "lucide-react";
 import { useGameCover } from "@/lib/hooks/useGameCover";
 import { cn } from "@/lib/utils/ui";
-import type { GameRow } from "@/store/db";
+import type { GameEntry } from "@/store/db";
 import { GameBoxSkeleton } from "./game-box";
 
 export function GameBoxCover({
     game,
     className,
 }: {
-    game: GameRow;
+    game: GameEntry;
     className?: string | undefined;
 }) {
     const [isLoading, cover] = useGameCover(game);
