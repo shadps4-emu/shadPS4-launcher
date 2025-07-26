@@ -3,6 +3,7 @@ use crate::game_process::log::{Entry, LogData, LogEntry};
 use crate::game_process::{log, GameBridgeStateType};
 use anyhow::Context;
 use serde::Serialize;
+use std::ffi::OsStr;
 use std::path::Path;
 use std::process::Stdio;
 use std::sync::Arc;
@@ -43,16 +44,19 @@ pub struct ProcessData {
 }
 
 impl GameProcess {
-    pub async fn start<'b>(
+    pub async fn start<'b, S>(
         app_handle: &'b AppHandle,
         exe: impl AsRef<Path>,
         wd: impl AsRef<Path>,
-        game: impl AsRef<Path>,
+        args: impl IntoIterator<Item = S>,
         callback: impl Fn(GameEvent) + Send + 'static,
-    ) -> anyhow::Result<GameProcess> {
+    ) -> anyhow::Result<GameProcess>
+    where
+        S: AsRef<OsStr>,
+    {
         let c = Command::new(exe.as_ref().as_os_str())
             .current_dir(wd)
-            .arg(game.as_ref().as_os_str())
+            .args(args)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())

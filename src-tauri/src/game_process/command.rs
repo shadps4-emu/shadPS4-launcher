@@ -5,6 +5,7 @@ use anyhow::anyhow;
 use anyhow_tauri::bail;
 use anyhow_tauri::IntoTAResult;
 use log::{debug, error};
+use std::ffi::{OsStr, OsString};
 use tauri::ipc::Channel;
 use tauri_plugin_fs::FilePath;
 
@@ -13,14 +14,15 @@ pub async fn game_process_spawn(
     app_handle: tauri::AppHandle,
     exe: FilePath,
     wd: FilePath,
-    game_binary: FilePath,
+    args: Vec<String>,
     on_event: Channel<GameEvent<'static>>,
 ) -> anyhow_tauri::TAResult<u32> {
+    let args: Vec<OsString> = args.into_iter().map(|s| OsString::from(s)).collect();
     let p = GameProcess::start(
         &app_handle,
         exe.as_path().ok_or(anyhow!("invalid exe"))?,
         wd.as_path().ok_or(anyhow!("invalid wd"))?,
-        game_binary.as_path().ok_or(anyhow!("invalid game path"))?,
+        args,
         move |ev| {
             on_event.send(ev).expect("could not send game event to js");
         },
