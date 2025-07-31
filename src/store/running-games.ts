@@ -1,79 +1,61 @@
-import { type Atom, atom, type PrimitiveAtom } from "jotai";
+import { atom, type PrimitiveAtom } from "jotai";
 import type { GameProcess, LogEntry } from "@/lib/native/game-process";
 import type { Callback } from "@/lib/utils/types";
-import { defaultStore } from ".";
+import { defaultStore, type JotaiStore } from ".";
 import type { GameEntry } from "./db";
 
-export type RunningGame = {
+export type Capabilities = "ENABLE_MEMORY_PATCH";
+
+export type GameProcessState = {
     game: GameEntry;
     process: GameProcess;
-    atomRunning: Atom<true | number>; // true or exit code
-    atomError: Atom<string | null>;
+    hasIpc: boolean;
+    atomRunning: PrimitiveAtom<true | number>; // true or exit code
+    atomError: PrimitiveAtom<string | null>;
     log: {
         atomCallback: PrimitiveAtom<Callback<[LogEntry]>[]>;
-        atomClassList: Atom<string[]>;
+        atomClassList: PrimitiveAtom<string[]>;
     };
+    atomCapabilities: PrimitiveAtom<Capabilities[]>;
 };
 
-export const atomRunningGames = atom<RunningGame[]>([]);
-export const atomShowingRunningGame = atom<RunningGame | null>(null);
+export const atomRunningGames = atom<GameProcessState[]>([]);
+export const atomShowingRunningGame = atom<GameProcessState | null>(null);
 
-export function addRunningGame(
+export function createGameProcesState(
     game: GameEntry,
     process: GameProcess,
-): RunningGame {
-    const store = defaultStore;
-
+    store: JotaiStore = defaultStore,
+): GameProcessState {
     const atomRunning = atom<true | number>(true);
     const atomError = atom<string | null>(null);
     const atomLogCallback = atom<Callback<[LogEntry]>[]>([]);
     const atomLogClassList = atom<string[]>(["STDERR"]);
+    const atomCapabilities = atom<Capabilities[]>([]);
 
     const runningGame = {
         game: game,
         process: process,
+        hasIpc: false,
         atomRunning,
         atomError,
         log: {
             atomCallback: atomLogCallback,
             atomClassList: atomLogClassList,
         },
-    } satisfies RunningGame;
+        atomCapabilities,
+    } satisfies GameProcessState;
 
     store.set(atomRunningGames, (prev) => [...prev, runningGame]);
-
-    process.onMessage = (ev) => {
-        switch (ev.event) {
-            case "log":
-                for (const c of store.get(atomLogCallback)) {
-                    c(ev);
-                }
-                break;
-            case "addLogClass":
-                store.set(atomLogClassList, (prev) => [...prev, ev.value]);
-                break;
-            case "gameExit":
-                store.set(atomRunning, ev.status);
-                break;
-            case "iOError":
-                store.set(atomError, ev.err);
-                break;
-            default: {
-                // exaustive switch
-                const a: never = ev;
-                return a;
-            }
-        }
-    };
 
     return runningGame;
 }
 
-export function removeRunningGame(runningGame: RunningGame) {
-    runningGame.process.delete();
-    delete (runningGame as Partial<RunningGame>).log;
-    delete (runningGame as Partial<RunningGame>).process;
+export function removeRunningGame(state: GameProcessState) {
+    state.process.delete();
+    delete (state as Partial<GameProcessState>).log;
+    delete (state as Partial<GameProcessState>).process;
     defaultStore.set(atomRunningGames, (prev) =>
-        prev.filter((e) => e !== runningGame),
+        prev.filter((e) => e !== state),
     );
 }

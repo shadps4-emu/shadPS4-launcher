@@ -22,7 +22,7 @@ import { capitalize } from "@/lib/utils/strings";
 import { cn } from "@/lib/utils/ui";
 import {
     atomShowingRunningGame,
-    type RunningGame,
+    type GameProcessState,
     removeRunningGame,
 } from "@/store/running-games";
 import { LogList } from "../log-list";
@@ -62,7 +62,7 @@ import { Skeleton } from "../ui/skeleton";
 export function RunningGameDialog({
     runningGame,
 }: {
-    runningGame: RunningGame;
+    runningGame: GameProcessState;
 }) {
     const setShowingGame = useSetAtom(atomShowingRunningGame);
 

@@ -1,3 +1,5 @@
+import { type Err, err } from "neverthrow";
+
 export function stringifyError(e: unknown): string {
     if (typeof e === "string") {
         return e;
@@ -13,4 +15,17 @@ export function stringifyError(e: unknown): string {
     }
 
     return JSON.stringify(e);
+}
+
+// This is for Warning propagation instead of error
+export class WarningError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "WarningError";
+        Object.setPrototypeOf(this, WarningError.prototype);
+    }
+}
+
+export function errWarning(message: string): Err<never, WarningError> {
+    return err(new WarningError(message));
 }

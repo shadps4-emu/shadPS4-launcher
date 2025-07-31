@@ -4,8 +4,8 @@ import { unwrap } from "jotai/utils";
 import { atomWithQuery } from "jotai-tanstack-query";
 import { ResultAsync } from "neverthrow";
 import { Octokit } from "octokit";
+import { withTimeout } from "@/lib/nt/timeout";
 import { stringifyError } from "@/lib/utils/error";
-import { withTimeout } from "@/lib/utils/flow";
 import { atomWithTauriStore } from "@/lib/utils/jotai/tauri-store";
 import { oficialRepo } from "./common";
 
@@ -114,7 +114,6 @@ export const atomAvailableVersions = atomWithQuery((get) => ({
                                 ),
                         ),
                         10000,
-                        new Error("GitHub Timeout"),
                     );
                     if (result.isErr() || result.value.status !== 200) {
                         throw new Error(

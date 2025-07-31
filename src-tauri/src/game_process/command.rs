@@ -41,7 +41,24 @@ pub async fn game_process_kill(state: GameBridgeState<'_>, pid: u32) -> anyhow_t
         bail!("pid not found");
     };
 
-    Ok(proc.kill().await)
+    proc.kill().await?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn game_process_send(
+    state: GameBridgeState<'_>,
+    pid: u32,
+    value: &str,
+) -> anyhow_tauri::TAResult<()> {
+    let state = state.lock().await;
+    let Some(proc) = state.process_list.get(&pid) else {
+        debug!("process not found: pid={}", pid);
+        bail!("pid not found");
+    };
+
+    proc.send(value).await?;
+    Ok(())
 }
 
 #[tauri::command]

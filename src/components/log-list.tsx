@@ -21,7 +21,7 @@ import {
 } from "react";
 import { useThemeStyle } from "@/lib/hooks/useThemeStyle";
 import { type LogEntry, LogLevel } from "@/lib/native/game-process";
-import type { RunningGame } from "@/store/running-games";
+import type { GameProcessState } from "@/store/running-games";
 
 const theme = {
     bgHeader: "#ffffff",
@@ -134,7 +134,7 @@ const baseColumns: GridColumn[] = [
 ];
 
 type Props = {
-    runningGame: RunningGame;
+    runningGame: GameProcessState;
     levelFilter?: LogLevel[] | undefined;
     classFilter?: string[] | undefined;
 };

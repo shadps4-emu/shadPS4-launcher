@@ -1,4 +1,3 @@
-use crate::game_process::ipc::GameCommand;
 use crate::game_process::log::{Entry, LogData, LogEntry};
 use crate::game_process::{log, GameBridgeStateType};
 use anyhow::Context;
@@ -21,6 +20,7 @@ pub enum GameEvent<'a> {
     AddLogClass { value: &'a str },
     GameExit { status: i32 },
     IOError { err: String },
+    IpcLine { value: &'a str },
 }
 
 enum InnerCommand {
@@ -33,8 +33,7 @@ pub struct GameProcess {
     #[allow(dead_code)]
     data: ProcessData,
 
-    #[allow(dead_code)]
-    sender: Arc<Mutex<Sender<GameCommand>>>, // These are commands sent to the emulator
+    sender: Arc<Mutex<Sender<String>>>, // These are commands sent to the emulator
     inner_sender: Arc<Mutex<Sender<InnerCommand>>>, // These are commands sent to the launcher
 }
 
@@ -60,6 +59,7 @@ impl GameProcess {
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
+            .env("SHADPS4_ENABLE_IPC", "true")
             .spawn()?;
 
         let pid = c.id().expect("failed to get process id");
@@ -96,12 +96,22 @@ impl GameProcess {
         &self.data
     }
 
-    pub async fn kill(&self) {
+    pub async fn kill(&self) -> anyhow::Result<()> {
         let inner_sender = self.inner_sender.lock().await;
         inner_sender
             .send(InnerCommand::Kill)
             .await
-            .expect("receiver is closed");
+            .context("receiver is closed")?;
+        Ok(())
+    }
+
+    pub async fn send(&self, value: &str) -> anyhow::Result<()> {
+        let sender = self.sender.lock().await;
+        sender
+            .send(value.to_string())
+            .await
+            .context("failed to send command to the game process")?;
+        Ok(())
     }
 
     async fn handle_events(
@@ -109,8 +119,8 @@ impl GameProcess {
         app_handle: AppHandle,
         callback: impl Fn(GameEvent) + Send + 'static,
         data: ProcessData,
-    ) -> (Sender<GameCommand>, Sender<InnerCommand>) {
-        let (tx, mut rx) = channel::<GameCommand>(1);
+    ) -> (Sender<String>, Sender<InnerCommand>) {
+        let (tx, mut rx) = channel::<String>(1);
         let (inner_tx, mut inner_rx) = channel::<InnerCommand>(1);
 
         // let pid = c.id().expect("failed to get process id");
@@ -166,6 +176,12 @@ impl GameProcess {
                             }
                             Ok(None) => break,
                             Ok(Some(line)) => {
+                                if line.starts_with(';') {
+                                    callback(GameEvent::IpcLine {
+                                        value: &line[1..],
+                                    });
+                                    continue;
+                                }
                                 let mut log_data = data.log_data.lock().await;
                                 let entry = Entry {
                                     time: OffsetDateTime::now_utc(),
@@ -185,8 +201,13 @@ impl GameProcess {
                        break;
                     }
                     Some(cmd) = rx.recv() => {
-                        let line = cmd.gen_send_line();
-                        let r = stdin.write_all(line.as_bytes()).await.context("failed to write to stdin");
+                        let r = stdin.write_all(cmd.as_bytes()).await.context("failed to write to stdin");
+                        if let Err(err) = r {
+                            io_err = Some(err);
+                            break;
+                        }
+                        let _ = stdin.write_u8(b'\n').await;
+                        let r = stdin.flush().await.context("failed to flush stdin");
                         if let Err(err) = r {
                             io_err = Some(err);
                             break;

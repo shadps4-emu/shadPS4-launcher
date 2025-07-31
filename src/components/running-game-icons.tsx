@@ -5,14 +5,14 @@ import { cn } from "@/lib/utils/ui";
 import {
     atomRunningGames,
     atomShowingRunningGame,
-    type RunningGame,
+    type GameProcessState,
 } from "@/store/running-games";
 
 function SingleGameIcon({
     runningGame,
     className,
     ...props
-}: ComponentProps<"div"> & { runningGame: RunningGame }) {
+}: ComponentProps<"div"> & { runningGame: GameProcessState }) {
     const { game } = runningGame;
     const setShowingRunningGame = useSetAtom(atomShowingRunningGame);
     const state = useAtomValue(runningGame.atomRunning);
