@@ -1,12 +1,12 @@
 import type { Update } from "@tauri-apps/plugin-updater";
 import { atom } from "jotai";
-import type { Digit } from "@/lib/utils/types";
 import type { GameEntry } from "./db";
 
-export type CUSA =
-    | "N/A"
-    | `N/A - ${string}`
-    | `CUSA${"0" | "1" | "2"}${Digit}${Digit}${Digit}${Digit}`;
+export type CUSA = "N/A" | `N/A - ${string}` | `CUSA${string}`;
+
+export type Version = `${number}.${number}`;
+
+export type CUSAVersion = `${CUSA}_${Version}`;
 
 export const oficialRepo = "shadps4-emu/shadPS4";
 

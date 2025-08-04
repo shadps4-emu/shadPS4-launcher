@@ -1,16 +1,18 @@
 import { join } from "@tauri-apps/api/path";
 import { mkdir, readTextFile, writeFile } from "@tauri-apps/plugin-fs";
-import { ok, ResultAsync } from "neverthrow";
+import { errAsync, ok, ResultAsync, safeTry } from "neverthrow";
 import { toast } from "sonner";
+import { fetchSafe } from "@/lib/nt/fetch";
 import { stringifyError } from "@/lib/utils/error";
 import type { JotaiStore } from "@/store";
 import {
     atomAvailablePatches,
+    type CheatRepository,
     type PatchList,
     type PatchRepository,
 } from "@/store/cheats-and-patches";
 import { atomDownloadingOverlay, type CUSA } from "@/store/common";
-import { atomPatchPath } from "@/store/paths";
+import { atomCheatPath, atomPatchPath } from "@/store/paths";
 
 export async function downloadPatches(
     repo: PatchRepository,
@@ -179,4 +181,67 @@ export class PatchFile {
         await writeFile(this.path, encodedData, { create: true });
         return true;
     }
+}
+
+export function downloadCheats(repo: CheatRepository, store: JotaiStore) {
+    return safeTry(async function* () {
+        const cheatPath = yield* await ResultAsync.fromSafePromise(
+            store.get(atomCheatPath),
+        ).map((e) => join(e, repo));
+        await mkdir(cheatPath, { recursive: true });
+
+        store.set(atomDownloadingOverlay, {
+            message: "Downloading cheats",
+            progress: "infinity",
+        });
+
+        let url: string;
+        let createUrl: (name: string) => string;
+        if (repo === "GoldHEN") {
+            url =
+                "https://raw.githubusercontent.com/GoldHEN/GoldHEN_Cheat_Repository/main/json.txt";
+            createUrl = (name) =>
+                `https://raw.githubusercontent.com/GoldHEN/GoldHEN_Cheat_Repository/main/json/${name}`;
+        } else if (repo === "shadPS4") {
+            url =
+                "https://raw.githubusercontent.com/shadps4-emu/ps4_cheats/main/CHEATS_JSON.txt";
+            createUrl = (name) =>
+                `https://raw.githubusercontent.com/shadps4-emu/ps4_cheats/main/CHEATS/${name}`;
+        } else {
+            const r: never = repo;
+            return r;
+        }
+
+        const data = yield* await fetchSafe(url).map((e) => e.text());
+        const lineList = data.split("\n");
+
+        await ResultAsync.combine(
+            lineList
+                .filter((e) => Boolean(e))
+                .map((line) => {
+                    const [key] = line.trim().split("=", 1);
+                    if (!key) {
+                        return errAsync("invalid key line: " + line);
+                    }
+                    return fetchSafe(createUrl(key))
+                        .map((e) => e.bytes())
+                        .map(async (modData) => {
+                            const path = await join(cheatPath, key);
+                            await writeFile(path, modData, { create: true });
+                        });
+                }),
+        );
+
+        store.set(atomDownloadingOverlay, null);
+        return ok();
+    })
+        .andTee(() => {
+            store.set(atomDownloadingOverlay, null);
+        })
+        .orTee((err) => {
+            store.set(atomDownloadingOverlay, null);
+            const msg = `Error downloading Cheats from ${repo}`;
+            console.error(msg, err);
+            toast.error(`${msg}. ${stringifyError(err)}`);
+        });
 }

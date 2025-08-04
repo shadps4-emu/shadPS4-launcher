@@ -1,6 +1,6 @@
 import Database from "@tauri-apps/plugin-sql";
 import type { PSF } from "@/lib/native/psf";
-import type { CUSA } from "./common";
+import type { CUSA, Version } from "./common";
 
 const conn = await Database.load("sqlite:data.db");
 
@@ -9,7 +9,7 @@ export type GameEntry = {
     path: string;
     cusa: CUSA;
     title: string;
-    version: string;
+    version: Version;
     fw_version: string;
     sfo: PSF | null;
 
