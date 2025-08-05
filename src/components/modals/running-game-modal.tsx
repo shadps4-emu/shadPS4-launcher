@@ -188,7 +188,7 @@ export function RunningGameDialog({
                     className={cn("flex flex-col gap-4", {
                         "h-[calc(100vh-100px)] p-10 md:max-w-[800px]":
                             !maximized,
-                        "h-screen w-screen max-w-full": maximized,
+                        "h-screen w-screen max-w-full sm:max-w-full": maximized,
                     })}
                 >
                     <DialogHeader>

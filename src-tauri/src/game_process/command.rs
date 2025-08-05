@@ -5,7 +5,7 @@ use anyhow::anyhow;
 use anyhow_tauri::bail;
 use anyhow_tauri::IntoTAResult;
 use log::{debug, error};
-use std::ffi::{OsStr, OsString};
+use std::ffi::OsString;
 use tauri::ipc::Channel;
 use tauri_plugin_fs::FilePath;
 

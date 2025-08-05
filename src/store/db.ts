@@ -16,6 +16,10 @@ export type GameEntry = {
     error?: Error; // This is not stored in the database
 };
 
+export function isSameGame(g1: GameEntry, g2: GameEntry): boolean {
+    return g1.cusa === g2.cusa && g1.version === g2.version;
+}
+
 export const db = {
     conn,
     async listGames(): Promise<GameEntry[]> {

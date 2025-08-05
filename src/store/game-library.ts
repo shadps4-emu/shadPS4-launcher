@@ -7,7 +7,7 @@ import { stringifyError } from "@/lib/utils/error";
 import { atomWithTauriStore } from "@/lib/utils/jotai/tauri-store";
 import type { Callback } from "@/lib/utils/types";
 import { defaultStore } from ".";
-import type { CUSA } from "./common";
+import type { CUSA, Version } from "./common";
 import { db, type GameEntry } from "./db";
 import { atomGamesPath } from "./paths";
 
@@ -60,7 +60,7 @@ async function loadGameData(path: string): Promise<GameEntry> {
             path: path,
             cusa: (e.TITLE_ID?.Text || base) as CUSA,
             title: e.TITLE?.Text || "Unknown",
-            version: e.APP_VER?.Text || "UNK",
+            version: (e.APP_VER?.Text as Version) || "N/A",
             fw_version: fw_version || "UNK",
             sfo,
         };

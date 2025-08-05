@@ -116,7 +116,7 @@ impl GameProcess {
 
     async fn handle_events(
         mut c: Child,
-        app_handle: AppHandle,
+        _app_handle: AppHandle,
         callback: impl Fn(GameEvent) + Send + 'static,
         data: ProcessData,
     ) -> (Sender<String>, Sender<InnerCommand>) {

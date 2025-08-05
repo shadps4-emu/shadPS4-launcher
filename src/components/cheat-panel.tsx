@@ -8,12 +8,14 @@ import { createAbort } from "@/lib/utils/events";
 import {
     atomCheatsEnabled,
     type CheatFileFormat,
+    type CheatFileMod,
     type CheatRepository,
     cheatRepositories,
 } from "@/store/cheats-and-patches";
 import type { CUSAVersion } from "@/store/common";
-import type { GameEntry } from "@/store/db";
+import { type GameEntry, isSameGame } from "@/store/db";
 import { atomCheatPath } from "@/store/paths";
+import { atomRunningGames } from "@/store/running-games";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import {
@@ -28,14 +30,14 @@ import { ScrollArea } from "./ui/scroll-area";
 export function CheatPanel({ gameData }: { gameData: GameEntry }) {
     const store = useStore();
 
-    const cheatKey: CUSAVersion = `${gameData.cusa}_${gameData.version}`;
+    const gameKey: CUSAVersion = `${gameData.cusa}_${gameData.version}`;
 
     const cheatFolderPath = useAtomValue(atomCheatPath);
     const [availableCheats, setAvailableCheats] = useState<
-        Partial<Record<CheatRepository, string[]>>
+        Partial<Record<CheatRepository, CheatFileMod[]>>
     >({});
     const [allActiveCheats, setAllActiveCheats] = useAtom(atomCheatsEnabled);
-    const activeCheats = allActiveCheats[cheatKey] || {};
+    const activeCheats = allActiveCheats[gameKey] || {};
 
     const [_cheatList, refreshCheatList] = useReducer(() => ({}), {});
 
@@ -47,7 +49,7 @@ export function CheatPanel({ gameData }: { gameData: GameEntry }) {
             const cheatFile = await join(
                 cheatFolderPath,
                 repo,
-                `${cheatKey}.json`,
+                `${gameKey}.json`,
             );
             if (!(await exists(cheatFile))) {
                 return;
@@ -58,26 +60,47 @@ export function CheatPanel({ gameData }: { gameData: GameEntry }) {
             const { mods } = JSON.parse(
                 await readTextFile(cheatFile),
             ) as CheatFileFormat;
-            const modNames = mods.map((e) => e.name);
-            setAvailableCheats((prev) => ({ ...prev, [repo]: modNames }));
+            setAvailableCheats((prev) => ({ ...prev, [repo]: mods }));
         });
         return abort;
-    }, [cheatKey, cheatFolderPath, _cheatList]);
+    }, [gameKey, cheatFolderPath, _cheatList]);
 
     const toggleModActive = (
         repo: CheatRepository,
-        modName: string,
+        mod: CheatFileMod,
         enable: boolean,
     ) => {
+        const modName = mod.name;
         setAllActiveCheats((prev) => ({
             ...prev,
-            [cheatKey]: {
-                ...prev[cheatKey],
+            [gameKey]: {
+                ...prev[gameKey],
                 [repo]: enable
-                    ? [...(prev[cheatKey]?.[repo] || []), modName]
-                    : prev[cheatKey]?.[repo]?.filter((e) => e !== modName),
+                    ? [...(prev[gameKey]?.[repo] || []), modName]
+                    : prev[gameKey]?.[repo]?.filter((e) => e !== modName),
             },
         }));
+        const runningGame = store
+            .get(atomRunningGames)
+            .find((e) => isSameGame(e.game, gameData));
+        if (
+            runningGame &&
+            store
+                .get(runningGame.atomCapabilities)
+                .includes("ENABLE_MEMORY_PATCH")
+        ) {
+            const isOffset = !mod.hint;
+            for (const mem of mod.memory) {
+                runningGame.process.send_patch_memory(
+                    mod.name,
+                    mem.offset,
+                    enable ? mem.on : mem.off,
+                    "",
+                    "",
+                    isOffset,
+                );
+            }
+        }
     };
 
     return (
@@ -104,36 +127,36 @@ export function CheatPanel({ gameData }: { gameData: GameEntry }) {
                                 {(
                                     Object.entries(availableCheats) as [
                                         CheatRepository,
-                                        string[],
+                                        CheatFileMod[],
                                     ][]
                                 ).map(([repo, mods]) => (
                                     <Fragment key={repo}>
                                         <span className="font-medium text-muted-foreground text-xs">
                                             {repo}
                                         </span>
-                                        {mods.map((modName) => (
+                                        {mods.map((mod) => (
                                             <div
                                                 className="flex gap-2 hover:bg-muted/50"
-                                                key={modName}
+                                                key={mod.name}
                                             >
                                                 <Checkbox
                                                     checked={activeCheats[
                                                         repo as CheatRepository
-                                                    ]?.includes(modName)}
-                                                    id={`mod_${repo}_${modName}`}
+                                                    ]?.includes(mod.name)}
+                                                    id={`mod_${repo}_${mod.name}`}
                                                     onCheckedChange={(v) => {
                                                         toggleModActive(
                                                             repo,
-                                                            modName,
+                                                            mod,
                                                             v === true,
                                                         );
                                                     }}
                                                 />
                                                 <Label
                                                     className="flex items-center gap-4"
-                                                    htmlFor={`mod_${repo}_${modName}`}
+                                                    htmlFor={`mod_${repo}_${mod.name}`}
                                                 >
-                                                    <span>{modName}</span>
+                                                    <span>{mod.name}</span>
                                                 </Label>
                                             </div>
                                         ))}

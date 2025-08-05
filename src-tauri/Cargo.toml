@@ -3,7 +3,7 @@ name = "shadps4-launcher"
 version = "1.0.0"
 description = "shadPS4 Launcher"
 authors = ["Vinicius Rangel <me@viniciusrangel.dev>"]
-edition = "2021"
+edition = "2024"
 
 [lib]
 # The `_lib` suffix may seem redundant but it is necessary

@@ -4,7 +4,7 @@ import type { GameEntry } from "./db";
 
 export type CUSA = "N/A" | `N/A - ${string}` | `CUSA${string}`;
 
-export type Version = `${number}.${number}`;
+export type Version = "N/A" | `${number}.${number}`;
 
 export type CUSAVersion = `${CUSA}_${Version}`;
 

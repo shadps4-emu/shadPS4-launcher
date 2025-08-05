@@ -224,10 +224,12 @@ export function downloadCheats(repo: CheatRepository, store: JotaiStore) {
                         return errAsync("invalid key line: " + line);
                     }
                     return fetchSafe(createUrl(key))
-                        .map((e) => e.bytes())
+                        .map((e) => e.arrayBuffer())
                         .map(async (modData) => {
                             const path = await join(cheatPath, key);
-                            await writeFile(path, modData, { create: true });
+                            await writeFile(path, new Uint8Array(modData), {
+                                create: true,
+                            });
                         });
                 }),
         );

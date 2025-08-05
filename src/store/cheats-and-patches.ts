@@ -48,20 +48,22 @@ export const atomCheatsEnabled = atomWithTauriStore<CheatEnabledByGame>(
     },
 );
 
+export type CheatFileMod = {
+    name: string;
+    hint: boolean | null;
+    type: string;
+    memory: {
+        offset: string;
+        on: string;
+        off: string;
+    }[];
+};
+
 export type CheatFileFormat = {
     name: string;
     id: CUSA; // CUSA
     version: string;
     process: string;
     credits: string[];
-    mods: {
-        name: string;
-        hint: boolean | null;
-        type: string;
-        memory: {
-            offset: string;
-            on: string;
-            off: string;
-        }[];
-    }[];
+    mods: CheatFileMod[];
 };
