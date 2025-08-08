@@ -150,7 +150,7 @@ export class PatchFile {
             author: e.getAttribute("Author") ?? "UNK",
             version: e.getAttribute("PatchVer") ?? "UNK",
             gameVersion: e.getAttribute("AppVer") ?? "UNK",
-            isEnabled: e.getAttribute("Enabled") === "true",
+            isEnabled: e.getAttribute("isEnabled") === "true",
         }));
     }
 
@@ -159,10 +159,10 @@ export class PatchFile {
         enabled: boolean,
     ): PatchLine | null {
         const el = patchLine.el;
-        if (el.getAttribute("Enabled") === String(enabled)) {
+        if (el.getAttribute("isEnabled") === String(enabled)) {
             return null;
         }
-        el.setAttribute("Enabled", String(enabled));
+        el.setAttribute("isEnabled", String(enabled));
         this.modified = true;
         return {
             ...patchLine,
