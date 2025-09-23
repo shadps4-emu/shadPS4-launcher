@@ -11,7 +11,7 @@ import {
     type Theme,
 } from "@glideapps/glide-data-grid";
 import { format } from "date-fns";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import {
     useCallback,
     useEffect,
@@ -144,6 +144,7 @@ export function LogList({ runningGame, levelFilter, classFilter }: Props) {
 
     const isDark = useThemeStyle() === "dark";
     const setLogCallback = useSetAtom(runningGame.log.atomCallback);
+    const process = useAtomValue(runningGame.atomProcess);
 
     const [columns, setColumns] = useState(() =>
         baseColumns.map((e) => ({ ...e })),
@@ -155,7 +156,7 @@ export function LogList({ runningGame, levelFilter, classFilter }: Props) {
     const isScrollFollowing = useRef(true);
 
     useEffect(() => {
-        runningGame.process
+        process
             .getLog({
                 level: levelFilter,
                 logClass: classFilter,
@@ -164,7 +165,7 @@ export function LogList({ runningGame, levelFilter, classFilter }: Props) {
                 setRowData(log);
                 setRowCount(log.length);
             });
-    }, [runningGame, levelFilter, classFilter]);
+    }, [process, levelFilter, classFilter]);
 
     useEffect(() => {
         const c = (log: LogEntry) => {

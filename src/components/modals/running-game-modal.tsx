@@ -66,10 +66,11 @@ export function RunningGameDialog({
 }) {
     const setShowingGame = useSetAtom(atomShowingRunningGame);
 
-    const { game, process, atomRunning, log } = runningGame;
+    const { game, atomProcess, atomRunning, log } = runningGame;
     const [_, cover] = useGameCover(game);
-
+    const process = useAtomValue(atomProcess);
     const runningFlag = useAtomValue(atomRunning);
+
     const isRunning = runningFlag === true;
 
     const [maximized, setMaximized] = useState(false);

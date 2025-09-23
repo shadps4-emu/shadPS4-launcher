@@ -59,19 +59,25 @@ async function getCheatMods(
     return mods;
 }
 
+type Options = {
+    existingState?: GameProcessState;
+    overrideExe?: string;
+    overrideWorkDir?: string;
+    overrideArgs?: string[];
+};
+
 export async function startGame(
     store: JotaiStore,
     game: GameEntry,
+    options: Options = {},
 ): Promise<GameProcessState | null> {
     const result = await safeTry(async function* () {
         const gameKey: CUSAVersion = `${game.cusa}_${game.version}`;
 
-        const emu = store.get(atomSelectedVersion);
+        const emu = options.overrideExe ?? store.get(atomSelectedVersion)?.path;
         if (!emu) {
             return errWarning("No emulator selected");
         }
-
-        const userBaseDir = store.get(atomEmuUserPath);
 
         const gameDir = game.path;
         const gameBinary = await join(gameDir, "eboot.bin");
@@ -79,14 +85,17 @@ export async function startGame(
             return errWarning("Game binary (eboot.bin) not found");
         }
 
-        if (!(await exists(emu.path))) {
+        if (!(await exists(emu))) {
             return errWarning("Emulator binary not found");
         }
 
+        const userBaseDir = store.get(atomEmuUserPath);
+
         const workDir =
-            typeof userBaseDir === "string"
+            options.overrideWorkDir ??
+            (typeof userBaseDir === "string"
                 ? userBaseDir
-                : await dirname(emu.path);
+                : await dirname(emu));
 
         const userDir = await join(workDir, "user");
         if (!(await exists(userDir))) {
@@ -105,20 +114,24 @@ export async function startGame(
         }
 
         const args = [];
-
-        if (patchFile) {
-            args.push("-p", patchFile);
+        if (options.overrideArgs != null) {
+            args.push(...options.overrideArgs);
+        } else {
+            // Standard args
+            if (patchFile) {
+                args.push("-p", patchFile);
+            }
+            args.push(gameBinary);
         }
 
-        args.push(gameBinary);
+        const process = yield* await GameProcess.startGame(emu, workDir, args);
 
-        const process = yield* await GameProcess.startGame(
-            emu.path,
-            workDir,
-            args,
-        );
-
-        const state = createGameProcesState(game, process, store);
+        const state =
+            options.existingState ??
+            createGameProcesState(game, process, store);
+        if (state === options.existingState) {
+            store.set(state.atomProcess, process);
+        }
 
         const { onEmuRun } = handleGameProcess(state);
         yield* await withTimeout(onEmuRun, 5000).orTee(() => {

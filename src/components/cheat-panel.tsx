@@ -89,9 +89,10 @@ export function CheatPanel({ gameData }: { gameData: GameEntry }) {
                 .get(runningGame.atomCapabilities)
                 .includes("ENABLE_MEMORY_PATCH")
         ) {
+            const process = store.get(runningGame.atomProcess);
             const isOffset = !mod.hint;
             for (const mem of mod.memory) {
-                runningGame.process.send_patch_memory(
+                process.send_patch_memory(
                     mod.name,
                     mem.offset,
                     enable ? mem.on : mem.off,

@@ -45,10 +45,22 @@ export type GameEvent =
     | { event: "ipcLine"; value: string };
 
 export class GameProcess {
+    #exe: string;
+    #workingDir: string;
+    #args: string[];
     #pid: number;
     #ch: Channel<GameEvent>;
 
-    private constructor(pid: number, ch: Channel<GameEvent>) {
+    private constructor(
+        exe: string,
+        workingDir: string,
+        args: string[],
+        pid: number,
+        ch: Channel<GameEvent>,
+    ) {
+        this.#exe = exe;
+        this.#workingDir = workingDir;
+        this.#args = args;
         this.#pid = pid;
         this.#ch = ch;
     }
@@ -67,10 +79,22 @@ export class GameProcess {
                     args,
                     onEvent: ch,
                 });
-                return new GameProcess(pid, ch);
+                return new GameProcess(exe, workingDir, args, pid, ch);
             })(),
             (err) => new GameStartError(exe, workingDir, args, err),
         );
+    }
+
+    get exe() {
+        return this.#exe;
+    }
+
+    get workingDir() {
+        return this.#workingDir;
+    }
+
+    get args() {
+        return this.#args;
     }
 
     get pid() {
