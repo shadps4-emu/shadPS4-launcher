@@ -1,9 +1,9 @@
+use crate::game_process::GameBridgeState;
 use crate::game_process::game_process::{GameEvent, GameProcess};
 use crate::game_process::log::{Level, LogEntry};
-use crate::game_process::GameBridgeState;
 use anyhow::anyhow;
-use anyhow_tauri::bail;
 use anyhow_tauri::IntoTAResult;
+use anyhow_tauri::bail;
 use log::{debug, error};
 use std::ffi::OsString;
 use tauri::ipc::Channel;
@@ -12,12 +12,24 @@ use tauri_plugin_fs::FilePath;
 #[tauri::command]
 pub async fn game_process_spawn(
     app_handle: tauri::AppHandle,
+    state: GameBridgeState<'_>,
     exe: FilePath,
     wd: FilePath,
     args: Vec<String>,
     on_event: Channel<GameEvent<'static>>,
+    copy_data_from_pid: Option<u32>,
 ) -> anyhow_tauri::TAResult<u32> {
     let args: Vec<OsString> = args.into_iter().map(|s| OsString::from(s)).collect();
+
+    let mut data = None;
+    if let Some(old_pid) = copy_data_from_pid {
+        let state = state.lock().await;
+        let Some(old_proc) = state.process_list.get(&old_pid) else {
+            bail!("old process not found");
+        };
+        data = Some(old_proc.data().clone());
+    }
+
     let p = GameProcess::start(
         &app_handle,
         exe.as_path().ok_or(anyhow!("invalid exe"))?,
@@ -26,6 +38,7 @@ pub async fn game_process_spawn(
         move |ev| {
             on_event.send(ev).expect("could not send game event to js");
         },
+        data,
     )
     .await
     .inspect_err(|e| error!("could not start the game: err={}", e))?;

@@ -69,6 +69,7 @@ export class GameProcess {
         exe: string,
         workingDir: string,
         args: string[],
+        existingProcess: GameProcess | null = null,
     ): ResultAsync<GameProcess, GameStartError> {
         return ResultAsync.fromPromise(
             (async () => {
@@ -78,6 +79,7 @@ export class GameProcess {
                     wd: workingDir,
                     args,
                     onEvent: ch,
+                    copyDataFromPid: existingProcess?.pid ?? null,
                 });
                 return new GameProcess(exe, workingDir, args, pid, ch);
             })(),

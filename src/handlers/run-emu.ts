@@ -124,7 +124,18 @@ export async function startGame(
             args.push(gameBinary);
         }
 
-        const process = yield* await GameProcess.startGame(emu, workDir, args);
+        const previousAtomProcess = options.existingState?.atomProcess;
+        let existingProcess: GameProcess | null = null;
+        if (previousAtomProcess) {
+            existingProcess = store.get(previousAtomProcess);
+        }
+
+        const process = yield* await GameProcess.startGame(
+            emu,
+            workDir,
+            args,
+            existingProcess,
+        );
 
         const state =
             options.existingState ??

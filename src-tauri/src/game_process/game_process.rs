@@ -1,5 +1,5 @@
 use crate::game_process::log::{Entry, LogData, LogEntry};
-use crate::game_process::{log, GameBridgeStateType};
+use crate::game_process::{GameBridgeStateType, log};
 use anyhow::Context;
 use serde::Serialize;
 use std::ffi::OsStr;
@@ -11,7 +11,7 @@ use tauri::{AppHandle, Manager};
 use time::OffsetDateTime;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::process::{Child, Command};
-use tokio::sync::mpsc::{channel, Sender};
+use tokio::sync::mpsc::{Sender, channel};
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase", tag = "event")]
@@ -30,7 +30,6 @@ enum InnerCommand {
 #[derive(Clone)]
 pub struct GameProcess {
     pid: u32,
-    #[allow(dead_code)]
     data: ProcessData,
 
     sender: Arc<Mutex<Sender<String>>>, // These are commands sent to the emulator
@@ -49,6 +48,7 @@ impl GameProcess {
         wd: impl AsRef<Path>,
         args: impl IntoIterator<Item = S>,
         callback: impl Fn(GameEvent) + Send + 'static,
+        data: Option<ProcessData>,
     ) -> anyhow::Result<GameProcess>
     where
         S: AsRef<OsStr>,
@@ -64,9 +64,9 @@ impl GameProcess {
 
         let pid = c.id().expect("failed to get process id");
 
-        let data = ProcessData {
+        let data = data.unwrap_or_else(|| ProcessData {
             log_data: Arc::new(Mutex::new(LogData::new())),
-        };
+        });
 
         let (sender, inner_sender) =
             Self::handle_events(c, app_handle.clone(), callback, data.clone()).await;
