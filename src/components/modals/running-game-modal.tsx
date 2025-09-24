@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 import { useAtomValue, useSetAtom } from "jotai";
 import {
     FilterIcon,
@@ -6,11 +7,13 @@ import {
     Maximize2Icon,
     MaximizeIcon,
     PauseIcon,
+    SaveIcon,
     Trash2Icon,
     Volume2Icon,
     XIcon,
 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import {
     GamepadNavField,
     type NavButton,
@@ -58,6 +61,7 @@ import {
 } from "../ui/dropdown-menu";
 import { Navigable } from "../ui/navigable";
 import { Skeleton } from "../ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 export function RunningGameDialog({
     runningGame,
@@ -99,6 +103,20 @@ export function RunningGameDialog({
         }
     };
 
+    const saveLog = async () => {
+        try {
+            await process.saveLog({
+                defaultName: `shadps4-log-${game.cusa}-${format(new Date(), "yyyy-MM-dd_HH-mm")}.txt`,
+                level: logLevelFilter,
+                logClass: logClassFilter,
+            });
+            toast.success("Log saved");
+        } catch (e: unknown) {
+            console.error("Error saving log", e);
+            toast.error("Error saving log: " + stringifyError(e));
+        }
+    };
+
     if ("error" in game) {
         return (
             <Dialog onOpenChange={close} open>
@@ -113,14 +131,21 @@ export function RunningGameDialog({
 
     const filterMenuContent = (
         <DropdownMenuContent>
-            <DropdownMenuItem
-                onClick={() => {
-                    setLogLevelFilter([]);
-                    setLogClassFilter([]);
-                }}
-            >
-                <XIcon /> Show All
-            </DropdownMenuItem>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <DropdownMenuItem
+                        onClick={() => {
+                            setLogLevelFilter([]);
+                            setLogClassFilter([]);
+                        }}
+                    >
+                        <XIcon /> Show All
+                    </DropdownMenuItem>
+                </TooltipTrigger>
+                <TooltipContent>
+                    ⭐ Use shift+click to toggle all but one
+                </TooltipContent>
+            </Tooltip>
             <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
                     <GaugeIcon
@@ -141,6 +166,17 @@ export function RunningGameDialog({
                                         : prev.filter((e) => e !== level),
                                 )
                             }
+                            onClick={(e) => {
+                                const isShifted = e.shiftKey;
+                                if (isShifted) {
+                                    e.preventDefault();
+                                    setLogLevelFilter(
+                                        Object.values(LogLevel).filter(
+                                            (e) => e !== level,
+                                        ),
+                                    );
+                                }
+                            }}
                             onSelect={(e) => e.preventDefault()}
                         >
                             {capitalize(level)}
@@ -168,6 +204,17 @@ export function RunningGameDialog({
                                         : prev.filter((e) => e !== className),
                                 )
                             }
+                            onClick={(e) => {
+                                const isShifted = e.shiftKey;
+                                if (isShifted) {
+                                    e.preventDefault();
+                                    setLogClassFilter(
+                                        availableClassLog.filter(
+                                            (e) => e !== className,
+                                        ),
+                                    );
+                                }
+                            }}
                             onSelect={(e) => e.preventDefault()}
                         >
                             {capitalize(className)}
@@ -237,14 +284,32 @@ export function RunningGameDialog({
                                     Output Log
                                 </h3>
                             </div>
-                            <Badge
-                                className="text-xs"
-                                variant={isRunning ? "default" : "secondary"}
-                            >
-                                {isRunning
-                                    ? "Running"
-                                    : `Exited with code ${runningFlag}`}
-                            </Badge>
+                            <div>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Badge
+                                            className="mr-4"
+                                            onClick={saveLog}
+                                        >
+                                            <SaveIcon size={12} /> Save Log
+                                        </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        The output will contain only the
+                                        filtered data
+                                    </TooltipContent>
+                                </Tooltip>
+                                <Badge
+                                    className="text-xs"
+                                    variant={
+                                        isRunning ? "default" : "secondary"
+                                    }
+                                >
+                                    {isRunning
+                                        ? "Running"
+                                        : `Exited with code ${runningFlag}`}
+                                </Badge>
+                            </div>
                         </div>
 
                         <LogList

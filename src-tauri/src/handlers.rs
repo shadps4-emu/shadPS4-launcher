@@ -6,6 +6,7 @@ pub fn all_handlers() -> Box<dyn Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         game_process::command::game_process_delete,
         game_process::command::game_process_get_log,
         game_process::command::game_process_kill,
+        game_process::command::game_process_save_log,
         game_process::command::game_process_send,
         game_process::command::game_process_spawn,
         utility_commands::extract_zip,

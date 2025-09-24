@@ -6,8 +6,12 @@ use anyhow_tauri::IntoTAResult;
 use anyhow_tauri::bail;
 use log::{debug, error};
 use std::ffi::OsString;
+use std::fs::File;
+use std::io::Write;
 use tauri::ipc::Channel;
+use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_fs::FilePath;
+use time::macros::format_description;
 
 #[tauri::command]
 pub async fn game_process_spawn(
@@ -101,28 +105,74 @@ pub async fn game_process_get_log(
         bail!("pid not found");
     };
 
+    let log_class = log_class.unwrap_or_default();
+    let level = level.unwrap_or_default();
+
     let log_data = proc.data().log_data.lock().await;
     let rows = log_data
         .rows
         .iter()
-        .filter(|(_, e)| {
-            if let Some(level) = &level
-                && !level.is_empty()
-            {
-                return level.contains(&e.level);
-            };
-            true
-        })
-        .filter(|(_, e)| {
-            if let Some(log_class) = &log_class
-                && !log_class.is_empty()
-            {
-                return log_class.contains(&e.class);
-            };
-            true
-        })
+        .filter(|(_, e)| level.is_empty() || level.contains(&e.level))
+        .filter(|(_, e)| log_class.is_empty() || log_class.contains(&e.class))
         .map(|(i, e)| (*i, e).into())
         .collect::<Vec<LogEntry>>();
 
     Ok(serde_json::to_string(&rows).into_ta_result()?)
+}
+
+#[tauri::command]
+pub async fn game_process_save_log(
+    app_handle: tauri::AppHandle,
+    state: GameBridgeState<'_>,
+    pid: u32,
+    default_name: String,
+    level: Option<Vec<Level>>,
+    log_class: Option<Vec<&str>>,
+) -> anyhow_tauri::TAResult<()> {
+    let state = state.lock().await;
+    let Some(proc) = state.process_list.get(&pid) else {
+        debug!("process not found: pid={}", pid);
+        bail!("pid not found");
+    };
+
+    let Some(path) = app_handle
+        .dialog()
+        .file()
+        .set_file_name(default_name)
+        .add_filter("shadPS4 Log", &["txt"])
+        .blocking_save_file()
+    else {
+        return Ok(());
+    };
+    let path = path.into_path().map_err(|e| anyhow!("invalid path: err={}", e))?;
+
+    let Ok(mut file) = File::create(path) else {
+        bail!("Could not open the file for writing");
+    };
+
+    let log_class = log_class.unwrap_or_default();
+    let level = level.unwrap_or_default();
+    let log_data = proc.data().log_data.lock().await;
+    let rows = log_data
+        .rows
+        .iter()
+        .filter(|(_, e)| level.is_empty() || level.contains(&e.level))
+        .filter(|(_, e)| log_class.is_empty() || log_class.contains(&e.class));
+
+    let line_time_fmt = format_description!("[hour]:[minute]:[second]");
+    for (_, row) in rows {
+        let r = write!(
+            &mut file,
+            "{} [{}] <{}> {}\n",
+            row.time.format(line_time_fmt).unwrap(),
+            row.class,
+            row.level.as_ref(),
+            &row.message
+        );
+        if let Err(err) = r {
+            bail!("could not write to file: err={}", err);
+        }
+    }
+
+    Ok(())
 }

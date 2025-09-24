@@ -5,6 +5,10 @@
     "windows": ["main", "emu_config"],
     "permissions": [
         "core:default",
+        "core:webview:allow-webview-hide",
+        "core:webview:allow-webview-show",
+        "core:window:allow-hide",
+        "core:window:allow-show",
         "dialog:allow-open",
         "fs:allow-copy-file",
         "fs:allow-exists",
@@ -24,15 +28,11 @@
         "opener:default",
         "os:default",
         "process:default",
+        "sql:allow-execute",
+        "sql:default",
         "store:default",
         "updater:default",
         "upload:default",
-        "core:window:allow-show",
-        "core:window:allow-hide",
-        "core:webview:allow-webview-show",
-        "core:webview:allow-webview-hide",
-        "sql:default",
-        "sql:allow-execute",
         {
             "identifier": "fs:scope",
             "allow": ["**/*"]
@@ -42,6 +42,9 @@
             "allow": [
                 {
                     "path": "**/*"
+                },
+                {
+                    "path": "**/.*"
                 }
             ]
         }

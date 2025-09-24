@@ -135,6 +135,23 @@ export class GameProcess {
         );
     }
 
+    async saveLog({
+        defaultName,
+        level,
+        logClass,
+    }: {
+        defaultName: string;
+        level?: LogLevel[] | undefined;
+        logClass?: string[] | undefined;
+    }) {
+        await invoke("game_process_save_log", {
+            pid: this.pid,
+            defaultName,
+            level,
+            logClass,
+        });
+    }
+
     send_patch_memory(
         modName: string,
         offset: string,

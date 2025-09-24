@@ -4,7 +4,7 @@ use std::cell::RefCell;
 use std::collections::{btree_map, BTreeMap, HashMap};
 use time::OffsetDateTime;
 
-#[derive(Copy, Clone, Default, Hash, Eq, PartialEq, Debug, Serialize, Deserialize)]
+#[derive(Copy, Clone, Default, Hash, Eq, PartialEq, Debug, Serialize, Deserialize, strum::AsRefStr)]
 #[serde(rename_all = "camelCase")]
 pub enum Level {
     #[default]
