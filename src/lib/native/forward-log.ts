@@ -34,7 +34,7 @@ function forwardConsole(
         prefix += "\n";
 
         if (typeof data?.[0] === "string") {
-            original(prefix + data.shift(), ...data);
+            original(prefix + data[0], ...data.slice(1));
         } else {
             original(prefix, ...data);
         }
