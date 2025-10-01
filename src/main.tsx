@@ -12,6 +12,7 @@ import { EmuConfigWindow } from "./components/window/emu-config-window";
 import { startUpdateChecker } from "./handlers/auto-update";
 import { startGamepadHandler } from "./handlers/gamepad";
 import { GamepadInputStackProvider } from "./lib/context/gamepad-input-stack";
+import { NavigatorProvider } from "./lib/context/navigator-provider";
 import { setupForwardingConsole } from "./lib/native/forward-log";
 import { defaultStore } from "./store";
 
@@ -58,11 +59,13 @@ async function start(r: Routing) {
             <QueryClientProvider client={queryClient}>
                 <Jotai.Provider store={defaultStore}>
                     <GamepadInputStackProvider>
-                        <TooltipProvider>
-                            <Toaster richColors />
-                            <LoadingOverlay />
-                            {content}
-                        </TooltipProvider>
+                        <NavigatorProvider>
+                            <TooltipProvider>
+                                <Toaster richColors />
+                                <LoadingOverlay />
+                                {content}
+                            </TooltipProvider>
+                        </NavigatorProvider>
                     </GamepadInputStackProvider>
                 </Jotai.Provider>
             </QueryClientProvider>

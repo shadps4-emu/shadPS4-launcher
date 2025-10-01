@@ -1,6 +1,6 @@
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { TooltipTrigger } from "@radix-ui/react-tooltip";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import {
     FolderCogIcon,
     Gamepad2Icon,
@@ -9,11 +9,14 @@ import {
     SortDescIcon,
 } from "lucide-react";
 import { type ComponentProps, useState } from "react";
+import { FolderConfigModal } from "@/components/modals/folder-config-modal";
+import { VersionManagerModal } from "@/components/modals/version-manager-modal";
 import { openEmuConfigWindow } from "@/handlers/window";
 import { GamepadNavField } from "@/lib/context/gamepad-nav-field";
 import { useDebounceEffect } from "@/lib/hooks/useDebounceEffect";
+import { useNavigator } from "@/lib/hooks/useNavigator";
 import { cn } from "@/lib/utils/ui";
-import { atomFolderConfigModalIsOpen, oficialRepo } from "@/store/common";
+import { oficialRepo } from "@/store/common";
 import {
     atomGameLibraryIsIndexing,
     atomGameLibrarySorting,
@@ -21,7 +24,6 @@ import {
 } from "@/store/game-library";
 import {
     atomInstalledVersions,
-    atomModalVersionManagerIsOpen,
     atomSelectedVersion,
 } from "@/store/version-manager";
 import { RunningGameIcons } from "./running-game-icons";
@@ -42,10 +44,8 @@ import { Spinner } from "./ui/spinner";
 import { Tooltip, TooltipContent } from "./ui/tooltip";
 
 function VersionSelector() {
+    const { pushModal } = useNavigator();
     const [isOpen, setIsOpen] = useState(false);
-    const setVersionManagerModalOpen = useSetAtom(
-        atomModalVersionManagerIsOpen,
-    );
     const installedVersions = useAtomValue(atomInstalledVersions);
     const [selectVersion, setSelectedVersion] = useAtom(atomSelectedVersion);
 
@@ -82,7 +82,7 @@ function VersionSelector() {
                         <Button
                             onClick={() => {
                                 setIsOpen(false);
-                                setVersionManagerModalOpen(true);
+                                pushModal(<VersionManagerModal />);
                             }}
                             variant="ghost"
                         >
@@ -126,7 +126,7 @@ type Props = {
 };
 
 export function Toolbar({ onSearch = () => void 0 }: Props) {
-    const setFolderConfigModalOpen = useSetAtom(atomFolderConfigModalIsOpen);
+    const { pushModal } = useNavigator();
     const [sort, setSort] = useAtom(atomGameLibrarySorting);
     const [isSortOpen, setSortOpen] = useState(false);
     const indexing = useAtomValue(atomGameLibraryIsIndexing);
@@ -197,7 +197,7 @@ export function Toolbar({ onSearch = () => void 0 }: Props) {
                         <SettingsIcon />
                     </ToolbarButton>
                     <ToolbarButton
-                        onClick={() => setFolderConfigModalOpen(true)}
+                        onClick={() => pushModal(<FolderConfigModal />)}
                         tooltip="Folder Settings"
                     >
                         <FolderCogIcon />

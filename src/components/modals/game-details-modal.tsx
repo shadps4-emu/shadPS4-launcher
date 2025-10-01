@@ -1,4 +1,3 @@
-import { useAtom } from "jotai";
 import { Badge } from "@/components/ui/badge";
 import {
     Dialog,
@@ -19,8 +18,8 @@ import {
     GamepadNavField,
     type NavButton,
 } from "@/lib/context/gamepad-nav-field";
+import { useNavigator } from "@/lib/hooks/useNavigator";
 import type { PSFEntry } from "@/lib/native/psf";
-import { atomShowingGameDetails } from "@/store/common";
 import type { GameEntry } from "@/store/db";
 import { GameBoxCover } from "../game-cover";
 
@@ -46,15 +45,16 @@ function Entry({ value }: { value: PSFEntry }) {
 
 type Props = {
     gameData: GameEntry;
-    onClose: () => void;
 };
 
-function GameDetailsDialog({ gameData, onClose }: Props) {
+export function GameDetailsModal({ gameData }: Props) {
+    const { popModal } = useNavigator();
+
     const sfo = gameData.sfo;
 
     const onButtonPress = (btn: NavButton) => {
         if (btn === "back") {
-            onClose();
+            popModal();
             return;
         }
     };
@@ -65,7 +65,7 @@ function GameDetailsDialog({ gameData, onClose }: Props) {
             onButtonPress={onButtonPress}
             zIndex={100}
         >
-            <Dialog onOpenChange={() => onClose()} open>
+            <Dialog onOpenChange={() => popModal()} open>
                 <DialogContent
                     aria-describedby={undefined}
                     className="flex max-h-[90vh] max-w-xl flex-col md:max-w-4xl"
@@ -187,20 +187,5 @@ function GameDetailsDialog({ gameData, onClose }: Props) {
                 </DialogContent>
             </Dialog>
         </GamepadNavField>
-    );
-}
-
-export function GameDetailsModal() {
-    const [showingGame, setShowingGame] = useAtom(atomShowingGameDetails);
-
-    if (!showingGame) {
-        return <></>;
-    }
-
-    return (
-        <GameDetailsDialog
-            gameData={showingGame}
-            onClose={() => setShowingGame(null)}
-        />
     );
 }

@@ -39,8 +39,6 @@ export type RemoteEmulatorVersion = Omit<EmulatorVersion, "path"> & {
 
 const octokit = new Octokit();
 
-export const atomModalVersionManagerIsOpen = atom<boolean>(false);
-
 export const atomRemoteList = atomWithTauriStore<string[]>(
     "versions.json",
     "remote_list",

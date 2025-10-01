@@ -1,4 +1,4 @@
-import { useAtomValue, useSetAtom, useStore } from "jotai";
+import { useAtomValue, useStore } from "jotai";
 import {
     CircleHelpIcon,
     EllipsisIcon,
@@ -19,20 +19,20 @@ import CN from "@/assets/flags/cn.svg";
 import EU from "@/assets/flags/eu.svg";
 import JP from "@/assets/flags/jp.svg";
 import US from "@/assets/flags/us.svg";
+import { CheatAndPatchesModal } from "@/components/modals/cheats-and-patches-modal";
+import { GameDetailsModal } from "@/components/modals/game-details-modal";
 import type { GamepadButtonEvent } from "@/handlers/gamepad";
 import { startGame } from "@/handlers/run-emu";
 import {
     GamepadNavField,
     type NavButton,
 } from "@/lib/context/gamepad-nav-field";
+import { useNavigator } from "@/lib/hooks/useNavigator";
 import type { PSF } from "@/lib/native/psf";
 import { stringifyError } from "@/lib/utils/error";
 import { cn } from "@/lib/utils/ui";
-import { atomShowingGameCheatAndPatch } from "@/store/cheats-and-patches";
-import { atomShowingGameDetails } from "@/store/common";
 import type { GameEntry } from "@/store/db";
 import { gamepadActiveAtom } from "@/store/gamepad";
-import { atomShowingRunningGame } from "@/store/running-games";
 import { GameBoxCover } from "./game-cover";
 import GamepadIcon, { ButtonType } from "./gamepad-icon";
 import { Button } from "./ui/button";
@@ -98,11 +98,10 @@ export function GameBoxError({ err }: { err: Error }) {
 
 export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     const [isPending, startTransaction] = useTransition();
+    const { pushModal } = useNavigator();
 
     const isGamepad = useAtomValue(gamepadActiveAtom);
     const store = useStore();
-    const setShowingDetails = useSetAtom(atomShowingGameDetails);
-    const setPatchesModal = useSetAtom(atomShowingGameCheatAndPatch);
 
     const [clickCount, setClickCount] = useState(0);
     const [isContextOpen, setContextOpen] = useState(false);
@@ -122,7 +121,7 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
                 setClickCount(0);
                 const r = await startGame(store, game);
                 if (r) {
-                    store.set(atomShowingRunningGame, r);
+                    pushModal(<GameDetailsModal gameData={r.game} />);
                 }
             } catch (e: unknown) {
                 toast.error("Unknown error: " + stringifyError(e));
@@ -138,11 +137,11 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     };
 
     const openDetails = () => {
-        setShowingDetails(game);
+        pushModal(<GameDetailsModal gameData={game} />);
     };
 
     const openCheatsPatches = () => {
-        setPatchesModal(game);
+        pushModal(<CheatAndPatchesModal gameData={game} />);
     };
 
     const openContext = (e: ReactMouseEvent | null) => {

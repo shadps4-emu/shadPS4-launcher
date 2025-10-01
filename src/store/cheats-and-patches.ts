@@ -1,9 +1,5 @@
-import { atom } from "jotai";
 import { atomWithTauriStore } from "@/lib/utils/jotai/tauri-store";
 import type { CUSA, CUSAVersion } from "./common";
-import type { GameEntry } from "./db";
-
-export const atomShowingGameCheatAndPatch = atom<GameEntry | null>(null);
 
 // Patches ----------------------------------
 

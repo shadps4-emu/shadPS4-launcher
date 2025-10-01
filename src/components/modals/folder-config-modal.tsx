@@ -3,8 +3,8 @@ import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { useAtom } from "jotai";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useNavigator } from "@/lib/hooks/useNavigator";
 import { stringifyError } from "@/lib/utils/error";
-import { atomFolderConfigModalIsOpen } from "@/store/common";
 import { atomEmuUserPath, atomGamesPath } from "@/store/paths";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
@@ -135,11 +135,11 @@ function PathConfig() {
 }
 
 export function FolderConfigModal() {
-    const [isOpen, setIsOpen] = useAtom(atomFolderConfigModalIsOpen);
+    const { popModal } = useNavigator();
 
     return (
         <>
-            <Dialog onOpenChange={setIsOpen} open={isOpen}>
+            <Dialog onOpenChange={() => popModal()} open>
                 <DialogTitle className="hidden">Configuration</DialogTitle>
                 <DialogContent aria-describedby={undefined}>
                     <PathConfig />

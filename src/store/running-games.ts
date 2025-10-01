@@ -20,7 +20,6 @@ export type GameProcessState = {
 };
 
 export const atomRunningGames = atom<GameProcessState[]>([]);
-export const atomShowingRunningGame = atom<GameProcessState | null>(null);
 
 export function createGameProcesState(
     game: GameEntry,

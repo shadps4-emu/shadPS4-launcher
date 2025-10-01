@@ -1,5 +1,4 @@
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { useAtom } from "jotai";
 import { AlertTriangleIcon, ExternalLinkIcon } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,7 @@ import {
     GamepadNavField,
     type NavButton,
 } from "@/lib/context/gamepad-nav-field";
-import { atomShowingGameCheatAndPatch } from "@/store/cheats-and-patches";
+import { useNavigator } from "@/lib/hooks/useNavigator";
 import type { GameEntry } from "@/store/db";
 import {
     Tabs,
@@ -26,16 +25,12 @@ import { CheatPanel } from "../cheat-panel";
 import { GameBoxCover } from "../game-cover";
 import { PatchPanel } from "../patch-panel";
 
-function CheatsAndPatchesDialog({
-    gameData,
-    onClose,
-}: {
-    gameData: GameEntry;
-    onClose: () => void;
-}) {
+export function CheatAndPatchesModal({ gameData }: { gameData: GameEntry }) {
+    const { popModal } = useNavigator();
+
     const onButtonPress = (btn: NavButton) => {
         if (btn === "back") {
-            onClose();
+            popModal();
             return;
         }
     };
@@ -46,7 +41,7 @@ function CheatsAndPatchesDialog({
             onButtonPress={onButtonPress}
             zIndex={100}
         >
-            <Dialog onOpenChange={() => onClose()} open>
+            <Dialog onOpenChange={() => popModal()} open>
                 <DialogContent
                     aria-describedby={undefined}
                     className="flex h-full max-w-full flex-col gap-0 p-0 sm:max-w-4xl md:max-h-[90vh] lg:max-w-5xl"
@@ -155,20 +150,5 @@ function CheatsAndPatchesDialog({
                 </DialogContent>
             </Dialog>
         </GamepadNavField>
-    );
-}
-
-export function CheatAndPatchesModal() {
-    const [showingGame, setShowingGame] = useAtom(atomShowingGameCheatAndPatch);
-
-    if (!showingGame) {
-        return <></>;
-    }
-
-    return (
-        <CheatsAndPatchesDialog
-            gameData={showingGame}
-            onClose={() => setShowingGame(null)}
-        />
     );
 }

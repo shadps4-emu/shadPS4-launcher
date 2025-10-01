@@ -2,7 +2,7 @@ import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { exists } from "@tauri-apps/plugin-fs";
 import { platform } from "@tauri-apps/plugin-os";
 import { format } from "date-fns";
-import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
     AlertCircleIcon,
     CheckIcon,
@@ -34,6 +34,7 @@ import {
     GamepadNavField,
     type NavButton,
 } from "@/lib/context/gamepad-nav-field";
+import { useNavigator } from "@/lib/hooks/useNavigator";
 import { stringifyError } from "@/lib/utils/error";
 import type { Callback } from "@/lib/utils/types";
 import { oficialRepo } from "@/store/common";
@@ -41,7 +42,6 @@ import { atomEmuInstallsPath } from "@/store/paths";
 import {
     atomAvailableVersions,
     atomInstalledVersions,
-    atomModalVersionManagerIsOpen,
     atomRemoteList,
     type EmulatorVersion,
     type RemoteEmulatorVersion,
@@ -136,16 +136,18 @@ function DownloadButton({
     }
 
     if (v.notSupported) {
-        <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-                <Button disabled size="icon" variant="outline">
-                    <CircleSlashIcon />
-                </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-                <span>Not Supported In Your Platform</span>
-            </TooltipContent>
-        </Tooltip>;
+        return (
+            <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                    <Button disabled size="icon" variant="outline">
+                        <CircleSlashIcon />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <span>Not Supported In Your Platform</span>
+                </TooltipContent>
+            </Tooltip>
+        );
     }
 
     return (
@@ -158,15 +160,15 @@ function DownloadButton({
 }
 
 function TabAvailableVersion() {
+    const { popModal } = useNavigator();
     const { data, isLoading, error } = useAtomValue(atomAvailableVersions);
     const rootInstallPath = useAtomValue(atomEmuInstallsPath);
-    const store = useStore();
 
     const install = (v: RemoteEmulatorVersion) => {
         if (rootInstallPath) {
             void installNewVersion(v, rootInstallPath);
         }
-        store.set(atomModalVersionManagerIsOpen, false);
+        popModal();
     };
 
     if (isLoading) {
@@ -445,7 +447,7 @@ function TabAdvanced({ reset }: { reset: Callback }) {
 }
 
 function VersionManagerDialog() {
-    const setIsOpen = useSetAtom(atomModalVersionManagerIsOpen);
+    const { popModal } = useNavigator();
     const [tab, setName] = useState(TabName.installed);
 
     const reset = () => {
@@ -454,13 +456,13 @@ function VersionManagerDialog() {
 
     const onButtonPress = (btn: NavButton) => {
         if (btn === "back") {
-            setIsOpen(false);
+            popModal();
             return;
         }
     };
 
     return (
-        <Sheet onOpenChange={setIsOpen} open>
+        <Sheet onOpenChange={() => popModal()} open>
             <GamepadNavField
                 debugName="version-manager"
                 onButtonPress={onButtonPress}
@@ -511,11 +513,5 @@ function VersionManagerDialog() {
 }
 
 export function VersionManagerModal() {
-    const isOpen = useAtomValue(atomModalVersionManagerIsOpen);
-
-    if (!isOpen) {
-        return <></>;
-    }
-
     return <VersionManagerDialog />;
 }

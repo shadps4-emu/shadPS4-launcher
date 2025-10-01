@@ -1,11 +1,7 @@
 import { Suspense } from "react";
+import { ModalOverlay } from "@/components/modal-overlay";
 import { LoadingScreen } from "./components/loading-overlay";
 import { MainPage } from "./components/main-page";
-import { CheatAndPatchesModal } from "./components/modals/cheats-and-patches-modal";
-import { FolderConfigModal } from "./components/modals/folder-config-modal";
-import { GameDetailsModal } from "./components/modals/game-details-modal";
-import { RunningGameModal } from "./components/modals/running-game-modal";
-import { VersionManagerModal } from "./components/modals/version-manager-modal";
 import { UpdateIcon } from "./components/update-icon";
 
 import "./app.css";
@@ -18,12 +14,8 @@ export function App() {
             onContextMenu={(e) => e.preventDefault()}
         >
             <Suspense fallback={<LoadingScreen />}>
-                <FolderConfigModal />
-                <VersionManagerModal />
+                <ModalOverlay />
                 <UpdateIcon />
-                <RunningGameModal />
-                <GameDetailsModal />
-                <CheatAndPatchesModal />
                 <MainPage />
             </Suspense>
         </main>

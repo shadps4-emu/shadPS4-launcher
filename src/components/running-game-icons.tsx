@@ -1,12 +1,10 @@
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue } from "jotai";
 import type { ComponentProps, ReactElement } from "react";
+import { RunningGameModal } from "@/components/modals/running-game-modal";
 import { useGameCover } from "@/lib/hooks/useGameCover";
+import { useNavigator } from "@/lib/hooks/useNavigator";
 import { cn } from "@/lib/utils/ui";
-import {
-    atomRunningGames,
-    atomShowingRunningGame,
-    type GameProcessState,
-} from "@/store/running-games";
+import { atomRunningGames, type GameProcessState } from "@/store/running-games";
 
 function SingleGameIcon({
     runningGame,
@@ -14,7 +12,7 @@ function SingleGameIcon({
     ...props
 }: ComponentProps<"div"> & { runningGame: GameProcessState }) {
     const { game } = runningGame;
-    const setShowingRunningGame = useSetAtom(atomShowingRunningGame);
+    const { pushModal } = useNavigator();
     const state = useAtomValue(runningGame.atomRunning);
     const [_, cover] = useGameCover(game);
 
@@ -30,7 +28,9 @@ function SingleGameIcon({
     return (
         <div
             className={cn("relative", className)}
-            onClick={() => setShowingRunningGame(runningGame)}
+            onClick={() =>
+                pushModal(<RunningGameModal runningGame={runningGame} />)
+            }
             {...props}
         >
             <div className="absolute top-0 right-0 size-2">

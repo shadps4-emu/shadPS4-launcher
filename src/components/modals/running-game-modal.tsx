@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue } from "jotai";
 import {
     FilterIcon,
     FolderTreeIcon,
@@ -19,12 +19,12 @@ import {
     type NavButton,
 } from "@/lib/context/gamepad-nav-field";
 import { useGameCover } from "@/lib/hooks/useGameCover";
+import { useNavigator } from "@/lib/hooks/useNavigator";
 import { LogLevel } from "@/lib/native/game-process";
 import { stringifyError } from "@/lib/utils/error";
 import { capitalize } from "@/lib/utils/strings";
 import { cn } from "@/lib/utils/ui";
 import {
-    atomShowingRunningGame,
     type GameProcessState,
     removeRunningGame,
 } from "@/store/running-games";
@@ -63,12 +63,12 @@ import { Navigable } from "../ui/navigable";
 import { Skeleton } from "../ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
-export function RunningGameDialog({
+export function RunningGameModal({
     runningGame,
 }: {
     runningGame: GameProcessState;
 }) {
-    const setShowingGame = useSetAtom(atomShowingRunningGame);
+    const { popModal } = useNavigator();
 
     const { game, atomProcess, atomRunning, log } = runningGame;
     const [_, cover] = useGameCover(game);
@@ -84,7 +84,7 @@ export function RunningGameDialog({
     const [logClassFilter, setLogClassFilter] = useState<string[]>([]);
 
     const close = () => {
-        setShowingGame(null);
+        popModal();
     };
 
     const kill = () => {
@@ -420,14 +420,4 @@ export function RunningGameDialog({
             </GamepadNavField>
         </Dialog>
     );
-}
-
-export function RunningGameModal() {
-    const showingGame = useAtomValue(atomShowingRunningGame);
-
-    if (!showingGame) {
-        return <></>;
-    }
-
-    return <RunningGameDialog runningGame={showingGame} />;
 }
