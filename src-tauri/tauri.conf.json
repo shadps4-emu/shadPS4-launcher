@@ -17,14 +17,6 @@
                 "width": 930,
                 "height": 650,
                 "url": "/"
-            },
-            {
-                "label": "emu_config",
-                "title": "shadPS4 - Emulator Config",
-                "width": 1200,
-                "height": 850,
-                "visible": false,
-                "url": "/emu_config"
             }
         ],
         "security": {
