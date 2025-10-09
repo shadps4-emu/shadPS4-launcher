@@ -1,28 +1,17 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { exit } from "@tauri-apps/plugin-process";
-import * as Jotai from "jotai";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { App } from "./app";
-import { LoadingOverlay } from "./components/loading-overlay";
-import { Toaster } from "./components/ui/sonner";
-import { TooltipProvider } from "./components/ui/tooltip";
-import { EmuConfigWindow } from "./components/window/emu-config-window";
 import { startUpdateChecker } from "./handlers/auto-update";
 import { startGamepadHandler } from "./handlers/gamepad";
-import { GamepadInputStackProvider } from "./lib/context/gamepad-input-stack";
-import { NavigatorProvider } from "./lib/context/navigator-provider";
 import { setupForwardingConsole } from "./lib/native/forward-log";
-import { defaultStore } from "./store";
 
-type Routing = "main" | "EmuConfig";
-
-async function start(r: Routing) {
+async function start() {
     await setupForwardingConsole();
 
     const win = getCurrentWindow();
-    if (r === "main") {
+    if (win.label === "main") {
         startUpdateChecker();
         win.onCloseRequested(() => {
             exit(0);
@@ -36,51 +25,17 @@ async function start(r: Routing) {
 
     startGamepadHandler();
 
-    const queryClient = new QueryClient();
-
     const root = document.getElementById("root");
 
     if (!root) {
         throw new Error("Root element not found");
     }
 
-    let content: React.ReactNode;
-
-    if (r === "main") {
-        content = <App />;
-    } else if (r === "EmuConfig") {
-        content = <EmuConfigWindow />;
-    } else {
-        throw new Error("Unknown routing: " + r);
-    }
-
     ReactDOM.createRoot(root).render(
         <React.StrictMode>
-            <QueryClientProvider client={queryClient}>
-                <Jotai.Provider store={defaultStore}>
-                    <GamepadInputStackProvider>
-                        <NavigatorProvider>
-                            <TooltipProvider>
-                                <Toaster richColors />
-                                <LoadingOverlay />
-                                {content}
-                            </TooltipProvider>
-                        </NavigatorProvider>
-                    </GamepadInputStackProvider>
-                </Jotai.Provider>
-            </QueryClientProvider>
+            <App />
         </React.StrictMode>,
     );
 }
 
-switch (document.location.pathname) {
-    case "/":
-        start("main");
-        break;
-    case "/emu_config":
-        start("EmuConfig");
-        break;
-    default:
-        document.writeln("UNKNOWN ROUTING: " + document.location.pathname);
-        throw new Error("Unknown routing: " + document.location.pathname);
-}
+start();

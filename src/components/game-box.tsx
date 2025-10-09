@@ -6,7 +6,9 @@ import {
     GlobeIcon,
     PlayIcon,
 } from "lucide-react";
-import {
+import * as motion from "motion/react-client";
+import React, {
+    type ComponentProps,
     type MouseEvent as ReactMouseEvent,
     useEffect,
     useMemo,
@@ -20,7 +22,6 @@ import EU from "@/assets/flags/eu.svg";
 import JP from "@/assets/flags/jp.svg";
 import US from "@/assets/flags/us.svg";
 import { CheatAndPatchesModal } from "@/components/modals/cheats-and-patches-modal";
-import { GameDetailsModal } from "@/components/modals/game-details-modal";
 import type { GamepadButtonEvent } from "@/handlers/gamepad";
 import { startGame } from "@/handlers/run-emu";
 import {
@@ -35,6 +36,7 @@ import type { GameEntry } from "@/store/db";
 import { gamepadActiveAtom } from "@/store/gamepad";
 import { GameBoxCover } from "./game-cover";
 import GamepadIcon, { ButtonType } from "./gamepad-icon";
+import { GameDetailsModal } from "./modals/game-details-modal";
 import { Button } from "./ui/button";
 import {
     ContextMenu,
@@ -97,8 +99,8 @@ export function GameBoxError({ err }: { err: Error }) {
 }
 
 export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
-    const [isPending, startTransaction] = useTransition();
-    const { pushModal } = useNavigator();
+    const [isPending, startTransition] = useTransition();
+    const { pushModal, modalStack } = useNavigator();
 
     const isGamepad = useAtomValue(gamepadActiveAtom);
     const store = useStore();
@@ -108,6 +110,23 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     const contextMenuRef = useRef<HTMLSpanElement>(null);
     const contextOpenButtonRef = useRef<HTMLButtonElement>(null);
 
+    const isDetailsOpen = useMemo(() => {
+        if (modalStack.length === 0) {
+            return false;
+        }
+        const topModal = modalStack[modalStack.length - 1];
+        if (!React.isValidElement(topModal)) {
+            return false;
+        }
+        if (topModal.type !== GameDetailsModal) {
+            return false;
+        }
+        return (
+            (topModal.props as ComponentProps<typeof GameDetailsModal>)
+                .gameData === game
+        );
+    }, [modalStack, game]);
+
     useEffect(() => {
         if (clickCount >= 3) {
             setClickCount(0);
@@ -116,7 +135,7 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     }, [clickCount]);
 
     const openGame = () =>
-        startTransaction(async () => {
+        startTransition(async () => {
             try {
                 setClickCount(0);
                 const r = await startGame(store, game);
@@ -137,7 +156,9 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     };
 
     const openDetails = () => {
-        pushModal(<GameDetailsModal gameData={game} />);
+        startTransition(() => {
+            pushModal(<GameDetailsModal gameData={game} />);
+        });
     };
 
     const openCheatsPatches = () => {
@@ -189,7 +210,14 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
                                 <Spinner />
                             </div>
                         )}
-                        <GameBoxCover game={game} />
+                        {!isDetailsOpen && (
+                            <motion.div
+                                layoutId={`game-cover-${game.id}`}
+                                transition={{ duration: 0 }}
+                            >
+                                <GameBoxCover game={game} />
+                            </motion.div>
+                        )}
 
                         <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 bg-black/50 opacity-0 backdrop-blur-[2px] transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 group-data-gamepad-focus:opacity-100">
                             <span className="col-span-full row-start-1 row-end-2 truncate px-3 py-2 text-center font-semibold text-lg">

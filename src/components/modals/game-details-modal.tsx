@@ -1,3 +1,4 @@
+import * as motion from "motion/react-client";
 import { Badge } from "@/components/ui/badge";
 import {
     Dialog,
@@ -82,7 +83,11 @@ export function GameDetailsModal({ gameData }: Props) {
                     <div className="flex-grow overflow-y-auto">
                         <div className="grid grid-cols-1 gap-6 py-4 sm:grid-cols-3">
                             <div className="flex flex-col items-center pt-2 md:col-span-1">
-                                <GameBoxCover game={gameData} />
+                                <motion.div
+                                    layoutId={`game-cover-${gameData.id}`}
+                                >
+                                    <GameBoxCover game={gameData} />
+                                </motion.div>
                             </div>
 
                             <div className="space-y-4 md:col-span-2">

@@ -7,7 +7,7 @@ import {
 } from "react";
 
 export type NavigatorState = {
-    openModals: ReactNode[];
+    modalStack: ReactNode[];
 };
 
 export type NavigatorContext = NavigatorState & {
@@ -37,25 +37,19 @@ export function NavigatorProvider({ children }: PropsWithChildren) {
                 case "push_modal": {
                     return {
                         ...state,
-                        openModals: [...state.openModals, arg.el],
+                        modalStack: [...state.modalStack, arg.el],
                     };
                 }
                 case "pop_modal": {
                     return {
                         ...state,
-                        openModals:
-                            state.openModals.length === 0
-                                ? []
-                                : state.openModals.slice(0, -1),
+                        modalStack: state.modalStack.slice(0, -1),
                     };
                 }
                 case "replace_modal": {
                     return {
                         ...state,
-                        openModals:
-                            state.openModals.length === 0
-                                ? [arg.el]
-                                : [state.openModals.slice(0, -1), arg.el],
+                        modalStack: [...state.modalStack.slice(0, -1), arg.el],
                     };
                 }
                 default: {
@@ -65,7 +59,7 @@ export function NavigatorProvider({ children }: PropsWithChildren) {
             }
         },
         {
-            openModals: [],
+            modalStack: [],
         },
     );
 
