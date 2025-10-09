@@ -5,7 +5,7 @@ import type { CUSA, Version } from "./common";
 const conn = await Database.load("sqlite:data.db");
 
 export type GameEntry = {
-    id?: number;
+    id: number;
     path: string;
     cusa: CUSA;
     title: string;
@@ -38,8 +38,8 @@ export const db = {
     async removeAllGames(): Promise<void> {
         await conn.execute("DELETE FROM games");
     },
-    async addGame(data: GameEntry): Promise<void> {
-        await conn.execute(
+    async addGame(data: GameEntry): Promise<GameEntry> {
+        const r = await conn.execute(
             "INSERT INTO games (path, cusa, title, version, fw_version, sfo_json) VALUES ($1, $2, $3, $4, $5, $6)",
             [
                 data.path,
@@ -50,5 +50,12 @@ export const db = {
                 data.sfo ? JSON.stringify(data.sfo) : null,
             ],
         );
+        if (r.lastInsertId == null) {
+            throw new Error("inserted database game entry did not have an id");
+        }
+        return {
+            ...data,
+            id: r.lastInsertId,
+        };
     },
 } as const;

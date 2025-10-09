@@ -34,6 +34,7 @@ async function loadGameData(path: string): Promise<GameEntry> {
 
         if (!(await exists(paramSfo))) {
             return {
+                id: -1,
                 path: path,
                 cusa: ("N/A - " + base) as CUSA,
                 title: base,
@@ -57,6 +58,7 @@ async function loadGameData(path: string): Promise<GameEntry> {
         }
 
         return {
+            id: -1,
             path: path,
             cusa: (e.TITLE_ID?.Text || base) as CUSA,
             title: e.TITLE?.Text || "Unknown",
@@ -67,6 +69,7 @@ async function loadGameData(path: string): Promise<GameEntry> {
     } catch (e: unknown) {
         console.error(`could not read game info at: "${path}"`, e);
         return {
+            id: -2,
             path: path,
             cusa: "N/A",
             title: "N/A",
@@ -95,13 +98,15 @@ async function registerGamePath(workPath: string) {
         if (!path) {
             break;
         }
-        const gameData = await loadGameData(path);
-        if (!("error" in gameData)) {
-            db.addGame(gameData);
+        let gameData = await loadGameData(path);
+        if (gameData.id === -1) {
+            if (!("error" in gameData)) {
+                gameData = await db.addGame(gameData);
+            }
+            defaultStore.set(atomGameLibrary, (prev) =>
+                prev.filter((e) => e.path !== path).concat(gameData),
+            );
         }
-        defaultStore.set(atomGameLibrary, (prev) =>
-            prev.filter((e) => e.path !== path).concat(gameData),
-        );
     }
     gameRegisterQueueIsUse = false;
 }
