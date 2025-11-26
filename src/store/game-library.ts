@@ -148,7 +148,7 @@ async function scanDirectory(
             return;
         }
         const children = await readDir(path);
-        let tempKnownPaths = new Set<string>(knownPaths);
+        const tempKnownPaths = new Set<string>(knownPaths);
 
         for (const c of children) {
             if (c.isDirectory) {
