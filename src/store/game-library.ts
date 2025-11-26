@@ -148,9 +148,12 @@ async function scanDirectory(
             return;
         }
         const children = await readDir(path);
+        const tempKnownPaths = new Set<string>(knownPaths);
+
         for (const c of children) {
             if (c.isDirectory) {
                 const childPath = await join(path, c.name);
+                tempKnownPaths.delete(childPath);
                 await scanDirectory(
                     childPath,
                     knownPaths,
@@ -159,6 +162,13 @@ async function scanDirectory(
                 );
             }
         }
+
+        tempKnownPaths.forEach((path) => {
+            unregisterGamePathPrefix(
+                path,
+                knownPaths,
+            );
+        });
     } catch (e: unknown) {
         console.error(`Error discovering game at "${path}"`, e);
     }
