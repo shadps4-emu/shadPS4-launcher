@@ -33,6 +33,8 @@ import { atomShowingGameDetails } from "@/store/common";
 import type { GameEntry } from "@/store/db";
 import { gamepadActiveAtom } from "@/store/gamepad";
 import { atomShowingRunningGame } from "@/store/running-games";
+import { UnlistenFn } from "@tauri-apps/api/event";
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import { GameBoxCover } from "./game-cover";
 import GamepadIcon, { ButtonType } from "./gamepad-icon";
 import { Button } from "./ui/button";
@@ -108,6 +110,8 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     const [isContextOpen, setContextOpen] = useState(false);
     const contextMenuRef = useRef<HTMLSpanElement>(null);
     const contextOpenButtonRef = useRef<HTMLButtonElement>(null);
+    const contextMenuContentRef = useRef<HTMLDivElement>(null);
+    const [isWindowFocused, setIsWindowFocused] = useState<boolean>(true);
 
     useEffect(() => {
         if (clickCount >= 3) {
@@ -115,6 +119,24 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
             toast.info("Do a double click to start the game");
         }
     }, [clickCount]);
+
+    useEffect(() => {
+        const unlistenPromises: Promise<UnlistenFn>[] = [];
+        unlistenPromises.push(getCurrentWindow().onFocusChanged(({ payload }) => {
+            setIsWindowFocused(payload.valueOf());
+        }));
+        return () => {
+            unlistenPromises.forEach(unlistenPromise => unlistenPromise.then(unlisten => unlisten()));
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!isWindowFocused && isContextOpen) {
+            contextMenuContentRef.current?.remove();
+            contextMenuContentRef.current = null;
+            setContextOpen(false);
+        }
+    }, [isWindowFocused])
 
     const openGame = () =>
         startTransaction(async () => {
@@ -206,6 +228,7 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
                                     size="icon"
                                     type="button"
                                     variant="ghost"
+                                    disabled={isContextOpen}
                                 >
                                     {isGamepad ? (
                                         <GamepadIcon
@@ -233,12 +256,12 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
                     </div>
                 </Navigable>
             </ContextMenuTrigger>
-            <ContextMenuContent>
+            <ContextMenuContent ref={contextMenuContentRef}>
                 <GamepadNavField
                     debugName="game-context-menu"
                     enabled={isContextOpen}
                 >
-                    <Navigable>
+                    <Navigable grabFocus={true}>
                         <ContextMenuItem autoFocus onClick={openDetails}>
                             Details
                         </ContextMenuItem>

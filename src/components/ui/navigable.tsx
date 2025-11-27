@@ -43,6 +43,9 @@ export function Navigable({
 
     const onSelect = useCallback(
         (btn: NavButton | null, e: GamepadButtonEvent) => {
+            if (!document.hasFocus()) {
+                return;
+            }
             propOnSelect?.(btn, e);
             if (!e.isPreventingDefault) {
                 document
@@ -59,6 +62,9 @@ export function Navigable({
     );
     const onButtonPress = useCallback(
         (btn: NavButton, e: GamepadButtonEvent) => {
+            if (!document.hasFocus()) {
+                return;
+            }
             propOnButtonPress?.(btn, e);
             if (!e.isPreventingDefault && defaultInput !== false) {
                 if (btn === "confirm") {
