@@ -139,7 +139,7 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
                 contextMenuContentRef.current = null;
                 setContextOpen(false);
                 setIsFocusLost(true);
-            } else {
+            } else if (navFieldRef.current) {
                 navFieldRef.current?.removeAttribute("data-gamepad-focus");
             }
             setClickCount(0);
@@ -147,11 +147,14 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     }, [isWindowFocused])
 
     useEffect(() => {
-        if (!isContextOpen && !isFocusLost) {
-            navFieldRef.current?.setAttribute("data-gamepad-focus", "true");
-        } else if (isFocusLost) {
-            setIsFocusLost(false);
+        if (navFieldRef.current) {
+            if (!isContextOpen && !isFocusLost && contextMenuContentRef.current) {
+                navFieldRef.current?.setAttribute("data-gamepad-focus", "true");
+            } else if (isFocusLost) {
+                setIsFocusLost(false);
+            }
         }
+
     }, [isContextOpen])
 
     const openGame = () =>
