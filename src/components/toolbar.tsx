@@ -113,10 +113,20 @@ function ToolbarButton({
     if (!tooltip) {
         return content;
     }
+    const [showTooltip, setShowTooltip] = useState(true);
+
     return (
-        <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>{content}</TooltipTrigger>
-            <TooltipContent>{tooltip}</TooltipContent>
+        <Tooltip delayDuration={500}>
+            <TooltipTrigger asChild onFocusCapture={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowTooltip(true);
+            }}  >{content}</TooltipTrigger>
+            <TooltipContent hidden={ !showTooltip } onBlurCapture={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowTooltip(false);
+            }} >{tooltip}</TooltipContent>
         </Tooltip>
     );
 }
