@@ -111,7 +111,9 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     const contextMenuRef = useRef<HTMLSpanElement>(null);
     const contextOpenButtonRef = useRef<HTMLButtonElement>(null);
     const contextMenuContentRef = useRef<HTMLDivElement>(null);
+    const navFieldRef = useRef<HTMLDivElement>(null);
     const [isWindowFocused, setIsWindowFocused] = useState<boolean>(true);
+    const [isFocusLost, setIsFocusLost] = useState<boolean>(true);
 
     useEffect(() => {
         if (clickCount >= 3) {
@@ -131,12 +133,26 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     }, []);
 
     useEffect(() => {
-        if (!isWindowFocused && isContextOpen) {
-            contextMenuContentRef.current?.remove();
-            contextMenuContentRef.current = null;
-            setContextOpen(false);
+        if (!isWindowFocused) {
+            if (isContextOpen) {
+                contextMenuContentRef.current?.remove();
+                contextMenuContentRef.current = null;
+                setContextOpen(false);
+                setIsFocusLost(true);
+            } else {
+                navFieldRef.current?.removeAttribute("data-gamepad-focus");
+            }
+            setClickCount(0);
         }
     }, [isWindowFocused])
+
+    useEffect(() => {
+        if (!isContextOpen && !isFocusLost) {
+            navFieldRef.current?.setAttribute("data-gamepad-focus", "true");
+        } else if (isFocusLost) {
+            setIsFocusLost(false);
+        }
+    }, [isContextOpen])
 
     const openGame = () =>
         startTransaction(async () => {
@@ -200,7 +216,7 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     return (
         <ContextMenu onOpenChange={setContextOpen}>
             <ContextMenuTrigger asChild ref={contextMenuRef}>
-                <Navigable onButtonPress={onButtonPress}>
+                <Navigable ref={navFieldRef} onButtonPress={onButtonPress}>
                     <div
                         className="group relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform focus-within:scale-110 hover:scale-110 data-gamepad-focus:scale-110"
                         onBlur={onBlur}
@@ -261,7 +277,7 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
                     debugName="game-context-menu"
                     enabled={isContextOpen}
                 >
-                    <Navigable grabFocus={true}>
+                    <Navigable grabFocus={isContextOpen}>
                         <ContextMenuItem autoFocus onClick={openDetails}>
                             Details
                         </ContextMenuItem>

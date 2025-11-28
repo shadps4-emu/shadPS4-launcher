@@ -84,9 +84,9 @@ export function GamepadInputStackProvider({ children }: PropsWithChildren) {
             }
             callbackList.push(callback);
             return () => {
-                const idx = callbackList.indexOf(callback);
+                const idx = callbackList!.indexOf(callback);
                 if (idx !== -1) {
-                    callbackList.splice(idx, 1);
+                    callbackList!.splice(idx, 1);
                 }
             };
         },
@@ -98,8 +98,10 @@ export function GamepadInputStackProvider({ children }: PropsWithChildren) {
         if (!callbackList) {
             return;
         }
-        for (const c of callbackList) {
-            c(e);
+        if (document.hasFocus()) {
+            for (const c of callbackList) {
+                c(e);
+            }
         }
     }, []);
 
