@@ -139,3 +139,21 @@
         @apply outline-solid outline-1 outline-current;
     }
 }
+
+@keyframes marquee {
+    0% {
+        transform: translateX(15%);
+    }
+
+    100% {
+        transform: translateX(var(--transform-final));
+    }
+}
+
+.marquee-container:hover .marquee-content {
+    animation-play-state: paused;
+}
+
+.animate-marquee {
+    animation: marquee 2s infinite alternate-reverse;
+}
