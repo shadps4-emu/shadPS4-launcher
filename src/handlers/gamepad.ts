@@ -47,7 +47,7 @@ function gamepadLoop() {
     try {
         const now = Date.now();
         for (const gamepad of navigator.getGamepads()) {
-            if (!gamepad) {
+            if (!gamepad || !document.hasFocus()) {
                 continue;
             }
 
