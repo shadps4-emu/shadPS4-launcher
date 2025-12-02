@@ -98,10 +98,8 @@ export function GamepadInputStackProvider({ children }: PropsWithChildren) {
         if (!callbackList) {
             return;
         }
-        if (document.hasFocus()) {
-            for (const c of callbackList) {
-                c(e);
-            }
+        for (const c of callbackList) {
+            c(e);
         }
     }, []);
 
