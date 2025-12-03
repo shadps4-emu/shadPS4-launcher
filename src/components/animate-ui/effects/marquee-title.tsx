@@ -1,20 +1,19 @@
-import { RefObject, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-interface GameTitleProps {
-    ref: RefObject<HTMLDivElement | null>;
+interface MarqueeTitleProps {
     title: string;
     classNames: string;
 }
 
-export function GameTitle(props: GameTitleProps) {
+export function MarqueeTitle(props: MarqueeTitleProps) {
     const [transformLimit, setTransformLimit] = useState(0);
     const [titleBoxWidth, setTitleBoxWidth] = useState(150);
     const [titleAnimate, setTitleAnimate] = useState<Boolean>(false);
     const [windowWidth, setWindowWidth] = useState(0.0);
-    const gameTitleRef = useRef<HTMLSpanElement>(null);
+    const textTitleRef = useRef<HTMLSpanElement>(null);
 
     const updateDimensions = () => {
-        setWindowWidth(props.ref.current!.clientWidth)
+        setWindowWidth(textTitleRef.current!.clientWidth)
     };
 
     const handleTransformLimit = (num: number) => {
@@ -40,23 +39,23 @@ export function GameTitle(props: GameTitleProps) {
     } as React.CSSProperties;
 
     useEffect(() => {
-        if (props.ref.current && gameTitleRef.current) {
+        if (textTitleRef.current) {
             window.addEventListener("resize", updateDimensions);
         }
         
         return () => {
             window.removeEventListener("resize", updateDimensions);
         };
-    }, [gameTitleRef]);
+    }, [textTitleRef]);
 
     useEffect(() => {
         handleTitleAnimate(textWrapAnimate());
     }, [windowWidth]);
 
     function textWrapAnimate() {
-        if (gameTitleRef.current) {
+        if (textTitleRef.current) {
             if (props.title.length >= 17) {
-                const boxLength = Math.ceil((gameTitleRef.current.getBoundingClientRect()).width);
+                const boxLength = Math.ceil((textTitleRef.current.getBoundingClientRect()).width);
                 if (boxLength > 170 && props.title.length < 19) {
                     return false;
                 }
@@ -79,7 +78,7 @@ export function GameTitle(props: GameTitleProps) {
     };
 
     return (
-        <span ref={gameTitleRef} className={`${titleAnimate ? ('animate-marquee' + " ") : ''}` + `${props.classNames}`}
+        <span ref={textTitleRef} className={`${titleAnimate ? ('animate-marquee' + " ") : ''}` + `${props.classNames}`}
             style={marqueeTransformStyle}
         >
             {props.title}
