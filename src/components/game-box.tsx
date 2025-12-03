@@ -42,6 +42,7 @@ import {
     ContextMenuItem,
     ContextMenuTrigger,
 } from "./ui/context-menu";
+import { GameTitle } from "./ui/game-title";
 import { Navigable } from "./ui/navigable";
 import { Skeleton } from "./ui/skeleton";
 import { Spinner } from "./ui/spinner";
@@ -108,9 +109,7 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     const [isContextOpen, setContextOpen] = useState(false);
     const contextMenuRef = useRef<HTMLSpanElement>(null);
     const contextOpenButtonRef = useRef<HTMLButtonElement>(null);
-    const gameTitleRef = useRef<HTMLSpanElement>(null);
-    const [transformLimit, setTransformLimit] = useState(0);
-    const [titleBoxWidth, setTitleBoxWidth] = useState(150);
+    const navFieldRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (clickCount >= 3) {
@@ -178,52 +177,10 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
         }
     };
 
-    const marqueeTransformStyle = {
-        '--transform-final': `${transformLimit}px`,
-    } as React.CSSProperties;
-
-    const handleTransformLimit = (num: number) => {
-        if (num != transformLimit) {
-            setTransformLimit(num);
-        }
-    }
-
-    const handleTitleBoxWidth = (num: number) => {
-        if (num != titleBoxWidth) {
-            setTitleBoxWidth(num);
-        }
-    }
-
-    function textWrapAnimate() {
-        if (gameTitleRef.current) {
-            if (game.title.length >= 17) {
-                const boxLength = Math.ceil((gameTitleRef.current?.getBoundingClientRect()).width);
-                if (boxLength > 170 && game.title.length < 19) {
-                    return false;
-                }
-
-                handleTitleBoxWidth(boxLength);
-                const upper = (game.title.match(/[A-Z]/g) || []).length;
-                const special = (game.title.match(/[\s\W]/g) || []).length;
-                const lower = game.title.length - (upper + special);
-                const fit = Math.ceil(
-                    (((titleBoxWidth * 0.15 + (upper * 18) + (lower * 17) + (special * 20) + titleBoxWidth) +
-                        ((game.title.length - 20) * 50)) / (titleBoxWidth * 0.85)) * 18);
-
-                handleTransformLimit(-fit);
-
-                return true;
-            } else {
-                return false;
-            }
-        }
-        return false;
-    };
-
     return (
         <ContextMenu onOpenChange={setContextOpen}>
             <ContextMenuTrigger asChild ref={contextMenuRef}>
-                <Navigable onButtonPress={onButtonPress}>
+                <Navigable ref={navFieldRef} onButtonPress={onButtonPress}>
                     <div
                         className="group relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform focus-within:scale-110 hover:scale-110 data-gamepad-focus:scale-110"
                         onBlur={onBlur}
@@ -238,12 +195,7 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
                         <GameBoxCover game={game} />
 
                         <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 bg-black/50 opacity-0 backdrop-blur-[2px] transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 group-data-gamepad-focus:opacity-100">
-                            <span ref={gameTitleRef} className={`${textWrapAnimate() ? 'animate-marquee' : ''}` +
-                                " col-span-full text-nowrap row-start-1 row-end-2 px-2 py-2 text-center flex-row font-semibold text-lg"}
-                                style={marqueeTransformStyle}
-                            >
-                                {game.title}
-                            </span>
+                            <GameTitle ref={navFieldRef} title={game.title} classNames={"col-span-full text-nowrap row-start-1 row-end-2 px-2 py-2 text-center flex-row font-semibold text-lg"} />
 
                             <div className="col-start-1 col-end-4 row-start-3 row-end-4 m-2 flex h-8 justify-between self-end">
                                 <Button
