@@ -139,3 +139,21 @@
         @apply outline-solid outline-1 outline-current;
     }
 }
+
+.marquee-text-track {
+    display: flex;
+    padding-left: 5rem;
+    gap: 5rem;
+    width: max-content;
+    animation: marquee-move-text 5s linear infinite forwards;
+}
+
+@keyframes marquee-move-text {
+    to {
+        transform: translateX(-49.85%);
+    }
+}
+
+.fadeout-horizontal {
+    mask-image: linear-gradient( to right, transparent, black 1rem, black calc(100% - 1rem), transparent );
+}

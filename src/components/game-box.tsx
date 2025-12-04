@@ -33,6 +33,7 @@ import { atomShowingGameDetails } from "@/store/common";
 import type { GameEntry } from "@/store/db";
 import { gamepadActiveAtom } from "@/store/gamepad";
 import { atomShowingRunningGame } from "@/store/running-games";
+import { MarqueeTitle } from "./animate-ui/effects/marquee-title";
 import { GameBoxCover } from "./game-cover";
 import GamepadIcon, { ButtonType } from "./gamepad-icon";
 import { Button } from "./ui/button";
@@ -108,6 +109,7 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     const [isContextOpen, setContextOpen] = useState(false);
     const contextMenuRef = useRef<HTMLSpanElement>(null);
     const contextOpenButtonRef = useRef<HTMLButtonElement>(null);
+    const navFieldRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (clickCount >= 3) {
@@ -178,7 +180,7 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     return (
         <ContextMenu onOpenChange={setContextOpen}>
             <ContextMenuTrigger asChild ref={contextMenuRef}>
-                <Navigable onButtonPress={onButtonPress}>
+                <Navigable ref={navFieldRef} onButtonPress={onButtonPress}>
                     <div
                         className="group relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform focus-within:scale-110 hover:scale-110 data-gamepad-focus:scale-110"
                         onBlur={onBlur}
@@ -193,10 +195,7 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
                         <GameBoxCover game={game} />
 
                         <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 bg-black/50 opacity-0 backdrop-blur-[2px] transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 group-data-gamepad-focus:opacity-100">
-                            <span className="col-span-full row-start-1 row-end-2 truncate px-3 py-2 text-center font-semibold text-lg">
-                                {/* TODO: scroll text on overflow */}
-                                {game.title}
-                            </span>
+                            <MarqueeTitle title={game.title} classNames={"inline-block text-nowrap text-center font-semibold text-lg"} />
 
                             <div className="col-start-1 col-end-4 row-start-3 row-end-4 m-2 flex h-8 justify-between self-end">
                                 <Button
