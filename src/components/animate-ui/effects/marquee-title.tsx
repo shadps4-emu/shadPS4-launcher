@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 interface MarqueeTitleProps {
     title: string;
@@ -6,82 +6,57 @@ interface MarqueeTitleProps {
 }
 
 export function MarqueeTitle(props: MarqueeTitleProps) {
-    const [transformLimit, setTransformLimit] = useState(0);
-    const [titleBoxWidth, setTitleBoxWidth] = useState(150);
-    const [titleAnimate, setTitleAnimate] = useState<Boolean>(false);
-    const [windowWidth, setWindowWidth] = useState(0.0);
-    const textTitleRef = useRef<HTMLSpanElement>(null);
-
-    const updateDimensions = () => {
-        setWindowWidth(textTitleRef.current!.clientWidth)
-    };
-
-    const handleTransformLimit = (num: number) => {
-        if (num != transformLimit) {
-            setTransformLimit(num);
-        }
-    };
-
-    const handleTitleBoxWidth = (num: number) => {
-        if (num != titleBoxWidth) {
-            setTitleBoxWidth(num);
-        }
-    };
+    const [titleAnimate, setTitleAnimate] = useState<boolean>(false);
+    const [boxWidth, setBoxWidth] = useState(150);
+    const titleDivRef = useRef<HTMLDivElement>(null);
+    const titleSpanRef = useRef<HTMLSpanElement>(null);
 
     const handleTitleAnimate = (state: boolean) => {
-        if (state != titleAnimate) {
-            setTitleAnimate(state);
-        }
+        setTitleAnimate(state);
     };
 
-    const marqueeTransformStyle = {
-        '--transform-final': `${transformLimit}px`,
-    } as React.CSSProperties;
-
-    useEffect(() => {
-        if (textTitleRef.current) {
-            window.addEventListener("resize", updateDimensions);
-        }
-        
-        return () => {
-            window.removeEventListener("resize", updateDimensions);
+    useLayoutEffect(() => {
+        const handleResize = () => {
+            const width = titleDivRef.current?.getBoundingClientRect().width;
+            setBoxWidth(width ?? 150);
         };
-    }, [textTitleRef]);
+
+        if (titleDivRef.current) {
+            const width = titleDivRef.current.getBoundingClientRect().width;
+            setBoxWidth(width);
+
+            window.addEventListener('resize', handleResize);
+        }
+
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         handleTitleAnimate(textWrapAnimate());
-    }, [windowWidth]);
+    }, [boxWidth]);
 
     function textWrapAnimate() {
-        if (textTitleRef.current) {
-            if (props.title.length >= 17) {
-                const boxLength = Math.ceil((textTitleRef.current.getBoundingClientRect()).width);
-                if (boxLength > 170 && props.title.length < 19) {
-                    return false;
-                }
-                handleTitleBoxWidth(boxLength);
-                const upper = (props.title.match(/[A-Z]/g) || []).length;
-                const special = (props.title.match(/[\s\W]/g) || []).length;
-                const lower = props.title.length - (upper + special);
-                const fit = Math.ceil(
-                    (((titleBoxWidth * 0.15 + (upper * 18) + (lower * 17) + (special * 20) + titleBoxWidth) +
-                        ((props.title.length - 20) * 50)) / (titleBoxWidth * 0.85)) * 18);
-
-                handleTransformLimit(-fit);
-                return true;
-            } else {
+        if (!titleSpanRef.current || !titleDivRef.current) {
+            return false;
+        }
+        if (props.title.length < 17) {
+            return false;
+        }
+        else {
+            const boxLength = Math.ceil((titleDivRef.current.getBoundingClientRect()).width);
+            if (boxLength > 170 && props.title.length < 19) {
                 return false;
             }
-        } else {
-            return false;
+            return true;
         }
     };
 
     return (
-        <span ref={textTitleRef} className={`${titleAnimate ? ('animate-marquee' + " ") : ''}` + `${props.classNames}`}
-            style={marqueeTransformStyle}
-        >
-            {props.title}
-        </span>
+        <div ref={titleDivRef} className={`${titleAnimate ? ('fadeout-horizontal' + " ") : ''}` + "col-span-full row-start-1 row-end-2 flex-row text-center px-2 py-2"}>
+            <span ref={titleSpanRef} className={`${titleAnimate ? ('marquee-text-track' + " ") : ''}` + `${props.classNames}`}>
+                <p>{props.title}</p>
+                <p hidden={ !titleAnimate } aria-hidden="true">{props.title}</p>
+            </span>
+        </div>
     );
 }

@@ -195,7 +195,7 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
                         <GameBoxCover game={game} />
 
                         <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 bg-black/50 opacity-0 backdrop-blur-[2px] transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 group-data-gamepad-focus:opacity-100">
-                            <MarqueeTitle title={game.title} classNames={"col-span-full text-nowrap row-start-1 row-end-2 px-2 py-2 text-center flex-row font-semibold text-lg"} />
+                            <MarqueeTitle title={game.title} classNames={"inline-block text-nowrap text-center font-semibold text-lg"} />
 
                             <div className="col-start-1 col-end-4 row-start-3 row-end-4 m-2 flex h-8 justify-between self-end">
                                 <Button
