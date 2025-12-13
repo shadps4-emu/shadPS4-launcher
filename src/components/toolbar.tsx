@@ -9,9 +9,9 @@ import {
     SortDescIcon,
 } from "lucide-react";
 import { type ComponentProps, useState } from "react";
+import { EmuConfigModal } from "@/components/modals/emu-config-modal";
 import { FolderConfigModal } from "@/components/modals/folder-config-modal";
 import { VersionManagerModal } from "@/components/modals/version-manager-modal";
-import { openEmuConfigWindow } from "@/handlers/window";
 import { GamepadNavField } from "@/lib/context/gamepad-nav-field";
 import { useDebounceEffect } from "@/lib/hooks/useDebounceEffect";
 import { useNavigator } from "@/lib/hooks/useNavigator";
@@ -191,7 +191,7 @@ export function Toolbar({ onSearch = () => void 0 }: Props) {
                 </div>
                 <div className="flex items-center gap-2">
                     <ToolbarButton
-                        onClick={() => openEmuConfigWindow()}
+                        onClick={() => pushModal(<EmuConfigModal />)}
                         tooltip="Emulator Settings"
                     >
                         <SettingsIcon />
