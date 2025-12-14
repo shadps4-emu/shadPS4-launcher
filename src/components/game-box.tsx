@@ -34,6 +34,7 @@ import { stringifyError } from "@/lib/utils/error";
 import { cn } from "@/lib/utils/ui";
 import type { GameEntry } from "@/store/db";
 import { gamepadActiveAtom } from "@/store/gamepad";
+import { MarqueeTitle } from "./animate-ui/effects/marquee-title";
 import { GameBoxCover } from "./game-cover";
 import GamepadIcon, { ButtonType } from "./gamepad-icon";
 import { GameDetailsModal } from "./modals/game-details-modal";
@@ -222,10 +223,12 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
                         )}
 
                         <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 bg-black/50 opacity-0 backdrop-blur-[2px] transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 group-data-gamepad-focus:opacity-100">
-                            <span className="col-span-full row-start-1 row-end-2 truncate px-3 py-2 text-center font-semibold text-lg">
-                                {/* TODO: scroll text on overflow */}
-                                {game.title}
-                            </span>
+                            <MarqueeTitle
+                                classNames={
+                                    "inline-block text-nowrap text-center font-semibold text-lg"
+                                }
+                                title={game.title}
+                            />
 
                             <div className="col-start-1 col-end-4 row-start-3 row-end-4 m-2 flex h-8 justify-between self-end">
                                 <Button
