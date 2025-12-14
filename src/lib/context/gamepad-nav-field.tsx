@@ -376,7 +376,9 @@ export function GamepadNavField({
                 );
                 document
                     .querySelectorAll("*[data-gamepad-focus]")
-                    .forEach((el) => el.removeAttribute("data-gamepad-focus"));
+                    .forEach((el) => {
+                        el.removeAttribute("data-gamepad-focus");
+                    });
             }
         };
         window.addEventListener("mousedown", c);

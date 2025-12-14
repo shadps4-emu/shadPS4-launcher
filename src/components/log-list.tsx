@@ -333,22 +333,20 @@ export function LogList({ runningGame, levelFilter, classFilter }: Props) {
     );
 
     return (
-        <>
-            <div className="flex-1 overflow-y-auto rounded-md border contain-strict">
-                <DataEditor
-                    columns={columns}
-                    drawHeader={() => false}
-                    getCellContent={getCellContent}
-                    getCellsForSelection={getCellForSelection}
-                    headerHeight={8}
-                    onColumnResize={onColumnResize}
-                    onVisibleRegionChanged={onVisibleRegionChanged}
-                    ref={dataGridRef}
-                    rows={rowCount}
-                    theme={isDark ? darkTheme : theme}
-                    width="100%"
-                />
-            </div>
-        </>
+        <div className="flex-1 overflow-y-auto rounded-md border contain-strict">
+            <DataEditor
+                columns={columns}
+                drawHeader={() => false}
+                getCellContent={getCellContent}
+                getCellsForSelection={getCellForSelection}
+                headerHeight={8}
+                onColumnResize={onColumnResize}
+                onVisibleRegionChanged={onVisibleRegionChanged}
+                ref={dataGridRef}
+                rows={rowCount}
+                theme={isDark ? darkTheme : theme}
+                width="100%"
+            />
+        </div>
     );
 }

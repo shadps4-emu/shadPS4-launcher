@@ -1,28 +1,28 @@
 {
-    "$schema": "https://next.biomejs.dev/schemas/2.0.0-beta/schema.json",
+    "$schema": "https://next.biomejs.dev/schemas/2.3.8/schema.json",
     "vcs": {
         "enabled": true,
         "clientKind": "git",
-        "useIgnoreFile": true,
+        "useIgnoreFile": true
     },
     "files": {
         "ignoreUnknown": false,
-        "includes": ["**/*", "!dist/**", "!src-tauri"],
+        "includes": ["**/*", "!dist", "!src-tauri"]
     },
     "assist": {
         "enabled": true,
         "actions": {
             "recommended": true,
             "source": {
-                "useSortedAttributes": "on",
-            },
-        },
+                "useSortedAttributes": "on"
+            }
+        }
     },
     "formatter": {
         "enabled": true,
         "indentStyle": "space",
         "indentWidth": 4,
-        "lineEnding": "lf",
+        "lineEnding": "lf"
     },
     "linter": {
         "enabled": true,
@@ -34,43 +34,42 @@
                 "useArrowFunction": "off",
                 "useLiteralKeys": "error",
                 "useOptionalChain": "error",
+                "noArguments": "warn"
             },
             "correctness": {
                 "noConstAssign": "error",
-                "noGlobalObjectCalls": "off",
-                "noInvalidBuiltinInstantiation": "off",
-                "noInvalidConstructorSuper": "off",
-                "noNewSymbol": "off",
-                "noSetterReturn": "off",
-                "noUndeclaredVariables": "off",
-                "noUnreachable": "off",
-                "noUnreachableSuper": "off",
+                "noGlobalObjectCalls": "error",
+                "noInvalidBuiltinInstantiation": "error",
+                "noInvalidConstructorSuper": "error",
+                "noSetterReturn": "error",
+                "noUndeclaredVariables": "error",
+                "noUnreachable": "warn",
+                "noUnreachableSuper": "error",
                 "noUnusedVariables": "error",
                 "noUnusedImports": "error",
-                "useArrayLiterals": "off",
-                "useExhaustiveDependencies": "warn",
-                "useHookAtTopLevel": "error",
+                "useExhaustiveDependencies": "error",
+                "useHookAtTopLevel": "error"
             },
             "style": {
-                "noArguments": "error",
                 "noInferrableTypes": "error",
                 "noNamespace": "error",
                 "useAsConstAssertion": "error",
-                "useBlockStatements": "warn",
+                "useBlockStatements": "error",
                 "useConsistentArrayType": "error",
                 "useConst": "error",
                 "useForOf": "error",
                 "useImportType": "error",
                 "useShorthandFunctionType": "error",
                 "useThrowOnlyError": "error",
+                "useArrayLiterals": "warn",
                 "useFilenamingConvention": {
                     "level": "error",
                     "options": {
                         "strictCase": true,
                         "requireAscii": true,
-                        "filenameCases": ["kebab-case"],
-                    },
-                },
+                        "filenameCases": ["kebab-case"]
+                    }
+                }
             },
             "suspicious": {
                 "noClassAssign": "off",
@@ -89,28 +88,32 @@
                 "noUnsafeNegation": "off",
                 "useAwait": "error",
                 "useGetterReturn": "off",
-                "useNamespaceKeyword": "error",
+                "useNamespaceKeyword": "error"
             },
             "nursery": {
-                "useSortedClasses": "warn",
+                "useSortedClasses": "error"
             },
             "a11y": {
                 "useKeyWithClickEvents": "off",
-            },
-        },
+                "useSemanticElements": "off"
+            }
+        }
     },
     "javascript": {
         "formatter": {
             "quoteStyle": "double",
             "semicolons": "always",
-            "trailingCommas": "all",
+            "trailingCommas": "all"
         },
-        "globals": [],
+        "globals": []
     },
-    "json": {
-        "formatter": {
-            "trailingCommas": "all",
+    "css": {
+        "parser": {
+            "tailwindDirectives": true
         },
+        "formatter": {
+            "enabled": true
+        }
     },
     "overrides": [
         {
@@ -124,12 +127,12 @@
                                 "strictCase": true,
                                 "requireAscii": true,
                                 "match": "use.*",
-                                "filenameCases": ["camelCase"],
-                            },
-                        },
-                    },
-                },
-            },
+                                "filenameCases": ["camelCase"]
+                            }
+                        }
+                    }
+                }
+            }
         },
         {
             "includes": ["src/lib/hooks/**/*.tsx"],
@@ -139,12 +142,12 @@
                         "useFilenamingConvention": {
                             "level": "error",
                             "options": {
-                                "match": "Hook_Should_Use_Ts_Extension!",
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    ],
+                                "match": "Hook_Should_Use_Ts_Extension!"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ]
 }

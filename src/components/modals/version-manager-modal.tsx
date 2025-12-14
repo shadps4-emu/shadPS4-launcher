@@ -317,7 +317,7 @@ function AddCustom({ reset }: { reset: Callback }) {
             path: binaryPath,
             name,
             repo: "Local",
-            date: new Date().getTime(),
+            date: Date.now(),
         };
         setInstalledVersions((prev) => [...prev, data]);
         reset();
@@ -374,7 +374,7 @@ function RepoEdit() {
             name = name.slice(dotCom + 5);
             setNewRepo(name);
         }
-        return /^[\w\-]+\/[\w\-]+$/.test(name) ? name : null;
+        return /^[\w-]+\/[\w-]+$/.test(name) ? name : null;
     };
 
     const addRepo = () => {

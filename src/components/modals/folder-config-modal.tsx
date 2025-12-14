@@ -138,13 +138,11 @@ export function FolderConfigModal() {
     const { popModal } = useNavigator();
 
     return (
-        <>
-            <Dialog onOpenChange={() => popModal()} open>
-                <DialogTitle className="hidden">Configuration</DialogTitle>
-                <DialogContent aria-describedby={undefined}>
-                    <PathConfig />
-                </DialogContent>
-            </Dialog>
-        </>
+        <Dialog onOpenChange={() => popModal()} open>
+            <DialogTitle className="hidden">Configuration</DialogTitle>
+            <DialogContent aria-describedby={undefined}>
+                <PathConfig />
+            </DialogContent>
+        </Dialog>
     );
 }

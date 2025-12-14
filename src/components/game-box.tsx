@@ -143,7 +143,7 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
                     pushModal(<GameDetailsModal gameData={r.game} />);
                 }
             } catch (e: unknown) {
-                toast.error("Unknown error: " + stringifyError(e));
+                toast.error(`Unknown error: ${stringifyError(e)}`);
             }
         });
 
@@ -204,6 +204,8 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
                         onBlur={onBlur}
                         onClick={onClick}
                         onDoubleClick={openGame}
+                        role="button"
+                        tabIndex={0}
                     >
                         {isPending && (
                             <div className="center absolute inset-0 bg-black/60">

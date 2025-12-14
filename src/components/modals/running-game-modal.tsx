@@ -113,7 +113,7 @@ export function RunningGameModal({
             toast.success("Log saved");
         } catch (e: unknown) {
             console.error("Error saving log", e);
-            toast.error("Error saving log: " + stringifyError(e));
+            toast.error(`Error saving log: ${stringifyError(e)}`);
         }
     };
 

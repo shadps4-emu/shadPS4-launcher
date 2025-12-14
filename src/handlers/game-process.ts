@@ -49,7 +49,7 @@ export function handleGameProcess(
             })
                 .catch((e: unknown) => {
                     console.error("Unknown restart error", e);
-                    toast.error("Unknown restart error: " + stringifyError(e));
+                    toast.error(`Unknown restart error: ${stringifyError(e)}`);
                     store.set(state.atomRunning, -1);
                     store.set(state.atomError, stringifyError(e));
                 })

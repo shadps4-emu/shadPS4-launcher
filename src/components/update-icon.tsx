@@ -9,7 +9,7 @@ export function UpdateIcon() {
     const availableUpdate = useAtomValue(atomAvailableUpdate);
 
     if (!availableUpdate) {
-        return <></>;
+        return null;
     }
 
     return createPortal(
@@ -19,6 +19,8 @@ export function UpdateIcon() {
                     <div
                         className="animate-bounce cursor-pointer rounded-full bg-green-100 p-4"
                         onClick={installUpdate}
+                        role="button"
+                        tabIndex={0}
                     >
                         <DownloadIcon className="h-5 w-5 text-green-700" />
                     </div>

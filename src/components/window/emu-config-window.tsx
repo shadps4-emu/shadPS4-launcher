@@ -44,7 +44,6 @@ function TomlInput({
                     value={value}
                 />
             );
-            break;
         case "number":
             return (
                 <Input
@@ -54,7 +53,6 @@ function TomlInput({
                     value={String(value)}
                 />
             );
-            break;
         case "boolean":
             return (
                 <Select
@@ -76,7 +74,6 @@ function TomlInput({
                     </SelectContent>
                 </Select>
             );
-            break;
     }
     return (
         <div>

@@ -42,7 +42,7 @@ export async function installUpdate() {
         });
 
         let progress = 0;
-        let totalSize: number | undefined = undefined;
+        let totalSize: number | undefined;
         await update.downloadAndInstall((ev) => {
             switch (ev.event) {
                 case "Started":
@@ -80,6 +80,6 @@ export async function installUpdate() {
         await relaunch();
     } catch (e: unknown) {
         console.error("download update error", e);
-        toast.error("Error downloading update: " + stringifyError(e));
+        toast.error(`Error downloading update: ${stringifyError(e)}`);
     }
 }

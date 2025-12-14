@@ -36,7 +36,7 @@ async function loadGameData(path: string): Promise<GameEntry> {
             return {
                 id: -1,
                 path: path,
-                cusa: ("N/A - " + base) as CUSA,
+                cusa: `N/A - ${base}` as CUSA,
                 title: base,
                 version: "N/A",
                 fw_version: "N/A",
@@ -111,10 +111,7 @@ async function registerGamePath(workPath: string) {
     gameRegisterQueueIsUse = false;
 }
 
-async function unregisterGamePathPrefix(
-    pathPrefix: string,
-    knownPaths: Set<string>,
-) {
+function unregisterGamePathPrefix(pathPrefix: string, knownPaths: Set<string>) {
     defaultStore.set(atomGameLibrary, (prev) =>
         prev.filter((e) => {
             const toRemove = e.path.startsWith(pathPrefix);
@@ -169,10 +166,7 @@ async function scanDirectory(
         }
 
         tempKnownPaths.forEach((path) => {
-            unregisterGamePathPrefix(
-                path,
-                knownPaths,
-            );
+            unregisterGamePathPrefix(path, knownPaths);
         });
     } catch (e: unknown) {
         console.error(`Error discovering game at "${path}"`, e);
@@ -280,7 +274,7 @@ async function scanDirectory(
                 }
             } catch (e: unknown) {
                 console.error("error watching path", stringifyError(e));
-                toast.error("Error watching games path: " + stringifyError(e));
+                toast.error(`Error watching games path: ${stringifyError(e)}`);
             }
         })();
         cancel = () => {

@@ -221,7 +221,7 @@ export function downloadCheats(repo: CheatRepository, store: JotaiStore) {
                 .map((line) => {
                     const [key] = line.trim().split("=", 1);
                     if (!key) {
-                        return errAsync("invalid key line: " + line);
+                        return errAsync(`invalid key line: ${line}`);
                     }
                     return fetchSafe(createUrl(key))
                         .map((e) => e.arrayBuffer())

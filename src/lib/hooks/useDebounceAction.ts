@@ -9,7 +9,6 @@ export function useDebounceAction<T extends () => void>(
         action();
     });
 
-    // biome-ignore lint/correctness/useExhaustiveDependencies: useEffectEvent is untracked
     return useCallback(() => {
         clearTimeout(lastTimeout.current);
         lastTimeout.current = setTimeout(() => {

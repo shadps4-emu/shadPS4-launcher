@@ -42,6 +42,8 @@ function NoGameFound() {
             <div
                 className="flex h-[150px] w-[300px] cursor-pointer flex-col items-center justify-center rounded-md border border-dashed text-sm"
                 onClick={() => void openGameFolder()}
+                role="button"
+                tabIndex={0}
             >
                 <span>No game found :(</span>
                 <span>Click here to open game folder</span>
@@ -149,6 +151,7 @@ function Grid({ search }: { search: string }) {
                                 {Array(itemPerRow - entries.length)
                                     .fill(0)
                                     .map((_, i) => (
+                                        // biome-ignore lint/suspicious/noArrayIndexKey: This is a skeleton element, order doesn't matter
                                         <EmptyGameBox key={i} />
                                     ))}
                             </div>

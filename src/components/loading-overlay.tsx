@@ -85,7 +85,7 @@ export function LoadingOverlay() {
     const value = useAtomValue(atomDownloadingOverlay);
 
     if (!value) {
-        return <></>;
+        return null;
     }
 
     const props: LoadingProps = {};

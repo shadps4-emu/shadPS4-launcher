@@ -2,7 +2,7 @@ import { type Atom, atom } from "jotai";
 import { loadable } from "jotai/utils";
 
 export function atomKeepLast<T>(src: Atom<T>): Atom<T> {
-    let prevData: T | undefined = undefined;
+    let prevData: T | undefined;
     const srcLoadable = loadable(src);
     return atom((get) => {
         const value = get(srcLoadable);

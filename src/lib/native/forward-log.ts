@@ -18,7 +18,7 @@ function forwardConsole(
     const original = console[fnName];
     // biome-ignore lint/suspicious/noExplicitAny: This is the original signature
     console[fnName] = function (...data: any[]) {
-        let callFrame: ErrorStackParser.StackFrame | undefined = undefined;
+        let callFrame: ErrorStackParser.StackFrame | undefined;
         try {
             callFrame = ErrorStackParser.parse(new Error())?.[1];
         } catch (_e) {
@@ -78,6 +78,8 @@ function forwardConsole(
                             }
                         case "undefined":
                             return "undefined";
+                        default:
+                            throw new Error("UNREACHABLE");
                     }
                 })
                 .join(" "),

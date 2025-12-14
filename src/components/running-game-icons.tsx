@@ -31,6 +31,8 @@ function SingleGameIcon({
             onClick={() =>
                 pushModal(<RunningGameModal runningGame={runningGame} />)
             }
+            role="button"
+            tabIndex={0}
             {...props}
         >
             <div className="absolute top-0 right-0 size-2">

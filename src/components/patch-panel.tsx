@@ -80,7 +80,7 @@ export function PatchPanel({ gameData }: { gameData: GameEntry }) {
                 setPatchLines(file.getPatchLines());
             } catch (e) {
                 console.error("Failed to parse patch file", e);
-                toast.error("Failed to parse patch file. " + stringifyError(e));
+                toast.error(`Failed to parse patch file. ${stringifyError(e)}`);
                 setPatchFile(null);
                 setPatchLines([]);
             }
@@ -98,7 +98,7 @@ export function PatchPanel({ gameData }: { gameData: GameEntry }) {
             })
             .catch((e) => {
                 console.error("Failed to save patch file", e);
-                toast.error("Failed to save patch file. " + e.message);
+                toast.error(`Failed to save patch file. ${e.message}`);
             });
     }, [patchFile]);
 

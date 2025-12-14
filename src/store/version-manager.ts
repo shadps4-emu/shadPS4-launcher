@@ -108,7 +108,7 @@ export const atomAvailableVersions = atomWithQuery((get) => ({
                             }),
                             (err) =>
                                 new Error(
-                                    "GitHub API Error: " + stringifyError(err),
+                                    `GitHub API Error: ${stringifyError(err)}`,
                                 ),
                         ),
                         10000,

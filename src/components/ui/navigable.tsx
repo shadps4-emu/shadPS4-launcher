@@ -38,7 +38,7 @@ export function Navigable({
     const navField = useGamepadNavField();
 
     useImperativeHandle(parentRef, () => {
-        return ref.current!;
+        return ref.current as HTMLElement;
     }, []);
 
     const onSelect = useCallback(
@@ -47,7 +47,9 @@ export function Navigable({
             if (!e.isPreventingDefault) {
                 document
                     .querySelectorAll("*[data-gamepad-focus]")
-                    .forEach((el) => el.removeAttribute("data-gamepad-focus"));
+                    .forEach((el) => {
+                        el.removeAttribute("data-gamepad-focus");
+                    });
                 const el = ref.current;
                 if (el) {
                     el.setAttribute("data-gamepad-focus", "true");
@@ -102,10 +104,8 @@ export function Navigable({
     ]);
 
     return (
-        <>
-            <Slot ref={ref} tabIndex={tabIndex ?? 0} {...props}>
-                {children}
-            </Slot>
-        </>
+        <Slot ref={ref} tabIndex={tabIndex ?? 0} {...props}>
+            {children}
+        </Slot>
     );
 }

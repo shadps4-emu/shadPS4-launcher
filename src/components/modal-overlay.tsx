@@ -6,7 +6,7 @@ export function ModalOverlay() {
     const { modalStack } = useNavigator();
 
     if (modalStack.length === 0) {
-        return <></>;
+        return null;
     }
 
     const modal = modalStack[modalStack.length - 1];
