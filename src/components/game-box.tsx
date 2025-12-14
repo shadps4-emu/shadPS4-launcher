@@ -200,7 +200,7 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     return (
         <ContextMenu onOpenChange={setContextOpen}>
             <ContextMenuTrigger asChild ref={contextMenuRef}>
-                <Navigable ref={navFieldRef} onButtonPress={onButtonPress}>
+                <Navigable onButtonPress={onButtonPress} ref={navFieldRef}>
                     <div
                         className="group relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform focus-within:scale-110 hover:scale-110 data-gamepad-focus:scale-110"
                         onBlur={onBlur}
@@ -224,7 +224,12 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
                         )}
 
                         <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 bg-black/50 opacity-0 backdrop-blur-[2px] transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 group-data-gamepad-focus:opacity-100">
-                            <MarqueeTitle title={game.title} classNames={"inline-block text-nowrap text-center font-semibold text-lg"} />
+                            <MarqueeTitle
+                                classNames={
+                                    "inline-block text-nowrap text-center font-semibold text-lg"
+                                }
+                                title={game.title}
+                            />
 
                             <div className="col-start-1 col-end-4 row-start-3 row-end-4 m-2 flex h-8 justify-between self-end">
                                 <Button

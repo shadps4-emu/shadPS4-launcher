@@ -1,8 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 interface MarqueeTitleProps {
-    title: string;
     classNames: string;
+    title: string;
 }
 
 export function MarqueeTitle(props: MarqueeTitleProps) {
@@ -21,10 +21,10 @@ export function MarqueeTitle(props: MarqueeTitleProps) {
             const width = titleDivRef.current.getBoundingClientRect().width;
             setBoxWidth(width);
 
-            window.addEventListener('resize', handleResize);
+            window.addEventListener("resize", handleResize);
         }
 
-        return () => window.removeEventListener('resize', handleResize);
+        return () => window.removeEventListener("resize", handleResize);
     }, []);
 
     useEffect(() => {
@@ -34,24 +34,37 @@ export function MarqueeTitle(props: MarqueeTitleProps) {
             }
             if (props.title.length < 17) {
                 return false;
-            }
-            else {
+            } else {
                 const boxLength = Math.ceil(boxWidth);
                 if (boxLength > 170 && props.title.length < 19) {
                     return false;
                 }
                 return true;
             }
-        };
+        }
 
         setTitleAnimate(textWrapAnimate());
     }, [boxWidth, props.title]);
 
     return (
-        <div ref={titleDivRef} className={`${titleAnimate ? ('fadeout-horizontal' + " ") : ''}` + "col-span-full row-start-1 row-end-2 flex-row text-center px-2 py-2"}>
-            <span ref={titleSpanRef} className={`${titleAnimate ? ('marquee-text-track' + " ") : ''}` + `${props.classNames}`}>
+        <div
+            className={
+                `${titleAnimate ? "fadeout-horizontal" + " " : ""}` +
+                "col-span-full row-start-1 row-end-2 flex-row px-2 py-2 text-center"
+            }
+            ref={titleDivRef}
+        >
+            <span
+                className={
+                    `${titleAnimate ? "marquee-text-track" + " " : ""}` +
+                    `${props.classNames}`
+                }
+                ref={titleSpanRef}
+            >
                 <p>{props.title}</p>
-                <p hidden={ !titleAnimate } aria-hidden="true">{props.title}</p>
+                <p aria-hidden="true" hidden={!titleAnimate}>
+                    {props.title}
+                </p>
             </span>
         </div>
     );
