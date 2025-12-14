@@ -110,7 +110,6 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     const [isContextOpen, setContextOpen] = useState(false);
     const contextMenuRef = useRef<HTMLSpanElement>(null);
     const contextOpenButtonRef = useRef<HTMLButtonElement>(null);
-    const navFieldRef = useRef<HTMLDivElement>(null);
 
     const isDetailsOpen = useMemo(() => {
         if (modalStack.length === 0) {
@@ -200,7 +199,7 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     return (
         <ContextMenu onOpenChange={setContextOpen}>
             <ContextMenuTrigger asChild ref={contextMenuRef}>
-                <Navigable onButtonPress={onButtonPress} ref={navFieldRef}>
+                <Navigable onButtonPress={onButtonPress}>
                     <div
                         className="group relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform focus-within:scale-110 hover:scale-110 data-gamepad-focus:scale-110"
                         onBlur={onBlur}
