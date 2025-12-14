@@ -11,10 +11,6 @@ export function MarqueeTitle(props: MarqueeTitleProps) {
     const titleDivRef = useRef<HTMLDivElement>(null);
     const titleSpanRef = useRef<HTMLSpanElement>(null);
 
-    const handleTitleAnimate = (state: boolean) => {
-        setTitleAnimate(state);
-    };
-
     useLayoutEffect(() => {
         const handleResize = () => {
             const width = titleDivRef.current?.getBoundingClientRect().width;
@@ -32,24 +28,24 @@ export function MarqueeTitle(props: MarqueeTitleProps) {
     }, []);
 
     useEffect(() => {
-        handleTitleAnimate(textWrapAnimate());
-    }, [boxWidth]);
-
-    function textWrapAnimate() {
-        if (!titleSpanRef.current || !titleDivRef.current) {
-            return false;
-        }
-        if (props.title.length < 17) {
-            return false;
-        }
-        else {
-            const boxLength = Math.ceil((titleDivRef.current.getBoundingClientRect()).width);
-            if (boxLength > 170 && props.title.length < 19) {
+        function textWrapAnimate() {
+            if (!titleSpanRef.current || !titleDivRef.current) {
                 return false;
             }
-            return true;
-        }
-    };
+            if (props.title.length < 17) {
+                return false;
+            }
+            else {
+                const boxLength = Math.ceil(boxWidth);
+                if (boxLength > 170 && props.title.length < 19) {
+                    return false;
+                }
+                return true;
+            }
+        };
+
+        setTitleAnimate(textWrapAnimate());
+    }, [boxWidth, props.title]);
 
     return (
         <div ref={titleDivRef} className={`${titleAnimate ? ('fadeout-horizontal' + " ") : ''}` + "col-span-full row-start-1 row-end-2 flex-row text-center px-2 py-2"}>
