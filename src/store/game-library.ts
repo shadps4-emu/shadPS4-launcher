@@ -132,6 +132,7 @@ async function isGame(path: string) {
 async function scanDirectory(
     path: string,
     knownPaths: Set<string>,
+    unknownPaths: Set<string>,
     signal: AbortSignal,
     recursionLevel: number,
 ) {
@@ -140,6 +141,7 @@ async function scanDirectory(
             return;
         }
         if (knownPaths.has(path)) {
+            unknownPaths.delete(path);
             return;
         }
         if (path.endsWith("-UPDATE") || path.endsWith("-patch")) {
@@ -150,24 +152,19 @@ async function scanDirectory(
             return;
         }
         const children = await readDir(path);
-        const tempKnownPaths = new Set<string>(knownPaths);
 
         for (const c of children) {
             if (c.isDirectory) {
                 const childPath = await join(path, c.name);
-                tempKnownPaths.delete(childPath);
                 await scanDirectory(
                     childPath,
                     knownPaths,
+                    unknownPaths,
                     signal,
                     recursionLevel + 1,
                 );
             }
         }
-
-        tempKnownPaths.forEach((path) => {
-            unregisterGamePathPrefix(path, knownPaths);
-        });
     } catch (e: unknown) {
         console.error(`Error discovering game at "${path}"`, e);
     }
@@ -215,10 +212,20 @@ async function scanDirectory(
                     if (signal.aborted) {
                         return;
                     }
-                    await scanDirectory(path, knownPaths, signal, 0);
+                    const unknownPaths = new Set<string>(knownPaths);
+                    await scanDirectory(
+                        path,
+                        knownPaths,
+                        unknownPaths,
+                        signal,
+                        0,
+                    );
                     if (signal.aborted) {
                         return;
                     }
+                    unknownPaths.forEach((path) => {
+                        unregisterGamePathPrefix(path, knownPaths);
+                    });
                     unsub = await watch(path, async (e) => {
                         if (typeof e.type === "object") {
                             if ("create" in e.type) {
