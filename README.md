@@ -33,7 +33,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
 </p>
 
 # This is a new, in development, launcher
-For the emulator source code and the existing more battle-tested interface, access [**HERE**](https://github.com/shadps4-emu/shadPS4).
+For the more battle-tested interface, access [**HERE**](https://github.com/shadps4-emu/shadps4-qtlauncher).
 
 ## General information
 
