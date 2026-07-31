@@ -2,7 +2,7 @@ use crate::file_format::psf::file_format::*;
 use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::fs::{metadata, File};
+use std::fs::{File, metadata};
 use std::io;
 use std::io::{BufRead, BufReader, Read, Seek, SeekFrom};
 use std::path::Path;
@@ -79,7 +79,7 @@ pub enum Error {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PSF {
-    last_write: SystemTime,
+    pub(super) last_write: SystemTime,
     entries: HashMap<String, Value>,
 }
 
@@ -107,7 +107,7 @@ impl PSF {
         Ok(s)
     }
 
-    fn read<R: Read + Seek>(&mut self, mut r: R) -> Result<(), Error> {
+    pub(super) fn read<R: Read + Seek>(&mut self, mut r: R) -> Result<(), Error> {
         r.seek(SeekFrom::Start(0))?;
         let header = FileHeader::read_from_io(&mut r)?;
         if header.magic != PSF_MAGIC {

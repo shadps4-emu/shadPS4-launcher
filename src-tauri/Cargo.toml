@@ -46,3 +46,4 @@ tokio = { version = "1.44.1", features = ["full"] }
 zerocopy = { version = "0.8.17", features = ["std"] }
 zerocopy-derive = "0.8.17"
 zip = "2.2.3"
+zarchive = { package = "zarchive-rs", version = "0.1.1" }
