@@ -3,6 +3,8 @@ use crate::{file_format, game_process, utility_commands};
 pub fn all_handlers() -> Box<dyn Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync> {
     Box::new(tauri::generate_handler![
         file_format::psf::js::read_psf,
+        file_format::zar::inspect_zar_game,
+        file_format::zar::read_zar_icon,
         game_process::command::game_process_delete,
         game_process::command::game_process_get_log,
         game_process::command::game_process_kill,

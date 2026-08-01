@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { GameProcess } from "@/lib/native/game-process";
 import { withTimeout } from "@/lib/nt/timeout";
 import { errWarning, stringifyError, WarningError } from "@/lib/utils/error";
+import { isZarPath } from "@/lib/utils/game-path";
 import type { JotaiStore } from "@/store";
 import {
     atomAvailablePatches,
@@ -80,9 +81,15 @@ export async function startGame(
         }
 
         const gameDir = game.path;
-        const gameBinary = await join(gameDir, "eboot.bin");
+        const gameBinary = isZarPath(gameDir)
+            ? gameDir
+            : await join(gameDir, "eboot.bin");
         if (!(await exists(gameBinary))) {
-            return errWarning("Game binary (eboot.bin) not found");
+            return errWarning(
+                isZarPath(gameDir)
+                    ? "Game archive (.zar) not found"
+                    : "Game binary (eboot.bin) not found",
+            );
         }
 
         if (!(await exists(emu))) {

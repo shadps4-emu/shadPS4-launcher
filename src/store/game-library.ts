@@ -2,8 +2,10 @@ import { basename, join, sep } from "@tauri-apps/api/path";
 import { exists, mkdir, readDir, stat, watch } from "@tauri-apps/plugin-fs";
 import { atom } from "jotai";
 import { toast } from "sonner";
-import { readPsf } from "@/lib/native/psf";
+import { type PSF, readPsf } from "@/lib/native/psf";
+import { inspectZarGame } from "@/lib/native/zar";
 import { stringifyError } from "@/lib/utils/error";
+import { isZarPath } from "@/lib/utils/game-path";
 import { atomWithTauriStore } from "@/lib/utils/jotai/tauri-store";
 import type { Callback } from "@/lib/utils/types";
 import { defaultStore } from ".";
@@ -29,22 +31,32 @@ export const atomGameLibrary = atom<GameEntry[]>([]);
 async function loadGameData(path: string): Promise<GameEntry> {
     try {
         const base = await basename(path);
+        const isZar = isZarPath(path);
+        const fallbackTitle = isZar ? base.slice(0, -4) : base;
 
-        const paramSfo = await join(path, "sce_sys", "param.sfo");
+        let sfo: PSF | null | undefined;
+        if (isZar) {
+            sfo = await inspectZarGame(path);
+        } else {
+            const paramSfo = await join(path, "sce_sys", "param.sfo");
 
-        if (!(await exists(paramSfo))) {
+            if (await exists(paramSfo)) {
+                sfo = await readPsf(paramSfo);
+            }
+        }
+
+        if (!sfo) {
             return {
                 id: -1,
                 path: path,
-                cusa: `N/A - ${base}` as CUSA,
-                title: base,
+                cusa: `N/A - ${fallbackTitle}` as CUSA,
+                title: fallbackTitle,
                 version: "N/A",
                 fw_version: "N/A",
                 sfo: null,
             };
         }
 
-        const sfo = await readPsf(paramSfo);
         const e = sfo.entries;
 
         let fw_version = e.SYSTEM_VER?.Integer?.toString(16)
@@ -60,7 +72,7 @@ async function loadGameData(path: string): Promise<GameEntry> {
         return {
             id: -1,
             path: path,
-            cusa: (e.TITLE_ID?.Text || base) as CUSA,
+            cusa: (e.TITLE_ID?.Text || fallbackTitle) as CUSA,
             title: e.TITLE?.Text || "Unknown",
             version: (e.APP_VER?.Text as Version) || "N/A",
             fw_version: fw_version || "UNK",
@@ -163,6 +175,13 @@ async function scanDirectory(
                     signal,
                     recursionLevel + 1,
                 );
+            } else if (c.isFile && isZarPath(c.name)) {
+                const childPath = await join(path, c.name);
+                if (knownPaths.has(childPath)) {
+                    unknownPaths.delete(childPath);
+                } else {
+                    void registerGamePath(childPath);
+                }
             }
         }
     } catch (e: unknown) {
@@ -230,10 +249,11 @@ async function scanDirectory(
                         if (typeof e.type === "object") {
                             if ("create" in e.type) {
                                 const newPath = e.paths[0];
-                                if (
-                                    newPath &&
-                                    (await stat(newPath)).isDirectory
-                                ) {
+                                if (!newPath) {
+                                    return;
+                                }
+                                const newPathStat = await stat(newPath);
+                                if (newPathStat.isDirectory) {
                                     let idx = Number.POSITIVE_INFINITY;
                                     while (true) {
                                         idx = newPath.lastIndexOf(
@@ -258,9 +278,23 @@ async function scanDirectory(
                                     await scanDirectory(
                                         newPath,
                                         knownPaths,
+                                        new Set(),
                                         signal,
                                         1,
                                     );
+                                    defaultStore.set(
+                                        atomGameLibraryIsIndexing,
+                                        false,
+                                    );
+                                } else if (
+                                    newPathStat.isFile &&
+                                    isZarPath(newPath)
+                                ) {
+                                    defaultStore.set(
+                                        atomGameLibraryIsIndexing,
+                                        true,
+                                    );
+                                    await registerGamePath(newPath);
                                     defaultStore.set(
                                         atomGameLibraryIsIndexing,
                                         false,
