@@ -278,7 +278,7 @@ async function scanDirectory(
                                     await scanDirectory(
                                         newPath,
                                         knownPaths,
-                                        new Set(),
+                                        new Set<string>(),
                                         signal,
                                         1,
                                     );
