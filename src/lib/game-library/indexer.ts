@@ -1,83 +1,16 @@
-import { basename, join, sep } from "@tauri-apps/api/path";
+import { join, sep } from "@tauri-apps/api/path";
 import { exists, mkdir, readDir, stat, watch } from "@tauri-apps/plugin-fs";
 import { toast } from "sonner";
-import { type PSF, readPsf } from "@/lib/native/psf";
-import { inspectZarGame } from "@/lib/native/zar";
+import { inspectGameEntry } from "@/lib/game-metadata";
 import { stringifyError } from "@/lib/utils/error";
 import { isZarPath } from "@/lib/utils/game-path";
 import type { Callback } from "@/lib/utils/types";
 import type { JotaiStore } from "@/store";
-import type { CUSA, Version } from "@/store/common";
-import { db, type GameEntry } from "@/store/db";
+import { db } from "@/store/db";
 import {
     atomGameLibrary,
     atomGameLibraryIsIndexing,
 } from "@/store/game-library";
-
-async function loadGameData(path: string): Promise<GameEntry> {
-    try {
-        const base = await basename(path);
-        const isZar = isZarPath(path);
-        const fallbackTitle = isZar ? base.slice(0, -4) : base;
-
-        let sfo: PSF | null | undefined;
-        if (isZar) {
-            sfo = await inspectZarGame(path);
-        } else {
-            const paramSfo = await join(path, "sce_sys", "param.sfo");
-            if (await exists(paramSfo)) {
-                sfo = await readPsf(paramSfo);
-            }
-        }
-
-        if (!sfo) {
-            return {
-                id: -1,
-                path: path,
-                cusa: `N/A - ${fallbackTitle}` as CUSA,
-                title: fallbackTitle,
-                version: "N/A",
-                fw_version: "N/A",
-                sfo: null,
-            };
-        }
-
-        const e = sfo.entries;
-        let fw_version = e.SYSTEM_VER?.Integer?.toString(16)
-            .padStart(8, "0")
-            .slice(0, 4);
-        if (fw_version) {
-            fw_version = `${fw_version.slice(0, 2).trimStart()}.${fw_version.slice(2)}`;
-            if (fw_version.startsWith("0")) {
-                fw_version = fw_version.slice(1);
-            }
-        }
-
-        return {
-            id: -1,
-            path: path,
-            cusa: (e.TITLE_ID?.Text || fallbackTitle) as CUSA,
-            title: e.TITLE?.Text || "Unknown",
-            version: (e.APP_VER?.Text as Version) || "N/A",
-            fw_version: fw_version || "UNK",
-            sfo,
-        };
-    } catch (e: unknown) {
-        console.error(`could not read game info at: "${path}"`, e);
-        return {
-            id: -2,
-            path: path,
-            cusa: "N/A",
-            title: "N/A",
-            version: "N/A",
-            fw_version: "N/A",
-            sfo: null,
-            error: new Error(`game read info. ${stringifyError(e)}`, {
-                cause: e,
-            }),
-        };
-    }
-}
 
 export type GameLibraryIndexer = {
     stop: () => Promise<void>;
@@ -105,7 +38,7 @@ export function startGameLibraryIndexer(
             if (!path) {
                 break;
             }
-            let gameData = await loadGameData(path);
+            let gameData = await inspectGameEntry(path);
             if (gameData.id === -1) {
                 if (!("error" in gameData)) {
                     gameData = await db.addGame(gameData);
