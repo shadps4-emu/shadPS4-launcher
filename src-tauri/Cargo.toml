@@ -31,6 +31,7 @@ tauri = { version = "2.11", features = ["devtools", "protocol-asset"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = { version = "2", features = ["watch"] }
 tauri-plugin-log = { version = "2", features = ["colored"] }
+tauri-plugin-mcp-bridge = "0.12.0"
 tauri-plugin-opener = "2"
 tauri-plugin-os = "2"
 tauri-plugin-process = "2"

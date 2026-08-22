@@ -12,7 +12,7 @@ mod db_migrations;
 
 pub fn run() {
     let logger_plugin = build_log_plugin();
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default()
         .invoke_handler(handlers::all_handlers())
         .plugin(logger_plugin)
         .plugin(tauri_plugin_dialog::init())
@@ -35,7 +35,18 @@ pub fn run() {
         )
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_upload::init())
+        .plugin(tauri_plugin_upload::init());
+
+    #[cfg(debug_assertions)]
+    {
+        builder = builder.plugin(
+            tauri_plugin_mcp_bridge::Builder::new()
+                .bind_address("127.0.0.1")
+                .build(),
+        );
+    }
+
+    builder
         .setup(|app| {
             let commit = option_env!("GIT_HASH");
             if let Some(commit) = commit {

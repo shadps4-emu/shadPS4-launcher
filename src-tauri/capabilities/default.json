@@ -23,6 +23,7 @@
         "fs:allow-write-text-file",
         "fs:default",
         "log:default",
+        "mcp-bridge:default",
         "opener:allow-open-path",
         "opener:allow-reveal-item-in-dir",
         "opener:default",
