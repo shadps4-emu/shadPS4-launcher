@@ -23,11 +23,11 @@ import JP from "@/assets/flags/jp.svg";
 import US from "@/assets/flags/us.svg";
 import { CheatAndPatchesModal } from "@/components/modals/cheats-and-patches-modal";
 import type { GamepadButtonEvent } from "@/handlers/gamepad";
-import { startGame } from "@/handlers/run-emu";
 import {
     GamepadNavField,
     type NavButton,
 } from "@/lib/context/gamepad-nav-field";
+import { launch } from "@/lib/game-launch";
 import { useNavigator } from "@/lib/hooks/useNavigator";
 import type { PSF } from "@/lib/native/psf";
 import { stringifyError } from "@/lib/utils/error";
@@ -139,7 +139,7 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
         startTransition(async () => {
             try {
                 setClickCount(0);
-                const r = await startGame(store, game);
+                const r = await launch(store, game);
                 if (r) {
                     pushModal(<GameDetailsModal gameData={r.game} />);
                 }
