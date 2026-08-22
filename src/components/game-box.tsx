@@ -21,7 +21,7 @@ import CN from "@/assets/flags/cn.svg";
 import EU from "@/assets/flags/eu.svg";
 import JP from "@/assets/flags/jp.svg";
 import US from "@/assets/flags/us.svg";
-import { CheatAndPatchesModal } from "@/components/modals/cheats-and-patches-modal";
+import { GameDetailsModal } from "@/components/modals/game-details-modal";
 import type { GamepadButtonEvent } from "@/handlers/gamepad";
 import {
     GamepadNavField,
@@ -37,7 +37,6 @@ import { gamepadActiveAtom } from "@/store/gamepad";
 import { MarqueeTitle } from "./animate-ui/effects/marquee-title";
 import { GameBoxCover } from "./game-cover";
 import GamepadIcon, { ButtonType } from "./gamepad-icon";
-import { GameDetailsModal } from "./modals/game-details-modal";
 import { Button } from "./ui/button";
 import {
     ContextMenu,
@@ -101,7 +100,7 @@ export function GameBoxError({ err }: { err: Error }) {
 
 export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     const [isPending, startTransition] = useTransition();
-    const { pushModal, modalStack } = useNavigator();
+    const { openModal, modalStack } = useNavigator();
 
     const isGamepad = useAtomValue(gamepadActiveAtom);
     const store = useStore();
@@ -141,7 +140,10 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
                 setClickCount(0);
                 const r = await launch(store, game);
                 if (r) {
-                    pushModal(<GameDetailsModal gameData={r.game} />);
+                    openModal({
+                        id: "game-details",
+                        params: { gameData: r.game },
+                    });
                 }
             } catch (e: unknown) {
                 toast.error(`Unknown error: ${stringifyError(e)}`);
@@ -158,12 +160,18 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
 
     const openDetails = () => {
         startTransition(() => {
-            pushModal(<GameDetailsModal gameData={game} />);
+            openModal({
+                id: "game-details",
+                params: { gameData: game },
+            });
         });
     };
 
     const openCheatsPatches = () => {
-        pushModal(<CheatAndPatchesModal gameData={game} />);
+        openModal({
+            id: "cheats-and-patches",
+            params: { gameData: game },
+        });
     };
 
     const openContext = (e: ReactMouseEvent | null) => {

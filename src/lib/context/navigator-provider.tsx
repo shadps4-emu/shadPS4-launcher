@@ -29,7 +29,10 @@ type Operation =
 
 const context = createContext<NavigatorContext | null>(null);
 
-export function NavigatorProvider({ children }: PropsWithChildren) {
+export function NavigatorProvider({
+    children,
+    initialModal = null,
+}: PropsWithChildren<{ initialModal?: ReactNode }>) {
     const [state, dispatch] = useReducer<NavigatorState, [Operation]>(
         (state, arg) => {
             const op = arg.op;
@@ -59,7 +62,7 @@ export function NavigatorProvider({ children }: PropsWithChildren) {
             }
         },
         {
-            modalStack: [],
+            modalStack: initialModal ? [initialModal] : [],
         },
     );
 

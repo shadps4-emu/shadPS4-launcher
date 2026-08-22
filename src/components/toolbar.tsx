@@ -9,12 +9,9 @@ import {
     SortDescIcon,
 } from "lucide-react";
 import { type ComponentProps, useState } from "react";
-import { EmuConfigModal } from "@/components/modals/emu-config-modal";
-import { FolderConfigModal } from "@/components/modals/folder-config-modal";
-import { VersionManagerModal } from "@/components/modals/version-manager-modal";
+import { ModalButton } from "@/components/modal-button";
 import { GamepadNavField } from "@/lib/context/gamepad-nav-field";
 import { useDebounceEffect } from "@/lib/hooks/useDebounceEffect";
-import { useNavigator } from "@/lib/hooks/useNavigator";
 import { cn } from "@/lib/utils/ui";
 import { oficialRepo } from "@/store/common";
 import {
@@ -44,7 +41,6 @@ import { Spinner } from "./ui/spinner";
 import { Tooltip, TooltipContent } from "./ui/tooltip";
 
 function VersionSelector() {
-    const { pushModal } = useNavigator();
     const [isOpen, setIsOpen] = useState(false);
     const installedVersions = useAtomValue(atomInstalledVersions);
     const [selectVersion, setSelectedVersion] = useAtom(atomSelectedVersion);
@@ -79,15 +75,13 @@ function VersionSelector() {
                     </SelectGroup>
                     <SelectSeparator />
                     <Navigable>
-                        <Button
-                            onClick={() => {
-                                setIsOpen(false);
-                                pushModal(<VersionManagerModal />);
-                            }}
+                        <ModalButton
+                            modal="version-manager"
+                            onClick={() => setIsOpen(false)}
                             variant="ghost"
                         >
                             Open Version Manager
-                        </Button>
+                        </ModalButton>
                     </Navigable>
                 </GamepadNavField>
             </SelectContent>
@@ -126,7 +120,6 @@ type Props = {
 };
 
 export function Toolbar({ onSearch = () => void 0 }: Props) {
-    const { pushModal } = useNavigator();
     const [sort, setSort] = useAtom(atomGameLibrarySorting);
     const [isSortOpen, setSortOpen] = useState(false);
     const indexing = useAtomValue(atomGameLibraryIsIndexing);
@@ -190,18 +183,36 @@ export function Toolbar({ onSearch = () => void 0 }: Props) {
                     </Select>
                 </div>
                 <div className="flex items-center gap-2">
-                    <ToolbarButton
-                        onClick={() => pushModal(<EmuConfigModal />)}
-                        tooltip="Emulator Settings"
-                    >
-                        <SettingsIcon />
-                    </ToolbarButton>
-                    <ToolbarButton
-                        onClick={() => pushModal(<FolderConfigModal />)}
-                        tooltip="Folder Settings"
-                    >
-                        <FolderCogIcon />
-                    </ToolbarButton>
+                    <Tooltip delayDuration={0}>
+                        <TooltipTrigger asChild>
+                            <Navigable>
+                                <ModalButton
+                                    className="[&_svg]:size-6"
+                                    modal="emu-config"
+                                    size="icon"
+                                    variant="ghost"
+                                >
+                                    <SettingsIcon />
+                                </ModalButton>
+                            </Navigable>
+                        </TooltipTrigger>
+                        <TooltipContent>Emulator Settings</TooltipContent>
+                    </Tooltip>
+                    <Tooltip delayDuration={0}>
+                        <TooltipTrigger asChild>
+                            <Navigable>
+                                <ModalButton
+                                    className="[&_svg]:size-6"
+                                    modal="folder-config"
+                                    size="icon"
+                                    variant="ghost"
+                                >
+                                    <FolderCogIcon />
+                                </ModalButton>
+                            </Navigable>
+                        </TooltipTrigger>
+                        <TooltipContent>Folder Settings</TooltipContent>
+                    </Tooltip>
                     <ToolbarButton>
                         <Gamepad2Icon />
                     </ToolbarButton>

@@ -19,11 +19,6 @@ async function start() {
         win.onCloseRequested(() => {
             exit(0);
         });
-    } else {
-        win.onCloseRequested((e) => {
-            e.preventDefault();
-            win.hide();
-        });
     }
 
     startGamepadHandler();

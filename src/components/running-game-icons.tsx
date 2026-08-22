@@ -1,6 +1,5 @@
 import { useAtomValue } from "jotai";
 import type { ComponentProps, ReactElement } from "react";
-import { RunningGameModal } from "@/components/modals/running-game-modal";
 import { useGameCover } from "@/lib/hooks/useGameCover";
 import { useNavigator } from "@/lib/hooks/useNavigator";
 import { cn } from "@/lib/utils/ui";
@@ -12,7 +11,7 @@ function SingleGameIcon({
     ...props
 }: ComponentProps<"div"> & { runningGame: GameProcessState }) {
     const { game } = runningGame;
-    const { pushModal } = useNavigator();
+    const { openModal } = useNavigator();
     const state = useAtomValue(runningGame.atomRunning);
     const [_, cover] = useGameCover(game);
 
@@ -29,7 +28,10 @@ function SingleGameIcon({
         <div
             className={cn("relative", className)}
             onClick={() =>
-                pushModal(<RunningGameModal runningGame={runningGame} />)
+                openModal({
+                    id: "running-game",
+                    params: { runningGame },
+                })
             }
             role="button"
             tabIndex={0}

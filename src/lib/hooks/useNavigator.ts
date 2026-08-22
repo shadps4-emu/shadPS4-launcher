@@ -1,5 +1,13 @@
 import type React from "react";
 import { useCallback, useContext } from "react";
+import {
+    isWindowableModalId,
+    type ModalId,
+    type ModalParamsById,
+    type OpenModalRequest,
+    openModalWindow,
+    renderModal,
+} from "@/lib/modals";
 import { NavigatorProvider } from "../context/navigator-provider";
 
 export function useNavigator() {
@@ -24,9 +32,30 @@ export function useNavigator() {
         [ctx.dispatch],
     );
 
+    const openModal = useCallback(
+        <I extends ModalId>(request: OpenModalRequest<I>) => {
+            const mode = request.mode ?? "panel";
+            const params = (
+                "params" in request ? request.params : undefined
+            ) as ModalParamsById[I];
+
+            if (mode === "window" && isWindowableModalId(request.id)) {
+                void openModalWindow(
+                    request.id,
+                    params as ModalParamsById[typeof request.id],
+                );
+                return;
+            }
+
+            pushModal(renderModal(request.id, params));
+        },
+        [pushModal],
+    );
+
     return {
         ...ctx,
         popModal,
         pushModal,
+        openModal,
     };
 }
