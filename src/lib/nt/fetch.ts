@@ -1,4 +1,5 @@
 import { ResultAsync } from "neverthrow";
+import type { infer as Infer, ZodError, ZodType } from "zod";
 
 export class FetchError extends Error {
     constructor(
@@ -9,6 +10,18 @@ export class FetchError extends Error {
         this.name = "FetchError";
         Object.setPrototypeOf(this, FetchError.prototype);
     }
+}
+
+function formatValidationError(error: ZodError): string {
+    return error.issues
+        .map((issue) => {
+            const path =
+                issue.path.length > 0
+                    ? issue.path.map(String).join(".")
+                    : "(root)";
+            return `${path}: ${issue.message}`;
+        })
+        .join("; ");
 }
 
 export function fetchSafe(
@@ -34,17 +47,28 @@ export function fetchSafe(
     );
 }
 
-export function fetchJsonSafe<T>(
+export function fetchJsonSafe<S extends ZodType>(
     input: RequestInfo | URL,
+    schema: S,
     init?: RequestInit,
-): ResultAsync<T, FetchError> {
+): ResultAsync<Infer<S>, FetchError> {
     return fetchSafe(input, init).andThen((res) =>
-        ResultAsync.fromPromise(res.json() as Promise<T>, (err) =>
-            err instanceof FetchError
-                ? err
-                : new FetchError(
-                      err instanceof Error ? err.message : String(err),
-                  ),
+        ResultAsync.fromPromise(
+            res.json().then((data: unknown) => {
+                const parsed = schema.safeParse(data);
+                if (!parsed.success) {
+                    throw new FetchError(
+                        `Invalid JSON response: ${formatValidationError(parsed.error)}`,
+                    );
+                }
+                return parsed.data;
+            }),
+            (err) =>
+                err instanceof FetchError
+                    ? err
+                    : new FetchError(
+                          err instanceof Error ? err.message : String(err),
+                      ),
         ),
     );
 }
