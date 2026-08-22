@@ -1,19 +1,18 @@
 import { dirname, join } from "@tauri-apps/api/path";
-import { exists, mkdir, readTextFile } from "@tauri-apps/plugin-fs";
+import { exists, mkdir } from "@tauri-apps/plugin-fs";
 import { ResultAsync } from "neverthrow";
+import { resolveMods } from "@/lib/mod-repository";
 import { WarningError } from "@/lib/utils/error";
 import { isZarPath } from "@/lib/utils/game-path";
 import type { JotaiStore } from "@/store";
 import {
     atomAvailablePatches,
-    atomCheatsEnabled,
     atomPatchRepoEnabledByGame,
-    type CheatFileFormat,
     type CheatFileMod,
 } from "@/store/cheats-and-patches";
 import type { CUSAVersion } from "@/store/common";
 import type { GameEntry } from "@/store/db";
-import { atomCheatPath, atomEmuUserPath, atomPatchPath } from "@/store/paths";
+import { atomEmuUserPath, atomPatchPath } from "@/store/paths";
 import { atomSelectedVersion } from "@/store/version-manager";
 
 export type LaunchOptions = {
@@ -29,38 +28,6 @@ export type LaunchConfig = {
     args: string[];
     cheatMods: CheatFileMod[];
 };
-
-async function resolveCheatMods(
-    gameKey: CUSAVersion,
-    store: JotaiStore,
-): Promise<CheatFileMod[]> {
-    const cheatFolderPath = await store.get(atomCheatPath);
-    const enabledCheats = store.get(atomCheatsEnabled)[gameKey];
-    if (!enabledCheats) {
-        return [];
-    }
-
-    const mods: CheatFileMod[] = [];
-    for (const [repo, enabledMods] of Object.entries(enabledCheats)) {
-        const cheatFilePath = await join(
-            cheatFolderPath,
-            repo,
-            `${gameKey}.json`,
-        );
-        if (!(await exists(cheatFilePath))) {
-            continue;
-        }
-        const cheatFile = JSON.parse(
-            await readTextFile(cheatFilePath),
-        ) as CheatFileFormat;
-        for (const mod of cheatFile.mods) {
-            if (enabledMods.includes(mod.name)) {
-                mods.push(mod);
-            }
-        }
-    }
-    return mods;
-}
 
 async function resolveLaunchConfigInner(
     store: JotaiStore,
@@ -121,7 +88,7 @@ async function resolveLaunchConfigInner(
         args.push(gameBinary);
     }
 
-    const cheatMods = await resolveCheatMods(gameKey, store);
+    const cheatMods = await resolveMods(gameKey, store);
 
     return {
         emuPath: emu,
