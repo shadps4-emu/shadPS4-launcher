@@ -5,7 +5,10 @@ import ReactDOM from "react-dom/client";
 import { App } from "./app";
 import { startUpdateChecker } from "./handlers/auto-update";
 import { startGamepadHandler } from "./handlers/gamepad";
+import { startGameLibraryIndexer } from "./lib/game-library";
 import { setupForwardingConsole } from "./lib/native/forward-log";
+import { defaultStore } from "./store";
+import { atomGamesPath } from "./store/paths";
 
 async function start() {
     await setupForwardingConsole();
@@ -24,6 +27,7 @@ async function start() {
     }
 
     startGamepadHandler();
+    startGameLibraryIndexer(defaultStore, (cb) => atomGamesPath.listen(cb));
 
     const root = document.getElementById("root");
 
