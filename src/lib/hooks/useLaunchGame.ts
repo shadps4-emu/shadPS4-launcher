@@ -28,13 +28,7 @@ export function useLaunchGame() {
 
             startTransition(async () => {
                 try {
-                    const result = await launch(store, game);
-                    if (result) {
-                        openModal({
-                            id: "game-details",
-                            params: { gameData: result.game },
-                        });
-                    }
+                    await launch(store, game);
                 } catch (e: unknown) {
                     toast.error(`Unknown error: ${stringifyError(e)}`);
                 } finally {
@@ -42,7 +36,7 @@ export function useLaunchGame() {
                 }
             });
         },
-        [store, openModal],
+        [store],
     );
 
     const requestLaunch = useCallback(
@@ -121,18 +115,12 @@ export function useLaunchGame() {
         startTransition(async () => {
             try {
                 await terminateRunningGame(runningGame, store);
-                const result = await launch(store, game);
-                if (result) {
-                    openModal({
-                        id: "game-details",
-                        params: { gameData: result.game },
-                    });
-                }
+                await launch(store, game);
             } catch (e: unknown) {
                 toast.error(`Unknown error: ${stringifyError(e)}`);
             }
         });
-    }, [conflict, store, openModal, setConflict]);
+    }, [conflict, store, setConflict]);
 
     return {
         requestLaunch,

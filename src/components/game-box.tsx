@@ -109,6 +109,7 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     const contextMenuRef = useRef<HTMLSpanElement>(null);
     const contextOpenButtonRef = useRef<HTMLButtonElement>(null);
     const clickTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
+    const launchIntentRef = useRef(false);
 
     const isDetailsOpen = useMemo(() => {
         if (modalStack.length === 0) {
@@ -147,6 +148,9 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
         clearClickTimer();
         clickTimerRef.current = setTimeout(() => {
             clickTimerRef.current = null;
+            if (launchIntentRef.current) {
+                return;
+            }
             openDetails();
         }, SINGLE_CLICK_DELAY_MS);
     }, [clearClickTimer, openDetails]);
@@ -156,13 +160,20 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
             e?.preventDefault();
             e?.stopPropagation();
             clearClickTimer();
+            launchIntentRef.current = true;
             requestLaunch(game);
+            window.setTimeout(() => {
+                launchIntentRef.current = false;
+            }, SINGLE_CLICK_DELAY_MS + 100);
         },
         [clearClickTimer, game, requestLaunch],
     );
 
     const onClick = (e: ReactMouseEvent) => {
         if (e.detail !== 1) {
+            if (e.detail >= 2) {
+                clearClickTimer();
+            }
             return;
         }
         e.stopPropagation();
