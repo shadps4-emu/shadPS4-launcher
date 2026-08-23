@@ -10,6 +10,7 @@ export type OpenMode = "panel" | "window";
  */
 export type ModalParamsById = {
     "emu-config": undefined;
+    "input-bindings": undefined;
     "folder-config": undefined;
     "version-manager": undefined;
     "game-details": { gameData: GameEntry };
@@ -25,6 +26,7 @@ export type WindowableModalId = Exclude<ModalId, "running-game">;
 
 export const WINDOWABLE_MODAL_IDS = new Set<WindowableModalId>([
     "emu-config",
+    "input-bindings",
     "folder-config",
     "version-manager",
     "game-details",

@@ -8,11 +8,10 @@ import {
     SettingsIcon,
     SortDescIcon,
 } from "lucide-react";
-import { type ComponentProps, useState } from "react";
+import { useState } from "react";
 import { ModalButton } from "@/components/modal-button";
 import { GamepadNavField } from "@/lib/context/gamepad-nav-field";
 import { useDebounceEffect } from "@/lib/hooks/useDebounceEffect";
-import { cn } from "@/lib/utils/ui";
 import { oficialRepo } from "@/store/common";
 import {
     atomGameLibraryIsIndexing,
@@ -86,32 +85,6 @@ function VersionSelector() {
                 </GamepadNavField>
             </SelectContent>
         </Select>
-    );
-}
-
-function ToolbarButton({
-    tooltip,
-    className,
-    ...props
-}: ComponentProps<typeof Button> & { tooltip?: string }) {
-    const content = (
-        <Navigable>
-            <Button
-                className={cn("[&_svg]:size-6", className)}
-                size="icon"
-                variant="ghost"
-                {...props}
-            />
-        </Navigable>
-    );
-    if (!tooltip) {
-        return content;
-    }
-    return (
-        <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>{content}</TooltipTrigger>
-            <TooltipContent>{tooltip}</TooltipContent>
-        </Tooltip>
     );
 }
 
@@ -213,9 +186,21 @@ export function Toolbar({ onSearch = () => void 0 }: Props) {
                         </TooltipTrigger>
                         <TooltipContent>Folder Settings</TooltipContent>
                     </Tooltip>
-                    <ToolbarButton>
-                        <Gamepad2Icon />
-                    </ToolbarButton>
+                    <Tooltip delayDuration={0}>
+                        <TooltipTrigger asChild>
+                            <Navigable>
+                                <ModalButton
+                                    className="[&_svg]:size-6"
+                                    modal="input-bindings"
+                                    size="icon"
+                                    variant="ghost"
+                                >
+                                    <Gamepad2Icon />
+                                </ModalButton>
+                            </Navigable>
+                        </TooltipTrigger>
+                        <TooltipContent>Input Bindings</TooltipContent>
+                    </Tooltip>
                     {indexing && (
                         <div className="flex gap-2 [&_svg]:size-6">
                             <Spinner />

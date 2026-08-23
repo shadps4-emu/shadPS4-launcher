@@ -3,6 +3,7 @@ import { CheatAndPatchesModal } from "@/components/modals/cheats-and-patches-mod
 import { EmuConfigModal } from "@/components/modals/emu-config-modal";
 import { FolderConfigModal } from "@/components/modals/folder-config-modal";
 import { GameDetailsModal } from "@/components/modals/game-details-modal";
+import { InputBindingsModal } from "@/components/modals/input-bindings-modal";
 import { RunningGameModal } from "@/components/modals/running-game-modal";
 import { VersionManagerModal } from "@/components/modals/version-manager-modal";
 import type { ModalId, ModalParamsById } from "./types";
@@ -26,6 +27,12 @@ export const modalRegistry = defineModals({
         width: 960,
         height: 720,
         render: () => <EmuConfigModal />,
+    },
+    "input-bindings": {
+        title: "Input Bindings",
+        width: 1024,
+        height: 780,
+        render: () => <InputBindingsModal />,
     },
     "folder-config": {
         title: "Folder Settings",
