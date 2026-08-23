@@ -49,6 +49,10 @@ import { Navigable } from "../ui/navigable";
 import { ScrollArea } from "../ui/scroll-area";
 import { BindingSlot } from "./binding-slot";
 import {
+    CONTROLLER_DIAGRAM_OUTPUTS,
+    ControllerDiagram,
+} from "./controller-diagram";
+import {
     type BindingCaptureTarget,
     useBindingCapture,
 } from "./use-binding-capture";
@@ -243,6 +247,42 @@ function InputBindingsPanelBody({ initial }: { initial: InputConfigFiles }) {
         toast.success("Restored default input bindings");
     };
 
+    const renderControllerDiagramSlot = (output: string) => {
+        const entries = entriesForTab(files, "controller", output);
+        const slots =
+            entries.length > 0
+                ? entries
+                : [{ inputs: ["", undefined, undefined] as BindingInputs }];
+        const entry = slots[0];
+        if (!entry) {
+            return null;
+        }
+
+        return (
+            <BindingSlot
+                compact
+                index={0}
+                inputs={entry.inputs}
+                key={`diagram-${output}-${entry.inputs.filter(Boolean).join("+") || "empty"}`}
+                label={OUTPUT_LABELS[output] ?? output}
+                listening={listening}
+                onClear={(target) =>
+                    persist(
+                        clearBinding(
+                            files,
+                            target.output,
+                            target.tab,
+                            target.index,
+                        ),
+                    )
+                }
+                onStart={setListening}
+                output={output}
+                tab="controller"
+            />
+        );
+    };
+
     const renderOutputSlots = (output: string) => {
         const entries = entriesForTab(files, tab, output);
         const slots =
@@ -353,26 +393,51 @@ function InputBindingsPanelBody({ initial }: { initial: InputConfigFiles }) {
                         {TAB_META.map(({ id }) => (
                             <TabsContent key={id} value={id}>
                                 <div className="space-y-8 p-5 sm:p-6">
+                                    {id === "controller" && (
+                                        <ControllerDiagram
+                                            outputs={[
+                                                ...CONTROLLER_DIAGRAM_OUTPUTS,
+                                            ]}
+                                            renderSlot={
+                                                renderControllerDiagramSlot
+                                            }
+                                        />
+                                    )}
+
                                     {id !== "mouse" &&
-                                        OUTPUT_GROUPS.map((group) => (
-                                            <section key={group.title}>
-                                                <div className="mb-4 flex items-center gap-3">
-                                                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-violet-400/40 to-transparent" />
-                                                    <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-[0.18em]">
-                                                        {group.title}
-                                                    </h3>
-                                                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-400/30 to-transparent" />
-                                                </div>
-                                                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                                                    {group.outputs.map(
-                                                        (output) =>
-                                                            renderOutputSlots(
-                                                                output,
-                                                            ),
-                                                    )}
-                                                </div>
-                                            </section>
-                                        ))}
+                                        OUTPUT_GROUPS.map((group) => {
+                                            const visibleOutputs =
+                                                group.outputs.filter(
+                                                    (output) =>
+                                                        id !== "controller" ||
+                                                        !CONTROLLER_DIAGRAM_OUTPUTS.has(
+                                                            output,
+                                                        ),
+                                                );
+                                            if (visibleOutputs.length === 0) {
+                                                return null;
+                                            }
+
+                                            return (
+                                                <section key={group.title}>
+                                                    <div className="mb-4 flex items-center gap-3">
+                                                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-violet-400/40 to-transparent" />
+                                                        <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-[0.18em]">
+                                                            {group.title}
+                                                        </h3>
+                                                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-400/30 to-transparent" />
+                                                    </div>
+                                                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                                                        {visibleOutputs.map(
+                                                            (output) =>
+                                                                renderOutputSlots(
+                                                                    output,
+                                                                ),
+                                                        )}
+                                                    </div>
+                                                </section>
+                                            );
+                                        })}
 
                                     {id === "keyboard" && (
                                         <section>
