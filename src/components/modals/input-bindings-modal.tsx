@@ -25,7 +25,7 @@ export function InputBindingsModal() {
                 <DialogTitle className="sr-only">Input Bindings</DialogTitle>
                 <DialogContent
                     aria-describedby={undefined}
-                    className="flex h-[min(92vh,780px)] max-h-[92vh] w-full max-w-full flex-col gap-0 overflow-hidden border-white/10 bg-gradient-to-br from-background via-background to-violet-950/20 p-0 sm:max-w-[95vw] lg:max-w-6xl"
+                    className="flex h-[min(95vh,880px)] w-[min(97vw,1200px)] max-w-none flex-col gap-0 overflow-hidden border-white/10 bg-gradient-to-br from-background via-background to-violet-950/20 p-0 sm:max-w-none"
                     showCloseButton
                 >
                     <InputBindingsPanel className="min-h-0 flex-1" />

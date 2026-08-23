@@ -2,12 +2,10 @@ import { SparklesIcon, XIcon } from "lucide-react";
 import { motion } from "motion/react";
 import {
     type BindingInputs,
-    formatBindingInputs,
     formatTokenLabel,
     type InputBindingTab,
 } from "@/lib/input-config";
 import { cn } from "@/lib/utils/ui";
-import { Button } from "../ui/button";
 import { Navigable } from "../ui/navigable";
 import type { BindingCaptureTarget } from "./use-binding-capture";
 
@@ -18,12 +16,15 @@ type Props = {
     output: string;
     index: number;
     listening: BindingCaptureTarget | null;
-    conflict?: string;
-    compact?: boolean;
+    className?: string;
     onStart: (target: BindingCaptureTarget) => void;
     onClear: (target: BindingCaptureTarget) => void;
 };
 
+/**
+ * One bindable slot. The whole surface is the bind target so the chip stays
+ * short enough to sit on the controller map without a separate action button.
+ */
 export function BindingSlot({
     label,
     inputs,
@@ -31,12 +32,11 @@ export function BindingSlot({
     output,
     index,
     listening,
-    conflict,
-    compact = false,
+    className,
     onStart,
     onClear,
 }: Props) {
-    const target = { tab, output, index };
+    const target = { index, output, tab };
     const isListening =
         listening?.output === output &&
         listening.index === index &&
@@ -51,25 +51,18 @@ export function BindingSlot({
     return (
         <div
             className={cn(
-                "group relative overflow-hidden border bg-gradient-to-br p-[1px] transition-all duration-300",
-                compact ? "rounded-xl" : "rounded-2xl",
+                "group relative h-full w-full overflow-hidden rounded-xl border bg-gradient-to-br p-px transition-colors duration-300",
                 isListening
-                    ? "border-transparent from-violet-500/80 via-fuchsia-500/70 to-amber-400/60 shadow-[0_0_32px_rgba(168,85,247,0.35)]"
-                    : "border-white/10 from-white/10 via-white/5 to-transparent hover:from-violet-500/30 hover:via-fuchsia-500/20 hover:to-cyan-400/20",
+                    ? "border-transparent from-violet-500/80 via-fuchsia-500/70 to-amber-400/60 shadow-[0_0_24px_rgba(168,85,247,0.35)]"
+                    : "border-white/10 from-white/10 via-white/5 to-transparent hover:from-violet-500/40 hover:via-fuchsia-500/25 hover:to-cyan-400/20",
+                className,
             )}
         >
-            <div
-                className={cn(
-                    "relative bg-gradient-to-br from-background/95 via-background/90 to-muted/20 backdrop-blur-sm",
-                    compact
-                        ? "rounded-[calc(0.75rem-1px)] p-2"
-                        : "rounded-[calc(1rem-1px)] p-4",
-                )}
-            >
+            <div className="relative flex h-full w-full flex-col justify-center overflow-hidden rounded-[calc(0.75rem-1px)] bg-gradient-to-br from-background/95 via-background/90 to-muted/20 px-2.5 backdrop-blur-sm">
                 {isListening && (
                     <motion.div
-                        animate={{ opacity: [0.35, 0.75, 0.35] }}
-                        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.18),transparent_55%)]"
+                        animate={{ opacity: [0.35, 0.8, 0.35] }}
+                        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.25),transparent_60%)]"
                         transition={{
                             duration: 1.6,
                             repeat: Number.POSITIVE_INFINITY,
@@ -77,112 +70,48 @@ export function BindingSlot({
                         }}
                     />
                 )}
-                <div
-                    className={cn(
-                        "relative flex items-start justify-between gap-2",
-                        compact && "items-center",
-                    )}
-                >
-                    <div className="min-w-0">
-                        <p
-                            className={cn(
-                                "font-medium text-muted-foreground uppercase tracking-[0.16em]",
-                                compact
-                                    ? "text-[9px] leading-none"
-                                    : "text-[11px]",
-                            )}
-                        >
-                            {label}
-                        </p>
-                        <p
-                            className={cn(
-                                "truncate font-semibold tracking-tight",
-                                compact
-                                    ? "mt-1 text-[11px] leading-tight"
-                                    : "mt-2 text-base",
-                                isListening &&
-                                    "bg-gradient-to-r from-violet-300 via-fuchsia-200 to-amber-200 bg-clip-text text-transparent",
-                            )}
-                        >
-                            {isListening ? "Press…" : display}
-                        </p>
-                        {!compact &&
-                            !isListening &&
-                            inputs.filter(Boolean).length > 0 && (
-                                <p className="mt-1 truncate text-muted-foreground text-xs">
-                                    {formatBindingInputs([
-                                        inputs[0] ?? "",
-                                        inputs[1],
-                                        inputs[2],
-                                    ])}
-                                </p>
-                            )}
-                        {conflict && (
-                            <p
-                                className={cn(
-                                    "text-amber-300",
-                                    compact
-                                        ? "mt-1 text-[10px]"
-                                        : "mt-2 text-xs",
-                                )}
-                            >
-                                Also used by {conflict}
-                            </p>
-                        )}
-                    </div>
-                    <div className="flex shrink-0 items-center gap-1">
-                        {isListening && (
-                            <SparklesIcon
-                                className={cn(
-                                    "animate-pulse text-fuchsia-300",
-                                    compact ? "size-3" : "size-4",
-                                )}
-                            />
-                        )}
-                        {inputs.some(Boolean) && !isListening && (
-                            <Navigable>
-                                <Button
-                                    className={cn(
-                                        "opacity-0 transition-opacity group-hover:opacity-100",
-                                        compact ? "size-6" : "size-8",
-                                    )}
-                                    onClick={() => onClear(target)}
-                                    size="icon"
-                                    variant="ghost"
-                                >
-                                    <XIcon
-                                        className={
-                                            compact ? "size-3" : "size-4"
-                                        }
-                                    />
-                                </Button>
-                            </Navigable>
-                        )}
-                    </div>
-                </div>
+
                 <Navigable>
                     <button
-                        className={cn(
-                            "w-full border font-medium transition-all",
-                            compact
-                                ? "mt-2 rounded-lg px-2 py-1 text-[10px]"
-                                : "mt-4 rounded-xl px-3 py-2 text-sm",
-                            isListening
-                                ? "border-fuchsia-400/40 bg-fuchsia-500/10 text-fuchsia-100"
-                                : "border-white/10 bg-white/5 text-foreground hover:border-violet-400/30 hover:bg-violet-500/10",
-                        )}
+                        aria-label={`Bind ${label}`}
+                        className="absolute inset-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400/60 focus-visible:ring-inset"
                         onClick={() => onStart(target)}
                         type="button"
-                    >
-                        {isListening
-                            ? compact
-                                ? "Listening…"
-                                : "Listening… (Esc to cancel)"
-                            : compact
-                              ? "Bind"
-                              : "Click to bind"}
-                    </button>
+                    />
                 </Navigable>
+
+                <p className="pointer-events-none relative truncate font-medium text-[10px] text-muted-foreground uppercase leading-none tracking-[0.12em]">
+                    {label}
+                </p>
+                <p
+                    className={cn(
+                        "pointer-events-none relative mt-1 truncate font-semibold text-xs leading-tight",
+                        isListening &&
+                            "bg-gradient-to-r from-violet-300 via-fuchsia-200 to-amber-200 bg-clip-text text-transparent",
+                        !isListening &&
+                            boundTokens.length === 0 &&
+                            "text-muted-foreground/60",
+                    )}
+                >
+                    {isListening ? "Press any input…" : display}
+                </p>
+
+                {isListening && (
+                    <SparklesIcon className="pointer-events-none absolute top-1.5 right-1.5 size-3 animate-pulse text-fuchsia-300" />
+                )}
+
+                {boundTokens.length > 0 && !isListening && (
+                    <Navigable>
+                        <button
+                            aria-label={`Clear ${label}`}
+                            className="absolute top-1 right-1 grid size-5 place-items-center rounded-md text-muted-foreground opacity-0 transition hover:bg-white/10 hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
+                            onClick={() => onClear(target)}
+                            type="button"
+                        >
+                            <XIcon className="size-3" />
+                        </button>
+                    </Navigable>
+                )}
             </div>
         </div>
     );
