@@ -10,6 +10,7 @@ import {
     createGameProcesState,
     type GameProcessState,
     removeRunningGame,
+    removeSingleClosedRunningGameOnLaunch,
 } from "@/store/running-games";
 import {
     type LaunchConfig,
@@ -27,6 +28,10 @@ async function launchWithConfig(
     config: LaunchConfig,
     options: FullLaunchOptions,
 ): Promise<GameProcessState | null> {
+    if (!options.existingState) {
+        removeSingleClosedRunningGameOnLaunch(store);
+    }
+
     const previousAtomProcess = options.existingState?.atomProcess;
     let existingProcess: GameProcess | null = null;
     if (previousAtomProcess) {

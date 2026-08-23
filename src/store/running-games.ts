@@ -93,6 +93,37 @@ export function removeRunningGame(
     delete (state as Partial<GameProcessState>).atomProcess;
 }
 
+/** Closed = process no longer running (`atomRunning` holds exit code, not `true`). */
+export function isRunningGameClosed(
+    store: JotaiStore,
+    state: GameProcessState,
+): boolean {
+    return store.get(state.atomRunning) !== true;
+}
+
+/**
+ * When launching a new game, drop a lone stale toolbar entry whose process
+ * has already exited (restore after reload, crash, or closed emulator window).
+ */
+export function removeSingleClosedRunningGameOnLaunch(
+    store: JotaiStore,
+    options: { excludeState?: GameProcessState } = {},
+): void {
+    const closedGames = store.get(atomRunningGames).filter((state) => {
+        if (state === options.excludeState) {
+            return false;
+        }
+        return isRunningGameClosed(store, state);
+    });
+
+    if (closedGames.length === 1) {
+        const closedGame = closedGames[0];
+        if (closedGame) {
+            removeRunningGame(closedGame, store);
+        }
+    }
+}
+
 function findLibraryGame(
     library: GameEntry[],
     game: GameEntry,
