@@ -44,6 +44,15 @@ export type GameEvent =
     | { event: "iOError"; err: string }
     | { event: "ipcLine"; value: string };
 
+export type RunningProcessInfo = {
+    pid: number;
+    exe: string;
+    wd: string;
+    args: string[];
+    ipcReady: boolean;
+    capabilities: string[];
+};
+
 export class GameProcess {
     #exe: string;
     #workingDir: string;
@@ -84,6 +93,33 @@ export class GameProcess {
                 return new GameProcess(exe, workingDir, args, pid, ch);
             })(),
             (err) => new GameStartError(exe, workingDir, args, err),
+        );
+    }
+
+    static listRunning(): ResultAsync<RunningProcessInfo[], Error> {
+        return ResultAsync.fromPromise(
+            invoke<RunningProcessInfo[]>("game_process_list"),
+            (err) => (err instanceof Error ? err : new Error(String(err))),
+        );
+    }
+
+    static attach(info: RunningProcessInfo): ResultAsync<GameProcess, Error> {
+        return ResultAsync.fromPromise(
+            (async () => {
+                const ch = new Channel<GameEvent>();
+                await invoke<RunningProcessInfo>("game_process_attach", {
+                    pid: info.pid,
+                    onEvent: ch,
+                });
+                return new GameProcess(
+                    info.exe,
+                    info.wd,
+                    info.args,
+                    info.pid,
+                    ch,
+                );
+            })(),
+            (err) => (err instanceof Error ? err : new Error(String(err))),
         );
     }
 

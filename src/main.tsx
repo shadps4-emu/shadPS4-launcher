@@ -7,6 +7,7 @@ import { startUpdateChecker } from "./handlers/auto-update";
 import { startGamepadHandler } from "./handlers/gamepad";
 import { startGameLibraryIndexer } from "./lib/game-library";
 import { setupForwardingConsole } from "./lib/native/forward-log";
+import { restoreRunningGamesFromBackend } from "./lib/running-games/restore-from-backend";
 import { defaultStore } from "./store";
 import { atomGamesPath } from "./store/paths";
 import { startRunningGamesSync } from "./store/running-games";
@@ -25,6 +26,7 @@ async function start() {
     startGamepadHandler();
     startGameLibraryIndexer(defaultStore, (cb) => atomGamesPath.listen(cb));
     startRunningGamesSync(defaultStore);
+    void restoreRunningGamesFromBackend(defaultStore);
 
     const root = document.getElementById("root");
 

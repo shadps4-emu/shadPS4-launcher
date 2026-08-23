@@ -10,14 +10,34 @@ export type EmulatorIpcSession = {
     applyCheats: (mods: CheatFileMod[]) => void;
 };
 
+export type ConnectEmulatorIpcOptions = {
+    reconnected?: boolean;
+    ipcReady?: boolean;
+    capabilities?: Capabilities[];
+};
+
 export function connectEmulatorIpc(
     process: GameProcess,
     state: GameProcessState,
     store: JotaiStore,
     onRestart: (args: string[]) => void,
+    options: ConnectEmulatorIpcOptions = {},
 ): EmulatorIpcSession {
+    const {
+        reconnected = false,
+        ipcReady = false,
+        capabilities = [],
+    } = options;
     const emuRunEvent = makeDeferred<void, never>();
     const { atomProcess } = state;
+
+    if (reconnected) {
+        if (ipcReady) {
+            state.hasIpc = true;
+            store.set(state.atomCapabilities, capabilities);
+        }
+        emuRunEvent.resolve();
+    }
 
     const addCapability = (capability: Capabilities) => {
         store.set(state.atomCapabilities, (prev) =>
@@ -26,7 +46,7 @@ export function connectEmulatorIpc(
     };
 
     let isReadingCapabilities = false;
-    let isFirstLine = true;
+    let isFirstLine = !(reconnected && ipcReady);
 
     let ipcState: null | keyof typeof ipcCommands = null;
     const ipcCommands = {

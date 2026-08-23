@@ -1,11 +1,10 @@
 use crate::game_process::GameBridgeState;
-use crate::game_process::game_process::{GameEvent, GameProcess};
+use crate::game_process::game_process::{GameEvent, GameProcess, RunningProcessInfo, is_process_alive};
 use crate::game_process::log::{Level, LogEntry};
 use anyhow::anyhow;
 use anyhow_tauri::IntoTAResult;
 use anyhow_tauri::bail;
 use log::{debug, error};
-use std::ffi::OsString;
 use std::fs::File;
 use std::io::Write;
 use tauri::ipc::Channel;
@@ -23,8 +22,6 @@ pub async fn game_process_spawn(
     on_event: Channel<GameEvent<'static>>,
     copy_data_from_pid: Option<u32>,
 ) -> anyhow_tauri::TAResult<u32> {
-    let args: Vec<OsString> = args.into_iter().map(|s| OsString::from(s)).collect();
-
     let mut data = None;
     if let Some(old_pid) = copy_data_from_pid {
         let state = state.lock().await;
@@ -39,9 +36,7 @@ pub async fn game_process_spawn(
         exe.as_path().ok_or(anyhow!("invalid exe"))?,
         wd.as_path().ok_or(anyhow!("invalid wd"))?,
         args,
-        move |ev| {
-            on_event.send(ev).expect("could not send game event to js");
-        },
+        on_event,
         data,
     )
     .await
@@ -90,6 +85,41 @@ pub async fn game_process_delete(
         bail!("pid not found");
     }
     Ok(())
+}
+
+#[tauri::command]
+pub async fn game_process_list(
+    state: GameBridgeState<'_>,
+) -> anyhow_tauri::TAResult<Vec<RunningProcessInfo>> {
+    let mut state = state.lock().await;
+    state
+        .process_list
+        .retain(|pid, _| is_process_alive(*pid));
+    Ok(state
+        .process_list
+        .values()
+        .map(GameProcess::info)
+        .collect())
+}
+
+#[tauri::command]
+pub async fn game_process_attach(
+    state: GameBridgeState<'_>,
+    pid: u32,
+    on_event: Channel<GameEvent<'static>>,
+) -> anyhow_tauri::TAResult<RunningProcessInfo> {
+    let state = state.lock().await;
+    let Some(proc) = state.process_list.get(&pid) else {
+        debug!("process not found: pid={}", pid);
+        bail!("pid not found");
+    };
+
+    if !is_process_alive(pid) {
+        bail!("process is not running");
+    }
+
+    proc.attach_event_channel(on_event);
+    Ok(proc.info())
 }
 
 #[tauri::command]
