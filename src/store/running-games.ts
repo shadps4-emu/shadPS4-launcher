@@ -3,6 +3,8 @@ import type { GameProcess, LogEntry } from "@/lib/native/game-process";
 import type { Callback } from "@/lib/utils/types";
 import { defaultStore, type JotaiStore } from ".";
 import { type GameEntry, isSameGame } from "./db";
+import { atomGameLibrary } from "./game-library";
+import { atomLaunchConflict } from "./launch-conflict";
 
 export type Capabilities = "ENABLE_MEMORY_PATCH";
 
@@ -89,4 +91,60 @@ export function removeRunningGame(
 
     delete (state as Partial<GameProcessState>).log;
     delete (state as Partial<GameProcessState>).atomProcess;
+}
+
+function findLibraryGame(
+    library: GameEntry[],
+    game: GameEntry,
+): GameEntry | undefined {
+    return library.find((entry) => isSameGame(entry, game));
+}
+
+export function reconcileRunningGamesWithLibrary(
+    store: JotaiStore,
+    library: GameEntry[],
+): void {
+    const runningGames = store.get(atomRunningGames);
+    let runningGamesChanged = false;
+
+    for (const state of runningGames) {
+        const match = findLibraryGame(library, state.game);
+        if (match && match !== state.game) {
+            state.game = match;
+            runningGamesChanged = true;
+        }
+    }
+
+    if (runningGamesChanged) {
+        store.set(atomRunningGames, [...runningGames]);
+    }
+
+    const conflict = store.get(atomLaunchConflict);
+    if (!conflict) {
+        return;
+    }
+
+    const game = findLibraryGame(library, conflict.game) ?? conflict.game;
+    const runningGame =
+        runningGames.find((state) => state === conflict.runningGame) ??
+        runningGames.find((state) =>
+            isSameGame(state.game, conflict.runningGame.game),
+        ) ??
+        conflict.runningGame;
+
+    if (game !== conflict.game || runningGame !== conflict.runningGame) {
+        store.set(atomLaunchConflict, {
+            ...conflict,
+            game,
+            runningGame,
+        });
+    }
+}
+
+export function startRunningGamesSync(
+    store: JotaiStore = defaultStore,
+): Callback {
+    return store.sub(atomGameLibrary, () => {
+        reconcileRunningGamesWithLibrary(store, store.get(atomGameLibrary));
+    });
 }

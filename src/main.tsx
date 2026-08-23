@@ -9,6 +9,7 @@ import { startGameLibraryIndexer } from "./lib/game-library";
 import { setupForwardingConsole } from "./lib/native/forward-log";
 import { defaultStore } from "./store";
 import { atomGamesPath } from "./store/paths";
+import { startRunningGamesSync } from "./store/running-games";
 
 async function start() {
     await setupForwardingConsole();
@@ -23,6 +24,7 @@ async function start() {
 
     startGamepadHandler();
     startGameLibraryIndexer(defaultStore, (cb) => atomGamesPath.listen(cb));
+    startRunningGamesSync(defaultStore);
 
     const root = document.getElementById("root");
 

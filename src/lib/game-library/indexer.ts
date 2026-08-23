@@ -43,6 +43,7 @@ export function startGameLibraryIndexer(
                 if (!("error" in gameData)) {
                     gameData = await db.addGame(gameData);
                 }
+                knownPaths.add(path);
                 store.set(atomGameLibrary, (prev) =>
                     prev.filter((e) => e.path !== path).concat(gameData),
                 );
