@@ -63,6 +63,23 @@ export function findActiveRunningGame(
     });
 }
 
+export function findAnyActiveRunningGame(
+    store: JotaiStore,
+): GameProcessState | undefined {
+    return store
+        .get(atomRunningGames)
+        .find((state) => store.get(state.atomRunning) === true);
+}
+
+export async function terminateRunningGame(
+    state: GameProcessState,
+    store: JotaiStore = defaultStore,
+): Promise<void> {
+    const process = store.get(state.atomProcess);
+    await process.kill();
+    removeRunningGame(state, store);
+}
+
 export function removeRunningGame(
     state: GameProcessState,
     store: JotaiStore = defaultStore,

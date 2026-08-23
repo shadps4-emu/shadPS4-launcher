@@ -22,6 +22,7 @@ import JP from "@/assets/flags/jp.svg";
 import US from "@/assets/flags/us.svg";
 import { AlreadyRunningGameDialog } from "@/components/modals/already-running-game-dialog";
 import { GameDetailsModal } from "@/components/modals/game-details-modal";
+import { TerminateRunningGameDialog } from "@/components/modals/terminate-running-game-dialog";
 import type { GamepadButtonEvent } from "@/handlers/gamepad";
 import {
     GamepadNavField,
@@ -102,10 +103,13 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     const {
         requestLaunch,
         isPending,
-        pending,
+        sameGameConflict,
+        differentGameConflict,
         dismissPrompt,
         openExistingLog,
         launchAnotherInstance,
+        proceedToTerminateConfirm,
+        confirmTerminateAndLaunch,
     } = useLaunchGame();
     const { openModal, modalStack } = useNavigator();
 
@@ -200,11 +204,20 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     return (
         <>
             <AlreadyRunningGameDialog
-                game={pending?.game ?? null}
+                game={sameGameConflict?.game ?? null}
                 onDismiss={dismissPrompt}
                 onLaunchAnother={launchAnotherInstance}
                 onOpenLog={openExistingLog}
-                open={pending !== null}
+                open={sameGameConflict !== null}
+            />
+            <TerminateRunningGameDialog
+                onConfirmTerminate={confirmTerminateAndLaunch}
+                onDismiss={dismissPrompt}
+                onProceedToConfirm={proceedToTerminateConfirm}
+                open={differentGameConflict !== null}
+                runningGame={differentGameConflict?.runningGame.game ?? null}
+                step={differentGameConflict?.step ?? "prompt"}
+                targetGame={differentGameConflict?.game ?? null}
             />
             <ContextMenu onOpenChange={setContextOpen}>
                 <ContextMenuTrigger asChild ref={contextMenuRef}>
