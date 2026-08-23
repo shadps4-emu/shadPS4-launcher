@@ -248,31 +248,69 @@ export function formatBindingInputs(inputs: BindingInputs): string {
     return inputs.filter(Boolean).join(" + ");
 }
 
+const TOKEN_LABELS: Record<string, string> = {
+    leftbutton: "Mouse 1",
+    rightbutton: "Mouse 2",
+    middlebutton: "Mouse 3",
+    sidebuttonback: "Mouse 4",
+    sidebuttonforward: "Mouse 5",
+    mousewheelup: "Wheel ↑",
+    mousewheeldown: "Wheel ↓",
+    mousewheelleft: "Wheel ←",
+    mousewheelright: "Wheel →",
+    pad_up: "D-pad Up",
+    pad_down: "D-pad Down",
+    pad_left: "D-pad Left",
+    pad_right: "D-pad Right",
+    l1: "L1",
+    l2: "L2",
+    l3: "L3",
+    l4: "L4",
+    l5: "L5",
+    r1: "R1",
+    r2: "R2",
+    r3: "R3",
+    r4: "R4",
+    r5: "R5",
+    lpaddle_high: "Left Paddle High",
+    lpaddle_low: "Left Paddle Low",
+    rpaddle_high: "Right Paddle High",
+    rpaddle_low: "Right Paddle Low",
+    axis_left_x: "Left Stick X",
+    axis_left_y: "Left Stick Y",
+    axis_right_x: "Right Stick X",
+    axis_right_y: "Right Stick Y",
+    axis_left_x_minus: "Left Stick ←",
+    axis_left_x_plus: "Left Stick →",
+    axis_left_y_minus: "Left Stick ↑",
+    axis_left_y_plus: "Left Stick ↓",
+    axis_right_x_minus: "Right Stick ←",
+    axis_right_x_plus: "Right Stick →",
+    axis_right_y_minus: "Right Stick ↑",
+    axis_right_y_plus: "Right Stick ↓",
+    lctrl: "L Ctrl",
+    rctrl: "R Ctrl",
+    lshift: "L Shift",
+    rshift: "R Shift",
+    lalt: "L Alt",
+    ralt: "R Alt",
+    lmeta: "L Meta",
+    rmeta: "R Meta",
+};
+
 export function formatTokenLabel(token: string): string {
     const base = tokenBase(token);
-    const labels: Record<string, string> = {
-        leftbutton: "Mouse 1",
-        rightbutton: "Mouse 2",
-        middlebutton: "Mouse 3",
-        sidebuttonback: "Mouse 4",
-        sidebuttonforward: "Mouse 5",
-        mousewheelup: "Wheel ↑",
-        mousewheeldown: "Wheel ↓",
-        mousewheelleft: "Wheel ←",
-        mousewheelright: "Wheel →",
-        pad_up: "D-pad Up",
-        pad_down: "D-pad Down",
-        pad_left: "D-pad Left",
-        pad_right: "D-pad Right",
-    };
-    if (labels[base]) {
-        return labels[base];
+    if (TOKEN_LABELS[base]) {
+        return TOKEN_LABELS[base];
     }
     if (base.startsWith("kp")) {
         return `Num ${base.slice(2).toUpperCase()}`;
     }
-    if (base.startsWith("f") && base.length <= 3) {
+    if (/^f\d{1,2}$/.test(base)) {
         return base.toUpperCase();
     }
-    return base.replaceAll("_", " ");
+    return base
+        .split("_")
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(" ");
 }

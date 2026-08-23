@@ -397,7 +397,7 @@ function InputBindingsPanelBody({ initial }: { initial: InputConfigFiles }) {
                     value="keyboard"
                 >
                     <ScrollArea className="min-h-0 flex-1">
-                        <div className="grid grid-cols-2 gap-2 p-3 md:grid-cols-3 xl:grid-cols-4">
+                        <div className="grid grid-cols-2 gap-2 p-3 md:grid-cols-3 lg:grid-cols-4">
                             {OUTPUT_GROUPS.map((group) => (
                                 <Fragment key={group.title}>
                                     <SectionHeading title={group.title} />
@@ -495,6 +495,12 @@ function InputBindingsPanelBody({ initial }: { initial: InputConfigFiles }) {
                                 ? mouseBound
                                 : (["cross", "circle", "options"] as const)
                             ).map((output) => renderOutputSlots(output))}
+                            {mouseBound.length === 0 && (
+                                <p className="col-span-full text-muted-foreground text-xs">
+                                    No mouse bindings yet — pick a slot above
+                                    and press a mouse button or wheel direction.
+                                </p>
+                            )}
                         </div>
                     </ScrollArea>
                 </TabsContent>
