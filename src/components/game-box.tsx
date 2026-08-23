@@ -1,4 +1,4 @@
-import { useAtomValue } from "jotai";
+import { useAtomValue, useStore } from "jotai";
 import {
     CircleHelpIcon,
     EllipsisIcon,
@@ -33,6 +33,7 @@ import { stringifyError } from "@/lib/utils/error";
 import { cn } from "@/lib/utils/ui";
 import type { GameEntry } from "@/store/db";
 import { gamepadActiveAtom } from "@/store/gamepad";
+import { findActiveRunningGame } from "@/store/running-games";
 import { MarqueeTitle } from "./animate-ui/effects/marquee-title";
 import { GameBoxCover } from "./game-cover";
 import GamepadIcon, { ButtonType } from "./gamepad-icon";
@@ -100,6 +101,7 @@ export function GameBoxError({ err }: { err: Error }) {
 }
 
 export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
+    const store = useStore();
     const { requestLaunch, isPending } = useLaunchGame();
     const { openModal, modalStack } = useNavigator();
 
@@ -144,16 +146,24 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
         });
     }, [game, openModal]);
 
-    const scheduleOpenDetails = useCallback(() => {
+    const scheduleSingleClickAction = useCallback(() => {
         clearClickTimer();
         clickTimerRef.current = setTimeout(() => {
             clickTimerRef.current = null;
             if (launchIntentRef.current) {
                 return;
             }
+            const runningGame = findActiveRunningGame(store, game);
+            if (runningGame) {
+                openModal({
+                    id: "running-game",
+                    params: { runningGame },
+                });
+                return;
+            }
             openDetails();
         }, SINGLE_CLICK_DELAY_MS);
-    }, [clearClickTimer, openDetails]);
+    }, [clearClickTimer, game, openDetails, openModal, store]);
 
     const openGame = useCallback(
         (e?: ReactMouseEvent) => {
@@ -177,7 +187,7 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
             return;
         }
         e.stopPropagation();
-        scheduleOpenDetails();
+        scheduleSingleClickAction();
     };
 
     const onBlur = () => {

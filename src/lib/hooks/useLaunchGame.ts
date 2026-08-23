@@ -9,6 +9,7 @@ import { atomLaunchConflict } from "@/store/launch-conflict";
 import {
     findActiveRunningGame,
     findAnyActiveRunningGame,
+    type GameProcessState,
     terminateRunningGame,
 } from "@/store/running-games";
 
@@ -19,6 +20,16 @@ export function useLaunchGame() {
     const [conflict, setConflict] = useAtom(atomLaunchConflict);
     const isLaunchingRef = useRef(false);
 
+    const openRunningGameLog = useCallback(
+        (runningGame: GameProcessState) => {
+            openModal({
+                id: "running-game",
+                params: { runningGame },
+            });
+        },
+        [openModal],
+    );
+
     const runLaunch = useCallback(
         (game: GameEntry) => {
             if (isLaunchingRef.current) {
@@ -28,7 +39,10 @@ export function useLaunchGame() {
 
             startTransition(async () => {
                 try {
-                    await launch(store, game);
+                    const runningGame = await launch(store, game);
+                    if (runningGame) {
+                        openRunningGameLog(runningGame);
+                    }
                 } catch (e: unknown) {
                     toast.error(`Unknown error: ${stringifyError(e)}`);
                 } finally {
@@ -36,7 +50,7 @@ export function useLaunchGame() {
                 }
             });
         },
-        [store],
+        [openRunningGameLog, store],
     );
 
     const requestLaunch = useCallback(
@@ -80,12 +94,9 @@ export function useLaunchGame() {
             conflict?.kind === "same" ? conflict.runningGame : undefined;
         setConflict(null);
         if (runningGame) {
-            openModal({
-                id: "running-game",
-                params: { runningGame },
-            });
+            openRunningGameLog(runningGame);
         }
-    }, [conflict, openModal, setConflict]);
+    }, [conflict, openRunningGameLog, setConflict]);
 
     const launchAnotherInstance = useCallback(() => {
         const game = conflict?.kind === "same" ? conflict.game : undefined;
@@ -115,12 +126,15 @@ export function useLaunchGame() {
         startTransition(async () => {
             try {
                 await terminateRunningGame(runningGame, store);
-                await launch(store, game);
+                const launchedGame = await launch(store, game);
+                if (launchedGame) {
+                    openRunningGameLog(launchedGame);
+                }
             } catch (e: unknown) {
                 toast.error(`Unknown error: ${stringifyError(e)}`);
             }
         });
-    }, [conflict, store, setConflict]);
+    }, [conflict, openRunningGameLog, store, setConflict]);
 
     return {
         requestLaunch,
