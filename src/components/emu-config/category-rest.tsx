@@ -1,4 +1,3 @@
-import { InfoIcon } from "lucide-react";
 import {
     LOG_LEVEL_OPTIONS,
     LOG_TYPE_OPTIONS,
@@ -353,55 +352,6 @@ export function AdvancedCategory({
                         value={w.windows_guest_red_zone_protection_mode}
                     />
                 </SettingRow>
-            </SettingSection>
-
-            <SettingSection
-                description="These live outside config.json and are not edited in this panel."
-                title="Not covered here"
-            >
-                <div className="space-y-3 px-4 py-4 text-muted-foreground text-sm leading-relaxed">
-                    <p className="flex gap-2">
-                        <InfoIcon className="mt-0.5 size-4 shrink-0" />
-                        <span>
-                            <strong className="text-foreground">
-                                Input bindings
-                            </strong>{" "}
-                            — keyboard/controller maps and hotkeys live in{" "}
-                            <code className="text-xs">input_config/*.ini</code>.
-                        </span>
-                    </p>
-                    <p className="flex gap-2">
-                        <InfoIcon className="mt-0.5 size-4 shrink-0" />
-                        <span>
-                            <strong className="text-foreground">
-                                User profiles
-                            </strong>{" "}
-                            — ShadNet accounts and NP fields are in{" "}
-                            <code className="text-xs">users.json</code>.
-                        </span>
-                    </p>
-                    <p className="flex gap-2">
-                        <InfoIcon className="mt-0.5 size-4 shrink-0" />
-                        <span>
-                            <strong className="text-foreground">
-                                CLI, env, CMake, ImGui overlay
-                            </strong>{" "}
-                            — launch flags, environment variables, build
-                            switches, and developer overlay state are not
-                            runtime JSON settings.
-                        </span>
-                    </p>
-                    <p className="flex gap-2">
-                        <InfoIcon className="mt-0.5 size-4 shrink-0" />
-                        <span>
-                            <strong className="text-foreground">
-                                Launcher-only preferences
-                            </strong>{" "}
-                            — library paths and version selection use the folder
-                            settings and version manager modals.
-                        </span>
-                    </p>
-                </div>
             </SettingSection>
         </div>
     );
