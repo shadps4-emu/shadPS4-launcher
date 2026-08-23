@@ -1,4 +1,4 @@
-import { useAtomValue, useStore } from "jotai";
+import { useAtomValue } from "jotai";
 import {
     CircleHelpIcon,
     EllipsisIcon,
@@ -14,20 +14,20 @@ import React, {
     useMemo,
     useRef,
     useState,
-    useTransition,
 } from "react";
 import { toast } from "sonner";
 import CN from "@/assets/flags/cn.svg";
 import EU from "@/assets/flags/eu.svg";
 import JP from "@/assets/flags/jp.svg";
 import US from "@/assets/flags/us.svg";
+import { AlreadyRunningGameDialog } from "@/components/modals/already-running-game-dialog";
 import { GameDetailsModal } from "@/components/modals/game-details-modal";
 import type { GamepadButtonEvent } from "@/handlers/gamepad";
 import {
     GamepadNavField,
     type NavButton,
 } from "@/lib/context/gamepad-nav-field";
-import { launch } from "@/lib/game-launch";
+import { useLaunchGame } from "@/lib/hooks/useLaunchGame";
 import { useNavigator } from "@/lib/hooks/useNavigator";
 import type { PSF } from "@/lib/native/psf";
 import { stringifyError } from "@/lib/utils/error";
@@ -99,11 +99,17 @@ export function GameBoxError({ err }: { err: Error }) {
 }
 
 export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
-    const [isPending, startTransition] = useTransition();
+    const {
+        requestLaunch,
+        isPending,
+        pending,
+        dismissPrompt,
+        openExistingLog,
+        launchAnotherInstance,
+    } = useLaunchGame();
     const { openModal, modalStack } = useNavigator();
 
     const isGamepad = useAtomValue(gamepadActiveAtom);
-    const store = useStore();
 
     const [clickCount, setClickCount] = useState(0);
     const [isContextOpen, setContextOpen] = useState(false);
@@ -134,21 +140,10 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
         }
     }, [clickCount]);
 
-    const openGame = () =>
-        startTransition(async () => {
-            try {
-                setClickCount(0);
-                const r = await launch(store, game);
-                if (r) {
-                    openModal({
-                        id: "game-details",
-                        params: { gameData: r.game },
-                    });
-                }
-            } catch (e: unknown) {
-                toast.error(`Unknown error: ${stringifyError(e)}`);
-            }
-        });
+    const openGame = () => {
+        setClickCount(0);
+        requestLaunch(game);
+    };
 
     const onClick = () => {
         setClickCount((prev) => prev + 1);
@@ -159,11 +154,9 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     };
 
     const openDetails = () => {
-        startTransition(() => {
-            openModal({
-                id: "game-details",
-                params: { gameData: game },
-            });
+        openModal({
+            id: "game-details",
+            params: { gameData: game },
         });
     };
 
@@ -205,91 +198,103 @@ export function GameBox({ game }: { game: GameEntry; isFirst?: boolean }) {
     };
 
     return (
-        <ContextMenu onOpenChange={setContextOpen}>
-            <ContextMenuTrigger asChild ref={contextMenuRef}>
-                <Navigable onButtonPress={onButtonPress}>
-                    <div
-                        className="group relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform focus-within:scale-110 hover:scale-110 data-gamepad-focus:scale-110"
-                        onBlur={onBlur}
-                        onClick={onClick}
-                        onDoubleClick={openGame}
-                        role="button"
-                        tabIndex={0}
-                    >
-                        {isPending && (
-                            <div className="center absolute inset-0 bg-black/60">
-                                <Spinner />
-                            </div>
-                        )}
-                        {!isDetailsOpen && (
-                            <motion.div
-                                layoutId={`game-cover-${game.id}`}
-                                transition={{ duration: 0 }}
-                            >
-                                <GameBoxCover game={game} />
-                            </motion.div>
-                        )}
-
-                        <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 bg-black/50 opacity-0 backdrop-blur-[2px] transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 group-data-gamepad-focus:opacity-100">
-                            <MarqueeTitle
-                                classNames={
-                                    "inline-block text-nowrap text-center font-semibold text-lg"
-                                }
-                                title={game.title}
-                            />
-
-                            <div className="col-start-1 col-end-4 row-start-3 row-end-4 m-2 flex h-8 justify-between self-end">
-                                <Button
-                                    className="cursor-help"
-                                    onClick={openContext}
-                                    ref={contextOpenButtonRef}
-                                    size="icon"
-                                    type="button"
-                                    variant="ghost"
+        <>
+            <AlreadyRunningGameDialog
+                game={pending?.game ?? null}
+                onDismiss={dismissPrompt}
+                onLaunchAnother={launchAnotherInstance}
+                onOpenLog={openExistingLog}
+                open={pending !== null}
+            />
+            <ContextMenu onOpenChange={setContextOpen}>
+                <ContextMenuTrigger asChild ref={contextMenuRef}>
+                    <Navigable onButtonPress={onButtonPress}>
+                        <div
+                            className="group relative aspect-square h-auto w-full min-w-[150px] max-w-[200px] flex-1 cursor-pointer overflow-hidden rounded-sm bg-zinc-800 transition-transform focus-within:scale-110 hover:scale-110 data-gamepad-focus:scale-110"
+                            onBlur={onBlur}
+                            onClick={onClick}
+                            onDoubleClick={openGame}
+                            role="button"
+                            tabIndex={0}
+                        >
+                            {isPending && (
+                                <div className="center absolute inset-0 bg-black/60">
+                                    <Spinner />
+                                </div>
+                            )}
+                            {!isDetailsOpen && (
+                                <motion.div
+                                    layoutId={`game-cover-${game.id}`}
+                                    transition={{ duration: 0 }}
                                 >
-                                    {isGamepad ? (
-                                        <GamepadIcon
-                                            className="animate-pulse"
-                                            icon={ButtonType.BUTTON_UP}
-                                        />
-                                    ) : (
-                                        <EllipsisIcon />
-                                    )}
-                                </Button>
-                                <Flag className="rounded-full" sfo={game.sfo} />
-                            </div>
+                                    <GameBoxCover game={game} />
+                                </motion.div>
+                            )}
 
-                            <button
-                                className="col-span-full row-span-full grid size-16 place-items-center place-self-center rounded-full bg-black/75"
-                                data-play-game={""}
-                                type="button"
-                            >
-                                <PlayIcon
-                                    className="size-10"
-                                    fill="currentColor"
+                            <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 bg-black/50 opacity-0 backdrop-blur-[2px] transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 group-data-gamepad-focus:opacity-100">
+                                <MarqueeTitle
+                                    classNames={
+                                        "inline-block text-nowrap text-center font-semibold text-lg"
+                                    }
+                                    title={game.title}
                                 />
-                            </button>
+
+                                <div className="col-start-1 col-end-4 row-start-3 row-end-4 m-2 flex h-8 justify-between self-end">
+                                    <Button
+                                        className="cursor-help"
+                                        onClick={openContext}
+                                        ref={contextOpenButtonRef}
+                                        size="icon"
+                                        type="button"
+                                        variant="ghost"
+                                    >
+                                        {isGamepad ? (
+                                            <GamepadIcon
+                                                className="animate-pulse"
+                                                icon={ButtonType.BUTTON_UP}
+                                            />
+                                        ) : (
+                                            <EllipsisIcon />
+                                        )}
+                                    </Button>
+                                    <Flag
+                                        className="rounded-full"
+                                        sfo={game.sfo}
+                                    />
+                                </div>
+
+                                <button
+                                    className="col-span-full row-span-full grid size-16 place-items-center place-self-center rounded-full bg-black/75"
+                                    data-play-game={""}
+                                    type="button"
+                                >
+                                    <PlayIcon
+                                        className="size-10"
+                                        fill="currentColor"
+                                    />
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                </Navigable>
-            </ContextMenuTrigger>
-            <ContextMenuContent>
-                <GamepadNavField
-                    debugName="game-context-menu"
-                    enabled={isContextOpen}
-                >
-                    <Navigable>
-                        <ContextMenuItem autoFocus onClick={openDetails}>
-                            Details
-                        </ContextMenuItem>
                     </Navigable>
-                    <Navigable>
-                        <ContextMenuItem onClick={openCheatsPatches}>
-                            Cheats & Patches
-                        </ContextMenuItem>
-                    </Navigable>
-                </GamepadNavField>
-            </ContextMenuContent>
-        </ContextMenu>
+                </ContextMenuTrigger>
+                <ContextMenuContent>
+                    <GamepadNavField
+                        debugName="game-context-menu"
+                        enabled={isContextOpen}
+                    >
+                        <Navigable>
+                            <ContextMenuItem autoFocus onClick={openDetails}>
+                                Details
+                            </ContextMenuItem>
+                        </Navigable>
+                        <Navigable>
+                            <ContextMenuItem onClick={openCheatsPatches}>
+                                Cheats & Patches
+                            </ContextMenuItem>
+                        </Navigable>
+                    </GamepadNavField>
+                </ContextMenuContent>
+            </ContextMenu>
+        </>
     );
 }

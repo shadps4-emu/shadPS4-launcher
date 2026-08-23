@@ -2,7 +2,7 @@ import { atom, type PrimitiveAtom } from "jotai";
 import type { GameProcess, LogEntry } from "@/lib/native/game-process";
 import type { Callback } from "@/lib/utils/types";
 import { defaultStore, type JotaiStore } from ".";
-import type { GameEntry } from "./db";
+import { type GameEntry, isSameGame } from "./db";
 
 export type Capabilities = "ENABLE_MEMORY_PATCH";
 
@@ -49,6 +49,18 @@ export function createGameProcesState(
     store.set(atomRunningGames, (prev) => [...prev, runningGame]);
 
     return runningGame;
+}
+
+export function findActiveRunningGame(
+    store: JotaiStore,
+    game: GameEntry,
+): GameProcessState | undefined {
+    return store.get(atomRunningGames).find((state) => {
+        if (store.get(state.atomRunning) !== true) {
+            return false;
+        }
+        return isSameGame(state.game, game);
+    });
 }
 
 export function removeRunningGame(
