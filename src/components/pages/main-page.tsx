@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { GamepadNavField } from "../../lib/context/gamepad-nav-field";
 import { GameLibrary } from "../game-library";
+import { LaunchConflictDialogs } from "../launch-conflict-dialogs";
 import { Toolbar } from "../toolbar";
 
 export function MainPage() {
@@ -12,6 +13,7 @@ export function MainPage() {
             onContextMenu={(e) => e.preventDefault()}
         >
             <GamepadNavField debugName="main-page" zIndex={0}>
+                <LaunchConflictDialogs />
                 <div className="flex h-full flex-col">
                     <Toolbar onSearch={setSearch} />
                     <GameLibrary search={search} />

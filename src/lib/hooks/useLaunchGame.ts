@@ -1,40 +1,31 @@
-import { useStore } from "jotai";
-import { useCallback, useState, useTransition } from "react";
+import { useAtom, useStore } from "jotai";
+import { useCallback, useRef, useTransition } from "react";
 import { toast } from "sonner";
 import { launch } from "@/lib/game-launch";
 import { useNavigator } from "@/lib/hooks/useNavigator";
 import { stringifyError } from "@/lib/utils/error";
 import type { GameEntry } from "@/store/db";
+import { atomLaunchConflict } from "@/store/launch-conflict";
 import {
     findActiveRunningGame,
     findAnyActiveRunningGame,
-    type GameProcessState,
     terminateRunningGame,
 } from "@/store/running-games";
-
-type SameGameConflict = {
-    kind: "same";
-    game: GameEntry;
-    runningGame: GameProcessState;
-};
-
-type DifferentGameConflict = {
-    kind: "different";
-    game: GameEntry;
-    runningGame: GameProcessState;
-    step: "prompt" | "confirm";
-};
-
-type LaunchConflict = SameGameConflict | DifferentGameConflict;
 
 export function useLaunchGame() {
     const store = useStore();
     const { openModal } = useNavigator();
     const [isPending, startTransition] = useTransition();
-    const [conflict, setConflict] = useState<LaunchConflict | null>(null);
+    const [conflict, setConflict] = useAtom(atomLaunchConflict);
+    const isLaunchingRef = useRef(false);
 
     const runLaunch = useCallback(
         (game: GameEntry) => {
+            if (isLaunchingRef.current) {
+                return;
+            }
+            isLaunchingRef.current = true;
+
             startTransition(async () => {
                 try {
                     const result = await launch(store, game);
@@ -46,6 +37,8 @@ export function useLaunchGame() {
                     }
                 } catch (e: unknown) {
                     toast.error(`Unknown error: ${stringifyError(e)}`);
+                } finally {
+                    isLaunchingRef.current = false;
                 }
             });
         },
@@ -75,14 +68,18 @@ export function useLaunchGame() {
                 return;
             }
 
+            if (isLaunchingRef.current) {
+                return;
+            }
+
             runLaunch(game);
         },
-        [store, runLaunch],
+        [store, runLaunch, setConflict],
     );
 
     const dismissPrompt = useCallback(() => {
         setConflict(null);
-    }, []);
+    }, [setConflict]);
 
     const openExistingLog = useCallback(() => {
         const runningGame =
@@ -94,7 +91,7 @@ export function useLaunchGame() {
                 params: { runningGame },
             });
         }
-    }, [conflict, openModal]);
+    }, [conflict, openModal, setConflict]);
 
     const launchAnotherInstance = useCallback(() => {
         const game = conflict?.kind === "same" ? conflict.game : undefined;
@@ -102,7 +99,7 @@ export function useLaunchGame() {
         if (game) {
             runLaunch(game);
         }
-    }, [conflict, runLaunch]);
+    }, [conflict, runLaunch, setConflict]);
 
     const proceedToTerminateConfirm = useCallback(() => {
         setConflict((prev) => {
@@ -111,7 +108,7 @@ export function useLaunchGame() {
             }
             return { ...prev, step: "confirm" };
         });
-    }, []);
+    }, [setConflict]);
 
     const confirmTerminateAndLaunch = useCallback(() => {
         if (conflict?.kind !== "different") {
@@ -135,17 +132,11 @@ export function useLaunchGame() {
                 toast.error(`Unknown error: ${stringifyError(e)}`);
             }
         });
-    }, [conflict, store, openModal]);
-
-    const sameGameConflict = conflict?.kind === "same" ? conflict : null;
-    const differentGameConflict =
-        conflict?.kind === "different" ? conflict : null;
+    }, [conflict, store, openModal, setConflict]);
 
     return {
         requestLaunch,
         isPending,
-        sameGameConflict,
-        differentGameConflict,
         dismissPrompt,
         openExistingLog,
         launchAnotherInstance,

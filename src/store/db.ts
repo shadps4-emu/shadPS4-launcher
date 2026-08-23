@@ -17,6 +17,9 @@ export type GameEntry = {
 };
 
 export function isSameGame(g1: GameEntry, g2: GameEntry): boolean {
+    if (g1.path === g2.path) {
+        return true;
+    }
     return g1.cusa === g2.cusa && g1.version === g2.version;
 }
 
