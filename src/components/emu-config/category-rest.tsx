@@ -15,6 +15,15 @@ import {
 } from "./fields";
 import type { ConfigUpdater } from "./types";
 
+/** Radix Select rejects empty string item values; map emulator default to a sentinel. */
+const LOG_FLUSH_DEFAULT_SENTINEL = "__default__";
+
+const LOG_FLUSH_LEVEL_OPTIONS = LOG_LEVEL_OPTIONS.map((option) =>
+    option.value === ""
+        ? { value: LOG_FLUSH_DEFAULT_SENTINEL, label: option.label }
+        : option,
+);
+
 export function NetworkCategory({
     config,
     set,
@@ -119,9 +128,13 @@ export function LoggingCategory({
     set: ConfigUpdater;
 }) {
     const l = config.Log;
-    const flushValue = LOG_LEVEL_OPTIONS.some((o) => o.value === l.flush_level)
-        ? l.flush_level
-        : "";
+    const flushValue =
+        l.flush_level === "" ||
+        LOG_LEVEL_OPTIONS.some((o) => o.value === l.flush_level)
+            ? l.flush_level === ""
+                ? LOG_FLUSH_DEFAULT_SENTINEL
+                : l.flush_level
+            : LOG_FLUSH_DEFAULT_SENTINEL;
 
     return (
         <div className="space-y-8">
@@ -232,8 +245,14 @@ export function LoggingCategory({
                 >
                     <SelectControl
                         id="flush"
-                        onChange={(v) => set("Log", "flush_level", v)}
-                        options={[...LOG_LEVEL_OPTIONS]}
+                        onChange={(v) =>
+                            set(
+                                "Log",
+                                "flush_level",
+                                v === LOG_FLUSH_DEFAULT_SENTINEL ? "" : v,
+                            )
+                        }
+                        options={LOG_FLUSH_LEVEL_OPTIONS}
                         value={flushValue}
                     />
                 </SettingRow>
